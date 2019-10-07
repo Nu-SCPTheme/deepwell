@@ -13,7 +13,7 @@ table! {
         file_name -> Text,
         file_uri -> Text,
         description -> Text,
-        page_id -> Nullable<Int8>,
+        page_id -> Int8,
     }
 }
 
@@ -46,8 +46,8 @@ table! {
 table! {
     ratings_history (rating_id) {
         rating_id -> Int8,
-        page_id -> Nullable<Int8>,
-        user_id -> Nullable<Int8>,
+        page_id -> Int8,
+        user_id -> Int8,
         created_at -> Timestamp,
         rating -> Nullable<Int2>,
     }
@@ -57,10 +57,10 @@ table! {
     revisions (revision_id) {
         revision_id -> Int8,
         created_at -> Timestamp,
-        page_id -> Nullable<Int8>,
-        user_id -> Nullable<Int8>,
+        page_id -> Int8,
+        user_id -> Int8,
         git_commit -> Text,
-        changes -> Nullable<Jsonb>,
+        changes -> Jsonb,
     }
 }
 
