@@ -1,7 +1,7 @@
 #
-# diesel.toml
+# sources.mk
 #
-# scipnet - Multi-tenant writing wiki software
+# scipnet - SCP Hosting Platform
 # Copyright (C) 2019 not_a_seagull, Ammon Smith
 #
 # This program is free software: you can redistribute it and/or modify
@@ -16,10 +16,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
-#
 
-# For documentation on how to configure this file,
-# see diesel.rs/guides/configuring-diesel-cli
-
-[print_schema]
-file = "src/schema.rs"
+DEEPWELL_SOURCES := \
+	deepwell/Cargo.toml \
+	deepwell/diesel.toml \
+	deepwell/migrations/* \
+	deepwell/src/*.rs
