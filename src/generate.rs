@@ -20,9 +20,10 @@
 
 use diesel::pg::PgConnection;
 use diesel::result::Error;
-use diesel::sql_types::Text;
+use diesel::sql_types::*;
 use diesel::{self, sql_query, RunQueryDsl};
 use heck::CamelCase;
+use std::mem;
 
 const TABLE_LIST_QUERY: &str = "
     SELECT table_name FROM information_schema.tables
@@ -34,6 +35,7 @@ const TABLE_LIST_QUERY: &str = "
 const COLUMN_LIST_QUERY: &str = "
     SELECT
         columns.column_name,
+        columns.data_type,
         columns.udt_name,
         columns.column_default,
         columns.is_nullable
@@ -51,6 +53,20 @@ enum DataType {
 }
 
 impl DataType {
+    fn from_pg_name(mut value: &str) -> Self {
+        if value.starts_with("_") {
+            value = &value[1..];
+        }
+
+        match value {
+            "int2" | "int8" => DataType::Number,
+            "text" => DataType::Text,
+            "date" | "timestamp" => DataType::Date,
+            "json" | "jsonb" => DataType::Json,
+            _ => panic!("Unknown postgres type: {}", value),
+        }
+    }
+
     fn ts_type_name(self) -> &'static str {
         match self {
             DataType::Number => "number",
@@ -72,6 +88,7 @@ struct Column {
     name: String,
     data_type: DataType,
     is_array: bool,
+    is_nullable: bool,
     has_default: bool,
 }
 
@@ -82,10 +99,50 @@ fn load_schema(conn: &PgConnection) -> Result<Vec<Table>, Error> {
         table_name: String,
     }
 
-    let tables: Vec<TableRow> = sql_query(TABLE_LIST_QUERY)
-        .load::<TableRow>(conn)?;
+    #[derive(Debug, QueryableByName)]
+    struct ColumnRow {
+        #[sql_type = "Text"]
+        column_name: String,
 
-    unimplemented!()
+        #[sql_type = "Text"]
+        data_type: String,
+
+        #[sql_type = "Text"]
+        udt_name: String,
+
+        #[sql_type = "Nullable<Text>"]
+        column_default: Option<String>,
+
+        #[sql_type = "Bool"]
+        is_nullable: bool,
+    }
+
+    let mut tables: Vec<Table> = sql_query(TABLE_LIST_QUERY)
+        .load::<TableRow>(conn)?
+        .into_iter()
+        .map(|row| Table {
+            name: row.table_name,
+            columns: vec![],
+        })
+        .collect();
+
+    for table in tables.iter_mut() {
+        let mut columns: Vec<Column> = sql_query(COLUMN_LIST_QUERY)
+            .load::<ColumnRow>(conn)?
+            .into_iter()
+            .map(|row| Column {
+                name: row.column_name,
+                data_type: DataType::from_pg_name(&row.udt_name),
+                is_array: row.data_type == "ARRAY",
+                is_nullable: row.is_nullable,
+                has_default: row.column_default.is_some(),
+            })
+            .collect();
+
+        mem::replace(&mut table.columns, columns);
+    }
+
+    Ok(tables)
 }
 
 pub fn typescript_interfaces(conn: &PgConnection) -> Result<String, Error> {
