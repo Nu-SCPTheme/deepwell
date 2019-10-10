@@ -159,7 +159,7 @@ pub fn typescript_interfaces(conn: &PgConnection) -> Result<String, Error> {
     for table in &tables {
         output.push_str("export interface ");
         output.push_str(&table.name.to_camel_case());
-        output.push_str(" {\n");
+        output.push_str("Model {\n");
 
         for column in &table.columns {
             output.push_str("  ");
