@@ -113,8 +113,8 @@ fn load_schema(conn: &PgConnection) -> Result<Vec<Table>, Error> {
         #[sql_type = "Nullable<Text>"]
         column_default: Option<String>,
 
-        #[sql_type = "Bool"]
-        is_nullable: bool,
+        #[sql_type = "Text"]
+        is_nullable: String,
     }
 
     let mut tables: Vec<Table> = sql_query(TABLE_LIST_QUERY)
@@ -135,7 +135,7 @@ fn load_schema(conn: &PgConnection) -> Result<Vec<Table>, Error> {
                 name: row.column_name,
                 data_type: DataType::from_pg_name(&row.udt_name),
                 is_array: row.data_type == "ARRAY",
-                is_nullable: row.is_nullable,
+                is_nullable: row.is_nullable == "YES",
                 has_default: row.column_default.is_some(),
             })
             .collect();
@@ -154,6 +154,8 @@ pub fn typescript_interfaces(conn: &PgConnection) -> Result<String, Error> {
         env!("CARGO_PKG_VERSION"),
     );
 
+    output.push_str("type Nullable<T> = T | null;\n\n");
+
     for table in &tables {
         output.push_str("export interface ");
         output.push_str(&table.name.to_camel_case());
@@ -168,10 +170,19 @@ pub fn typescript_interfaces(conn: &PgConnection) -> Result<String, Error> {
             }
 
             output.push_str(": ");
+
+            if column.is_nullable {
+                output.push_str("Nullable<");
+            }
+
             output.push_str(column.data_type.ts_type_name());
 
             if column.is_array {
                 output.push_str("[]");
+            }
+
+            if column.is_nullable {
+                output.push('>');
             }
 
             output.push_str(";\n");
