@@ -127,8 +127,6 @@ fn load_schema(conn: &PgConnection) -> Result<Vec<Table>, Error> {
         .collect();
 
     for table in tables.iter_mut() {
-        use diesel::pg::Pg;
-
         let columns: Vec<Column> = sql_query(COLUMN_LIST_QUERY)
             .bind::<Text, _>(&table.name)
             .load::<ColumnRow>(conn)?
@@ -181,6 +179,8 @@ pub fn typescript_interfaces(conn: &PgConnection) -> Result<String, Error> {
 
         output.push_str("}\n\n");
     }
+
+    output.pop();
 
     Ok(output)
 }

@@ -35,18 +35,19 @@ mod generate;
 mod models;
 mod schema;
 
+use std::env;
+
 fn main() {
     color_backtrace::install();
 
-    use diesel::Connection;
-    use diesel::pg::PgConnection;
-    use std::env;
-
     let conn = {
+        use diesel::Connection;
+        use diesel::pg::PgConnection;
+
         let url = env::var("DATABASE_URL").expect("DATABASE_URL is not set");
         PgConnection::establish(&url).expect("Error connecting to database")
     };
 
     let schema = generate::typescript_interfaces(&conn).expect("Unable to load schema");
-    println!("Typescript schema file:\n\n{}", schema);
+    println!("{}", schema);
 }
