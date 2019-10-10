@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use diesel::prelude::*;
 use super::schema::*;
+use diesel::prelude::*;
 
 // TODO

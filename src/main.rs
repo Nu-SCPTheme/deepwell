@@ -24,11 +24,13 @@ extern crate chrono;
 
 #[macro_use]
 extern crate diesel;
+extern crate heck;
 
 #[macro_use]
 extern crate serde;
 extern crate serde_json;
 
+mod generate;
 mod models;
 mod schema;
 
