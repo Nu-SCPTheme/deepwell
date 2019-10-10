@@ -10,6 +10,7 @@ edition = "2018" # this refers to the Cargo.toml
 
 [dependencies]
 chrono = { version = "0.4", features = ["serde"] }
+color-backtrace = "0.2"
 diesel = { version = "1", features = ["postgres", "serde_json"] }
 heck = "0.3"
 serde = { version = "1", features = ["derive"] }
