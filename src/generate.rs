@@ -41,7 +41,7 @@ const COLUMN_LIST_QUERY: &str = "
         columns.is_nullable
     FROM information_schema.columns
         WHERE columns.table_schema = 'public'
-        AND columns.table_name = ?
+        AND columns.table_name = $1
 ";
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
@@ -127,7 +127,10 @@ fn load_schema(conn: &PgConnection) -> Result<Vec<Table>, Error> {
         .collect();
 
     for table in tables.iter_mut() {
-        let mut columns: Vec<Column> = sql_query(COLUMN_LIST_QUERY)
+        use diesel::pg::Pg;
+
+        let columns: Vec<Column> = sql_query(COLUMN_LIST_QUERY)
+            .bind::<Text, _>(&table.name)
             .load::<ColumnRow>(conn)?
             .into_iter()
             .map(|row| Column {
@@ -152,7 +155,7 @@ pub fn typescript_interfaces(conn: &PgConnection) -> Result<String, Error> {
     for table in &tables {
         output.push_str("export interface ");
         output.push_str(&table.name.to_camel_case());
-        output.push_str(" {");
+        output.push_str(" {\n");
 
         for column in &table.columns {
             output.push_str("  ");
