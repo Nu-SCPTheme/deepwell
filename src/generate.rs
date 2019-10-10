@@ -20,6 +20,7 @@
 
 use diesel::pg::PgConnection;
 use diesel::result::Error;
+use diesel::sql_types::Text;
 use diesel::{self, sql_query, RunQueryDsl};
 use heck::CamelCase;
 
@@ -75,10 +76,14 @@ struct Column {
 }
 
 fn load_schema(conn: &PgConnection) -> Result<Vec<Table>, Error> {
-    /*
-    let tables: Vec<_> = sql_query(TABLE_LIST_QUERY)
-        .load(conn)?;
-    */
+    #[derive(Debug, QueryableByName)]
+    struct TableRow {
+        #[sql_type = "Text"]
+        table_name: String,
+    }
+
+    let tables: Vec<TableRow> = sql_query(TABLE_LIST_QUERY)
+        .load::<TableRow>(conn)?;
 
     unimplemented!()
 }
