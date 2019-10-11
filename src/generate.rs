@@ -163,8 +163,18 @@ pub fn typescript_interfaces(conn: &PgConnection) -> Result<String, Error> {
     output.push_str("type Nullable<T> = T | null;\n\n");
 
     for table in &tables {
+        let table_name = {
+            let mut name = table.name.to_camel_case();
+
+            if name.ends_with('s') {
+                name.pop();
+            }
+
+            name
+        };
+
         output.push_str("export interface ");
-        output.push_str(&table.name.to_camel_case());
+        output.push_str(&table_name);
         output.push_str("Model {\n");
 
         for column in &table.columns {
