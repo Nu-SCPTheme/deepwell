@@ -46,7 +46,14 @@ CREATE TABLE ratings_history (
 CREATE TABLE authors (
     page_id BIGINT NOT NULL REFERENCES pages(page_id),
     user_id BIGINT NOT NULL REFERENCES users(user_id),
-    author_type TEXT NOT NULL,
+    author_type TEXT NOT NULL CHECK (
+        author_type IN (
+            'author',
+            'rewrite',
+            'translator',
+            'maintainer'
+        )
+    ),
     created_at DATE NOT NULL,
     PRIMARY KEY (page_id, user_id, author_type)
 );
