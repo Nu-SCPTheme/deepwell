@@ -35,7 +35,7 @@ CREATE TABLE roles (
     role_id BIGINT PRIMARY KEY,
     wiki_id BIGINT NOT NULL REFERENCES wikis(wiki_id),
     name TEXT NOT NULL,
-    permset INTEGER NOT NULL,
+    permset BIT(20) NOT NULL,
     UNIQUE (wiki_id, name)
 );
 

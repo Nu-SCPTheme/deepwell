@@ -88,7 +88,7 @@ table! {
         role_id -> Int8,
         wiki_id -> Int8,
         name -> Text,
-        permset -> Int4,
+        permset -> Bit,
     }
 }
 
