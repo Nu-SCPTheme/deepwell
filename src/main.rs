@@ -20,6 +20,8 @@
 
 #![deny(missing_debug_implementations)]
 
+#[macro_use]
+extern crate askama;
 extern crate chrono;
 extern crate color_backtrace;
 
@@ -41,8 +43,8 @@ fn main() {
     color_backtrace::install();
 
     let conn = {
-        use diesel::Connection;
         use diesel::pg::PgConnection;
+        use diesel::Connection;
 
         let url = env::var("DATABASE_URL").expect("DATABASE_URL is not set");
         PgConnection::establish(&url).expect("Error connecting to database")
