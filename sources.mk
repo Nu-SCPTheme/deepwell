@@ -21,5 +21,6 @@
 DEEPWELL_SOURCES := \
 	deepwell/Cargo.toml \
 	deepwell/diesel.toml \
-	deepwell/migrations/* \
-	deepwell/src/*.rs
+	$(shell find deepwell/migrations -name '*.sql' 2> /dev/null) \
+	$(wildcard deepwell/templates/*) \
+	$(shell find deepwell/src -name '*.rs' 2> /dev/null)
