@@ -42,6 +42,8 @@ table! {
         user_id -> Int8,
         hash -> Bytea,
         salt -> Bytea,
+        iterations -> Int4,
+        digest -> Int2,
     }
 }
 

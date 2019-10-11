@@ -13,7 +13,9 @@ ALTER TABLE parents
 CREATE TABLE passwords (
     user_id BIGINT PRIMARY KEY REFERENCES users(user_id),
     hash BYTEA NOT NULL,
-    salt BYTEA NOT NULL
+    salt BYTEA NOT NULL,
+    iterations INTEGER NOT NULL,
+    digest SMALLINT NOT NULL CHECK (digest IN (224, 256, 384, 512))
 );
 
 CREATE TABLE wikis (
