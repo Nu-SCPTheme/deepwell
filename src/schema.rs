@@ -32,6 +32,16 @@ table! {
     parents (page_id, parent_page_id) {
         page_id -> Int8,
         parent_page_id -> Int8,
+        parented_by -> Int8,
+        parented_at -> Timestamp,
+    }
+}
+
+table! {
+    passwords (user_id) {
+        user_id -> Int8,
+        hash -> Bytea,
+        salt -> Bytea,
     }
 }
 
@@ -65,8 +75,50 @@ table! {
 }
 
 table! {
+    role_membership (wiki_id, role_id, user_id) {
+        wiki_id -> Int8,
+        role_id -> Int8,
+        user_id -> Int8,
+        applied_at -> Timestamp,
+    }
+}
+
+table! {
+    roles (role_id) {
+        role_id -> Int8,
+        wiki_id -> Int8,
+        name -> Text,
+        permset -> Int4,
+    }
+}
+
+table! {
     users (user_id) {
         user_id -> Int8,
+        name -> Text,
+        created_at -> Timestamp,
+        email -> Text,
+        author_page -> Text,
+        website -> Text,
+        about -> Text,
+        location -> Text,
+        gender -> Text,
+    }
+}
+
+table! {
+    wiki_membership (wiki_id, user_id) {
+        wiki_id -> Int8,
+        user_id -> Int8,
+        applied_at -> Timestamp,
+        joined_at -> Timestamp,
+    }
+}
+
+table! {
+    wikis (wiki_id) {
+        wiki_id -> Int8,
+        slug -> Text,
         name -> Text,
         created_at -> Timestamp,
     }
@@ -75,18 +127,31 @@ table! {
 joinable!(authors -> pages (page_id));
 joinable!(authors -> users (user_id));
 joinable!(files -> pages (page_id));
+joinable!(parents -> users (parented_by));
+joinable!(passwords -> users (user_id));
 joinable!(ratings_history -> pages (page_id));
 joinable!(ratings_history -> users (user_id));
 joinable!(revisions -> pages (page_id));
 joinable!(revisions -> users (user_id));
+joinable!(role_membership -> roles (role_id));
+joinable!(role_membership -> users (user_id));
+joinable!(role_membership -> wikis (wiki_id));
+joinable!(roles -> wikis (wiki_id));
+joinable!(wiki_membership -> users (user_id));
+joinable!(wiki_membership -> wikis (wiki_id));
 
 allow_tables_to_appear_in_same_query!(
     authors,
     files,
     pages,
     parents,
+    passwords,
     ratings,
     ratings_history,
     revisions,
+    role_membership,
+    roles,
     users,
+    wiki_membership,
+    wikis,
 );
