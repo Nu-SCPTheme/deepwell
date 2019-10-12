@@ -30,21 +30,23 @@ const CARGO_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const TABLE_LIST_QUERY: &str = "
     SELECT table_name FROM information_schema.tables
-        WHERE tables.table_schema = 'public'
+      WHERE tables.table_schema = 'public'
         AND tables.table_name NOT IN ('__diesel_schema_migrations', 'schema_version')
         AND tables.table_type = 'BASE TABLE'
+      ORDER BY table_name
 ";
 
 const COLUMN_LIST_QUERY: &str = "
     SELECT
-        columns.column_name,
-        columns.data_type,
-        columns.udt_name,
-        columns.column_default,
-        columns.is_nullable
+      columns.column_name,
+      columns.data_type,
+      columns.udt_name,
+      columns.column_default,
+      columns.is_nullable
     FROM information_schema.columns
-        WHERE columns.table_schema = 'public'
-        AND columns.table_name = $1
+      WHERE columns.table_schema = 'public'
+      AND columns.table_name = $1
+    ORDER BY columns.column_name
 ";
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
