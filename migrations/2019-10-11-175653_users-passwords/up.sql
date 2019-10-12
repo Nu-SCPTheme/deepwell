@@ -14,7 +14,7 @@ CREATE TABLE passwords (
     user_id BIGINT PRIMARY KEY REFERENCES users(user_id),
     hash BYTEA NOT NULL,
     salt BYTEA NOT NULL,
-    iterations INTEGER NOT NULL,
+    iterations INTEGER NOT NULL CHECK (iterations > 50000),
     digest SMALLINT NOT NULL CHECK (digest IN (224, 256, 384, 512))
 );
 
