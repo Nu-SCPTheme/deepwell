@@ -43,6 +43,7 @@ table! {
         hash -> Bytea,
         salt -> Bytea,
         iterations -> Int4,
+        key_size -> Int2,
         digest -> Int2,
     }
 }

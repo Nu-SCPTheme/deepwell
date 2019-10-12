@@ -15,6 +15,7 @@ CREATE TABLE passwords (
     hash BYTEA NOT NULL,
     salt BYTEA NOT NULL,
     iterations INTEGER NOT NULL CHECK (iterations > 50000),
+    key_size SMALLINT NOT NULL CHECK (key_size % 16 = 0),
     digest SMALLINT NOT NULL CHECK (digest IN (224, 256, 384, 512))
 );
 
