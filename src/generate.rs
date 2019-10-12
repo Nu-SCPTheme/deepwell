@@ -65,7 +65,7 @@ impl DataType {
 
         match value {
             "int2" | "int4" | "int8" => DataType::Number,
-            "text" => DataType::Text,
+            "text" | "char" | "varchar" => DataType::Text,
             "bytea" => DataType::Bytes,
             "date" | "timestamp" => DataType::Date,
             "json" | "jsonb" => DataType::Json,

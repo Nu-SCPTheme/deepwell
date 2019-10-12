@@ -16,7 +16,14 @@ CREATE TABLE passwords (
     salt BYTEA NOT NULL,
     iterations INTEGER NOT NULL CHECK (iterations > 50000),
     key_size SMALLINT NOT NULL CHECK (key_size % 16 = 0),
-    digest SMALLINT NOT NULL CHECK (digest IN (224, 256, 384, 512))
+    digest VARCHAR(12) NOT NULL CHECK (
+        digest IN (
+            'sha224',
+            'sha256',
+            'sha384',
+            'sha512'
+        )
+    )
 );
 
 CREATE TABLE wikis (

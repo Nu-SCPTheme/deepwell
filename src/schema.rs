@@ -44,7 +44,7 @@ table! {
         salt -> Bytea,
         iterations -> Int4,
         key_size -> Int2,
-        digest -> Int2,
+        digest -> Varchar,
     }
 }
 
