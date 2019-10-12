@@ -6,8 +6,8 @@ type Nullable<T> = T | null;
 {% for model in models %}
 export interface {{ model.name }} {
   {%- for field in model.fields %}
-    {{ field.name }}{% if field.has_default %}?{% endif -%}
-    : {% if field.is_nullable %}Nullable<{% endif -%}
+    {% if field.has_default %}// Has default value
+    {% endif %}{{ field.name }}: {% if field.is_nullable %}Nullable<{% endif -%}
       {{ field.data_type.ts_type_name() }} {%- if field.is_array %}[]{% endif -%}
     {% if field.is_nullable %}>{% endif -%}
     ;
