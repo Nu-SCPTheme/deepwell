@@ -46,7 +46,6 @@ const COLUMN_LIST_QUERY: &str = "
     FROM information_schema.columns
       WHERE columns.table_schema = 'public'
       AND columns.table_name = $1
-    ORDER BY columns.column_name
 ";
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
