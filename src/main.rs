@@ -20,36 +20,21 @@
 
 #![deny(missing_debug_implementations)]
 
-#[macro_use]
-extern crate askama;
 extern crate chrono;
 extern crate color_backtrace;
 
 #[macro_use]
 extern crate diesel;
-extern crate heck;
 
 #[macro_use]
 extern crate serde;
 extern crate serde_json;
 
-mod generate;
 mod models;
 mod schema;
-
-use std::env;
 
 fn main() {
     color_backtrace::install();
 
-    let conn = {
-        use diesel::pg::PgConnection;
-        use diesel::Connection;
-
-        let url = env::var("DATABASE_URL").expect("DATABASE_URL is not set");
-        PgConnection::establish(&url).expect("Error connecting to database")
-    };
-
-    let schema = generate::typescript_interfaces(&conn).expect("Unable to load schema");
-    println!("{}", schema);
+    // TODO
 }
