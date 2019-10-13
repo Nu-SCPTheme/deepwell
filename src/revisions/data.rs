@@ -29,8 +29,15 @@ pub struct CommitInfo<'a> {
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct GitHash([u8; 20]);
 
-impl GitHash {
-    pub fn new(oid: Oid) -> Self {
+impl From<[u8; 20]> for GitHash {
+    #[inline]
+    fn from(hash: [u8; 20]) -> Self {
+        GitHash(hash)
+    }
+}
+
+impl From<Oid> for GitHash {
+    fn from(oid: Oid) -> Self {
         let mut hash = [0; 20];
         let slice = &mut hash[..];
         slice.copy_from_slice(oid.as_bytes());

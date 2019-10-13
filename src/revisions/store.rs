@@ -131,7 +131,7 @@ impl RevisionStore {
             &[&parent],
         )?;
 
-        Ok(GitHash::new(commit))
+        Ok(GitHash::from(commit))
     }
 }
 
