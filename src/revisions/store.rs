@@ -25,11 +25,10 @@ use parking_lot::Mutex;
 use std::fmt::{self, Debug};
 use std::fs::{self, File};
 use std::io::{Read, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use wikidot_normalize::{is_normal, normalize};
 
 const SYSTEM_USER: &str = "DEEPWELL";
-const FILE_EXTENSION: &str = "ftml";
 
 macro_rules! check_repo {
     ($repo:expr) => {
@@ -67,27 +66,9 @@ impl RevisionStore {
         }
     }
 
-    // Path helpers
-    fn abs_path(&self, slug: &str) -> PathBuf {
-        let mut path = self.root.join(slug);
-        path.set_extension(FILE_EXTENSION);
-        path
-    }
-
-    fn path(&self, slug: &str) -> Result<PathBuf> {
-        check_normal(slug)?;
-        Ok(self.unchecked_path(slug))
-    }
-
-    fn unchecked_path(&self, slug: &str) -> PathBuf {
-        let mut path = PathBuf::from(slug);
-        path.set_extension(FILE_EXTENSION);
-        path
-    }
-
     // Filesystem helpers
     fn read_file(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
-        let path = self.abs_path(slug);
+        let path = self.root.join(slug);
         let mut file = match File::open(&path) {
             Ok(file) => file,
             Err(error) => {
@@ -107,14 +88,14 @@ impl RevisionStore {
     }
 
     fn write_file(&self, slug: &str, content: &[u8]) -> Result<()> {
-        let path = self.abs_path(slug);
+        let path = self.root.join(slug);
         let mut file = File::create(path)?;
         file.write_all(content)?;
         Ok(())
     }
 
     fn remove_file(&self, slug: &str) -> Result<Option<()>> {
-        let path = self.abs_path(slug);
+        let path = self.root.join(slug);
         match fs::remove_file(path) {
             Ok(_) => (),
             Err(error) => {
@@ -162,7 +143,7 @@ impl RevisionStore {
     }
 
     fn raw_commit(&self, repo: &Repository, slug: &str, info: CommitInfo) -> Result<Oid> {
-        let path = self.path(slug)?;
+        let path = Path::new(slug);
 
         // Stage file changes
         let mut index = repo.index()?;
@@ -198,7 +179,7 @@ impl RevisionStore {
 
         // Stage file changes
         let mut index = repo.index()?;
-        let path = self.unchecked_path(FILENAME);
+        let path = Path::new(FILENAME);
         index.add_path(&path)?;
         let oid = index.write_tree()?;
 
@@ -301,9 +282,11 @@ impl RevisionStore {
             None => return Ok(None),
         };
 
+        let slug = slug.as_ref();
         let tree = commit.tree()?;
-        let path = self.path(slug.as_ref())?;
-        let entry = tree.get_path(&path)?;
+        check_normal(slug)?;
+        let path = Path::new(slug);
+        let entry = tree.get_path(path)?;
         let obj = entry.to_object(&repo)?;
         let blob = obj
             .into_blob()
@@ -337,7 +320,8 @@ impl RevisionStore {
             _ => return Ok(None),
         };
 
-        let path = self.path(slug.as_ref())?;
+        let slug = slug.as_ref();
+        let path = self.root.join(slug);
         let raw_diff = repo.diff_tree_to_tree(
             Some(&first_tree),
             Some(&second_tree),
