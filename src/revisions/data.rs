@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use git2::{Blame as GitBlame, Oid};
+use git2::Oid;
 
 #[derive(Debug, Copy, Clone)]
 pub struct CommitInfo<'a> {
