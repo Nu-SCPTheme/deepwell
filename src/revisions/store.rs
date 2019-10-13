@@ -25,7 +25,7 @@ use parking_lot::Mutex;
 use std::fmt::{self, Debug};
 use std::fs::{self, File};
 use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use wikidot_normalize::{is_normal, normalize};
 
 const SYSTEM_USER: &str = "DEEPWELL";
@@ -43,6 +43,7 @@ macro_rules! check_repo {
 /// Represents a git repository to store page contents and their histories.
 pub struct RevisionStore {
     repo: Mutex<Repository>,
+    root: PathBuf,
     domain: String,
 }
 
@@ -53,43 +54,72 @@ impl RevisionStore {
     /// permit subdomains.
     #[inline]
     pub fn new<I: Into<String>>(repo: Repository, domain: I) -> Self {
+        let root = {
+            let mut path = repo.path().to_path_buf();
+            path.pop(); // Removes the .git dir
+            path
+        };
+
         RevisionStore {
             repo: Mutex::new(repo),
+            root,
             domain: domain.into(),
         }
     }
 
-    fn path(root: Option<&Path>, slug: &str) -> Result<PathBuf> {
-        if !is_normal(slug, false) {
-            return Err(Error::StaticMsg("slug not in wikidot normal form"));
-        }
-
-        Ok(Self::unchecked_path(root, slug))
-    }
-
-    fn unchecked_path(root: Option<&Path>, slug: &str) -> PathBuf {
-        let mut path = PathBuf::new();
-
-        if let Some(root) = root {
-            // If passed, make an absolute path
-            path.push(root);
-
-            // Remove the .git directory
-            path.pop();
-        }
-
-        path.push(slug);
+    // Path helpers
+    fn abs_path(&self, slug: &str) -> PathBuf {
+        let mut path = self.root.join(slug);
         path.set_extension(FILE_EXTENSION);
         path
     }
 
-    fn write_file(&self, path: &Path, contents: &[u8]) -> Result<()> {
+    fn path(&self, slug: &str) -> Result<PathBuf> {
+        check_normal(slug)?;
+        Ok(self.unchecked_path(slug))
+    }
+
+    fn unchecked_path(&self, slug: &str) -> PathBuf {
+        let mut path = PathBuf::from(slug);
+        path.set_extension(FILE_EXTENSION);
+        path
+    }
+
+    // Filesystem helpers
+    fn read_file(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
+        let path = self.abs_path(slug);
+        let mut file = match File::open(&path) {
+            Ok(file) => file,
+            Err(error) => {
+                use std::io::ErrorKind;
+
+                return match error.kind() {
+                    ErrorKind::NotFound => Ok(None),
+                    _ => Err(Error::from(error)),
+                };
+            }
+        };
+
+        let mut contents = Vec::new();
+        file.read_to_end(&mut contents)?;
+        let bytes = contents.into_boxed_slice();
+        Ok(Some(bytes))
+    }
+
+    fn write_file(&self, slug: &str, contents: &[u8]) -> Result<()> {
+        let path = self.abs_path(slug);
         let mut file = File::create(path)?;
         file.write_all(contents)?;
-
         Ok(())
     }
 
+    fn remove_file(&self, slug: &str) -> Result<()> {
+        let path = self.abs_path(slug);
+        fs::remove_file(path)?;
+        Ok(())
+    }
+
+    // Git helpers
     fn find_last_commit(repo: &Repository) -> Result<Commit> {
         let head = repo.head()?.resolve()?;
         let obj = head.peel(ObjectType::Commit)?;
@@ -120,7 +150,9 @@ impl RevisionStore {
         Ok((author, committer))
     }
 
-    fn raw_commit(&self, repo: &Repository, path: &Path, info: CommitInfo) -> Result<Oid> {
+    fn raw_commit(&self, repo: &Repository, slug: &str, info: CommitInfo) -> Result<Oid> {
+        let path = self.path(slug)?;
+
         // Stage file changes
         let mut index = repo.index()?;
         index.add_path(&path)?;
@@ -149,11 +181,13 @@ impl RevisionStore {
         let repo = self.repo.lock();
         check_repo!(repo);
 
-        let path = Self::unchecked_path(Some(repo.path()), ".gitignore");
-        self.write_file(&path, &[])?;
+        const FILENAME: &str = ".gitignore";
+
+        self.write_file(FILENAME, &[])?;
 
         // Stage file changes
         let mut index = repo.index()?;
+        let path = self.unchecked_path(FILENAME);
         index.add_path(&path)?;
         let oid = index.write_tree()?;
 
@@ -182,9 +216,9 @@ impl RevisionStore {
         let repo = self.repo.lock();
         check_repo!(repo);
 
-        let path = Self::path(Some(repo.path()), slug.as_ref())?;
-        self.write_file(&path, contents.as_ref())?;
-        let commit_oid = self.raw_commit(&repo, &path, info)?;
+        let slug = slug.as_ref();
+        self.write_file(slug, contents.as_ref())?;
+        let commit_oid = self.raw_commit(&repo, slug, info)?;
 
         Ok(GitHash::from(commit_oid))
     }
@@ -197,9 +231,9 @@ impl RevisionStore {
         let repo = self.repo.lock();
         check_repo!(repo);
 
-        let path = Self::path(Some(repo.path()), slug.as_ref())?;
-        fs::remove_file(&path)?;
-        let commit_oid = self.raw_commit(&repo, &path, info)?;
+        let slug = slug.as_ref();
+        self.remove_file(slug)?;
+        let commit_oid = self.raw_commit(&repo, slug, info)?;
 
         Ok(GitHash::from(commit_oid))
     }
@@ -213,23 +247,10 @@ impl RevisionStore {
         let repo = self.repo.lock();
         check_repo!(repo);
 
-        let path = Self::path(Some(repo.path()), slug.as_ref())?;
-        let mut file = match File::open(&path) {
-            Ok(file) => file,
-            Err(error) => {
-                use std::io::ErrorKind;
+        let slug = slug.as_ref();
+        check_normal(slug)?;
 
-                return match error.kind() {
-                    ErrorKind::NotFound => Ok(None),
-                    _ => Err(Error::from(error)),
-                };
-            }
-        };
-
-        let mut contents = Vec::new();
-        file.read_to_end(&mut contents)?;
-        let bytes = contents.into_boxed_slice();
-        Ok(Some(bytes))
+        self.read_file(slug)
     }
 
     fn find_commit(repo: &Repository, hash: GitHash) -> Result<Option<Commit>> {
@@ -263,7 +284,7 @@ impl RevisionStore {
         };
 
         let tree = commit.tree()?;
-        let path = Self::path(None, slug.as_ref())?;
+        let path = self.path(slug.as_ref())?;
         let entry = tree.get_path(&path)?;
         let obj = entry.to_object(&repo)?;
         let blob = obj
@@ -298,7 +319,7 @@ impl RevisionStore {
             _ => return Ok(None),
         };
 
-        let path = Self::path(None, slug.as_ref())?;
+        let path = self.path(slug.as_ref())?;
         let raw_diff = repo.diff_tree_to_tree(
             Some(&first_tree),
             Some(&second_tree),
@@ -335,5 +356,13 @@ impl Debug for RevisionStore {
             .field("repo", &repo)
             .field("domain", &self.domain)
             .finish()
+    }
+}
+
+fn check_normal(slug: &str) -> Result<()> {
+    if is_normal(slug, false) {
+        Ok(())
+    } else {
+        Err(Error::StaticMsg("slug not in wikidot normal form"))
     }
 }
