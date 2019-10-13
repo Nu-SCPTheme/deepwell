@@ -20,16 +20,17 @@
 
 #![deny(missing_debug_implementations)]
 
+extern crate arrayvec;
 extern crate chrono;
 
 #[macro_use]
 extern crate diesel;
-extern crate git2;
 extern crate parking_lot;
 
 #[macro_use]
 extern crate serde;
 extern crate serde_json;
+extern crate subprocess;
 
 #[macro_use]
 extern crate thiserror;

@@ -6,12 +6,13 @@ authors = ["Ammon Smith <ammon.i.smith@gmail.com>"]
 edition = "2018" # this refers to the Cargo.toml
 
 [dependencies]
+arrayvec = "0.5"
 chrono = { version = "0.4", features = ["serde"] }
 diesel = { version = "1", features = ["postgres", "serde_json"] }
-git2 = "0.10"
 parking_lot = "0.9"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+subprocess = "0.1"
 thiserror = "1"
 wikidot-normalize = "0.2"
 

@@ -18,12 +18,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-mod diff;
 mod git_hash;
 mod info;
 mod store;
 
-pub use self::diff::{Diff, DiffLine};
 pub use self::git_hash::GitHash;
 pub use self::info::CommitInfo;
 pub use self::store::RevisionStore;

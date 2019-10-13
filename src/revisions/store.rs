@@ -18,31 +18,34 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::{CommitInfo, Diff, GitHash};
+use super::{CommitInfo, GitHash};
 use crate::{Error, Result};
-use git2::{Commit, ObjectType, Oid, Repository, RepositoryState, Signature};
-use parking_lot::Mutex;
-use std::fmt::{self, Debug};
+use arrayvec::ArrayVec;
+use parking_lot::RwLock;
+use std::ffi::OsStr;
 use std::fs::{self, File};
 use std::io::{Read, Write};
-use std::path::{Path, PathBuf};
-use wikidot_normalize::{is_normal, normalize};
+use std::path::PathBuf;
+use wikidot_normalize::is_normal;
 
-const SYSTEM_USER: &str = "DEEPWELL";
+macro_rules! arguments {
+    ($($arg:expr),*) => (
+        let mut args = ArrayVec::<[OsStr; 16]>::new();
 
-macro_rules! check_repo {
-    ($repo:expr) => {
-        match $repo.state() {
-            RepositoryState::Clean => (),
-            _ => return Err(Error::StaticMsg("repository is not in a clean state")),
-        }
-    };
+        $(
+            args.push(OsStr::new($arg));
+        )*
+
+        args
+    );
+    ($($arg:expr,)*) => (arguments![$($arg),*]);
 }
 
 /// Represents a git repository to store page contents and their histories.
+#[derive(Debug)]
 pub struct RevisionStore {
-    repo: Mutex<Repository>,
-    root: PathBuf,
+    lock: RwLock<()>,
+    repo: PathBuf,
     domain: String,
 }
 
@@ -52,23 +55,21 @@ impl RevisionStore {
     /// The domain name should not be prefixed with a protocol such as `https://` but does
     /// permit subdomains.
     #[inline]
-    pub fn new<I: Into<String>>(repo: Repository, domain: I) -> Self {
-        let root = {
-            let mut path = repo.path().to_path_buf();
-            path.pop(); // Removes the .git dir
-            path
-        };
-
+    pub fn new<P, S>(repo: P, domain: S) -> Self
+    where
+        P: Into<PathBuf>,
+        S: Into<String>,
+    {
         RevisionStore {
-            repo: Mutex::new(repo),
-            root,
+            lock: RwLock::new(()),
+            repo: repo.into(),
             domain: domain.into(),
         }
     }
 
     // Filesystem helpers
     fn read_file(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
-        let path = self.root.join(slug);
+        let path = self.repo.join(slug);
         let mut file = match File::open(&path) {
             Ok(file) => file,
             Err(error) => {
@@ -88,14 +89,14 @@ impl RevisionStore {
     }
 
     fn write_file(&self, slug: &str, content: &[u8]) -> Result<()> {
-        let path = self.root.join(slug);
+        let path = self.repo.join(slug);
         let mut file = File::create(path)?;
         file.write_all(content)?;
         Ok(())
     }
 
     fn remove_file(&self, slug: &str) -> Result<Option<()>> {
-        let path = self.root.join(slug);
+        let path = self.repo.join(slug);
         match fs::remove_file(path) {
             Ok(_) => (),
             Err(error) => {
@@ -111,92 +112,21 @@ impl RevisionStore {
         Ok(Some(()))
     }
 
-    // Git helpers
-    fn find_last_commit(repo: &Repository) -> Result<Commit> {
-        let head = repo.head()?.resolve()?;
-        let obj = head.peel(ObjectType::Commit)?;
-        obj.into_commit()
-            .map_err(|_| Error::StaticMsg("repository has no commits"))
-    }
-
-    fn get_signatures(&self, info: &CommitInfo) -> Result<(Signature, Signature)> {
-        let mut email = String::new();
-
-        let author = {
-            email.push_str(info.username);
-            normalize(&mut email);
-            email.push_str(".user@");
-            email.push_str(&self.domain);
-
-            Signature::now(info.username, &email)?
-        };
-
-        let committer = {
-            email.clear();
-            email.push_str("system@");
-            email.push_str(&self.domain);
-
-            Signature::now(SYSTEM_USER, &email)?
-        };
-
-        Ok((author, committer))
-    }
-
-    fn raw_commit(&self, repo: &Repository, slug: &str, info: CommitInfo) -> Result<Oid> {
-        let path = Path::new(slug);
-
-        // Stage file changes
-        let mut index = repo.index()?;
-        index.add_path(&path)?;
-        let oid = index.write_tree()?;
-
-        // Commit to branch
-        let parent = Self::find_last_commit(&repo)?;
-        let tree = repo.find_tree(oid)?;
-        let (author, committer) = self.get_signatures(&info)?;
-        let commit = repo.commit(
-            Some("HEAD"),
-            &author,
-            &committer,
-            info.message,
-            &tree,
-            &[&parent],
-        )?;
-
-        Ok(commit)
-    }
-
     /// Create the first commit of the repo.
     /// Should only be called on empty repositories.
     #[cold]
     pub fn initial_commit(&self) -> Result<GitHash> {
-        let repo = self.repo.lock();
-        check_repo!(repo);
+        let lock = self.lock.write();
 
-        const FILENAME: &str = ".gitignore";
+        let args = vec![
+            "git",
+            "commit",
+            "--allow-empty",
+            "--author={} <deepwell@{}>",
+            "--message={}",
+        ];
 
-        self.write_file(FILENAME, &[])?;
-
-        // Stage file changes
-        let mut index = repo.index()?;
-        let path = Path::new(FILENAME);
-        index.add_path(&path)?;
-        let oid = index.write_tree()?;
-
-        // Create first commit
-        let tree = repo.find_tree(oid)?;
-        let email = format!("system@{}", self.domain);
-        let signature = Signature::now(SYSTEM_USER, &email)?;
-        let commit = repo.commit(
-            Some("HEAD"),
-            &signature,
-            &signature,
-            "Initial commit",
-            &tree,
-            &[],
-        )?;
-
-        Ok(GitHash::from(commit))
+        unimplemented!()
     }
 
     /// For the given slug, create or edit a page to have the specified contents.
@@ -205,14 +135,21 @@ impl RevisionStore {
         S: AsRef<str>,
         B: AsRef<[u8]>,
     {
-        let repo = self.repo.lock();
-        check_repo!(repo);
-
+        let lock = self.lock.write();
         let slug = slug.as_ref();
         self.write_file(slug, content.as_ref())?;
-        let commit_oid = self.raw_commit(&repo, slug, info)?;
 
-        Ok(GitHash::from(commit_oid))
+        let args = vec![
+            "git",
+            "commit",
+            "--author={} <deepwell@{}>",
+            "--message={}",
+            "--",
+            slug,
+        ];
+
+        unimplemented!()
+        //Ok(GitHash::from(commit_oid))
     }
 
     /// Remove the given page from the repository.
@@ -221,20 +158,23 @@ impl RevisionStore {
     where
         S: AsRef<str>,
     {
-        let repo = self.repo.lock();
-        check_repo!(repo);
-
+        let lock = self.lock.write();
         let slug = slug.as_ref();
-        match self.remove_file(slug)? {
-            Some(_) => {
-                // File actually existed before deletion
-                let commit_oid = self.raw_commit(&repo, slug, info)?;
-                let hash = GitHash::from(commit_oid);
 
-                Ok(Some(hash))
-            }
-            None => Ok(None),
+        if let None = self.remove_file(slug)? {
+            return Ok(None);
         }
+
+        let args = vec![
+            "git",
+            "commit",
+            "--author={} <deepwell@{}>",
+            "--message={}",
+            "--",
+            slug,
+        ];
+
+        unimplemented!()
     }
 
     /// Gets the current version of a page.
@@ -243,29 +183,11 @@ impl RevisionStore {
     where
         S: AsRef<str>,
     {
-        let repo = self.repo.lock();
-        check_repo!(repo);
-
+        let lock = self.lock.read();
         let slug = slug.as_ref();
+
         check_normal(slug)?;
-
         self.read_file(slug)
-    }
-
-    fn find_commit(repo: &Repository, hash: GitHash) -> Result<Option<Commit>> {
-        let oid = Oid::from_bytes(hash.as_ref())?;
-
-        match repo.find_commit(oid) {
-            Ok(commit) => Ok(Some(commit)),
-            Err(error) => {
-                use git2::ErrorCode;
-
-                match error.code() {
-                    ErrorCode::NotFound => Ok(None),
-                    _ => Err(Error::from(error)),
-                }
-            }
-        }
     }
 
     /// Gets the version of a page at the specified commit.
@@ -274,72 +196,26 @@ impl RevisionStore {
     where
         S: AsRef<str>,
     {
-        let repo = self.repo.lock();
-        check_repo!(repo);
-
-        // Get commit from hash
-        let commit = match Self::find_commit(&repo, hash)? {
-            Some(commit) => commit,
-            None => return Ok(None),
-        };
-
-        // Get blob from commit
+        let lock = self.lock.read();
         let slug = slug.as_ref();
-        let tree = commit.tree()?;
-        check_normal(slug)?;
-        let path = Path::new(slug);
-        let entry = tree.get_path(path)?;
-        let obj = entry.to_object(&repo)?;
-        let blob = obj
-            .into_blob()
-            .map_err(|_| Error::StaticMsg("tree object is not a blob"))?;
 
-        // Read bytes into result
-        let bytes = blob.content().to_vec().into_boxed_slice();
-        Ok(Some(bytes))
+        let args = vec![
+            "git",
+            "show",
+            "--format=%B",
+            "{}:{}",
+        ];
+
+        unimplemented!()
     }
 
     /// Gets the diff between commits of a particular page.
     /// Returns `None` if the page or commits do not exist.
-    pub fn get_diff<S>(&self, slug: S, first: GitHash, second: GitHash) -> Result<Option<Diff>>
+    pub fn get_diff<S>(&self, slug: S, first: GitHash, second: GitHash) -> Result<Option<()>>
     where
         S: AsRef<str>,
     {
-        use git2::DiffOptions;
-
-        let repo = self.repo.lock();
-        check_repo!(repo);
-
-        // Get commits from hashes
-        let first_commit = Self::find_commit(&repo, first)?;
-        let second_commit = Self::find_commit(&repo, second)?;
-
-        let (first_tree, second_tree) = match (first_commit, second_commit) {
-            (Some(first_commit), Some(second_commit)) => {
-                let first_tree = first_commit.tree()?;
-                let second_tree = second_commit.tree()?;
-
-                (first_tree, second_tree)
-            }
-            _ => return Ok(None),
-        };
-
-        // Get diff from repository
-        let slug = slug.as_ref();
-        let path = self.root.join(slug);
-        let raw_diff = repo.diff_tree_to_tree(
-            Some(&first_tree),
-            Some(&second_tree),
-            Some(
-                DiffOptions::new()
-                    .minimal(true)
-                    .force_text(true)
-                    .pathspec(path),
-            ),
-        )?;
-
-        let diff = Diff::new(raw_diff)?;
-        Ok(Some(diff))
+        Err(Error::StaticMsg("not implemented yet"))
     }
 
     /// Gets the blame for a particular page.
@@ -349,20 +225,6 @@ impl RevisionStore {
         S: AsRef<str>,
     {
         Err(Error::StaticMsg("not implemented yet"))
-    }
-}
-
-impl Debug for RevisionStore {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let repo = format!(
-            "git2::Repository {{ path: {}, .. }}",
-            self.repo.lock().path().display(),
-        );
-
-        f.debug_struct("RevisionStore")
-            .field("repo", &repo)
-            .field("domain", &self.domain)
-            .finish()
     }
 }
 

@@ -18,7 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use git2::Oid;
+use std::fmt::{self, UpperHex, LowerHex};
+use std::iter::FromIterator;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct GitHash([u8; 20]);
@@ -30,11 +31,11 @@ impl From<[u8; 20]> for GitHash {
     }
 }
 
-impl From<Oid> for GitHash {
-    fn from(oid: Oid) -> Self {
+impl From<&[u8]> for GitHash {
+    fn from(bytes: &[u8]) -> Self {
         let mut hash = [0; 20];
         let slice = &mut hash[..];
-        slice.copy_from_slice(oid.as_bytes());
+        slice.copy_from_slice(bytes);
         GitHash(hash)
     }
 }
@@ -50,5 +51,25 @@ impl AsRef<[u8]> for GitHash {
     #[inline]
     fn as_ref(&self) -> &[u8] {
         &self.0
+    }
+}
+
+impl LowerHex for GitHash {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for byte in &self.0 {
+            write!(f, "{:02x}", byte)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl UpperHex for GitHash {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        for byte in &self.0 {
+            write!(f, "{:02X}", byte)?;
+        }
+
+        Ok(())
     }
 }

@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use git2;
 use std::io;
+use subprocess::PopenError;
 
 #[must_use = "should handle errors"]
 #[derive(Debug, Error)]
@@ -30,6 +30,6 @@ pub enum Error {
     #[error("general I/O error: {0}")]
     Io(#[from] io::Error),
 
-    #[error("error performing git operation: {0}")]
-    Git(#[from] git2::Error),
+    #[error("error running subprocess: {0}")]
+    Subprocess(#[from] PopenError),
 }
