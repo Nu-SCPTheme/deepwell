@@ -20,7 +20,7 @@
 
 use super::{CommitInfo, GitHash};
 use crate::{Error, Result};
-use git2::{Commit, ObjectType, Oid, Repository, RepositoryState, Signature};
+use git2::{Commit, ErrorCode, ObjectType, Oid, Repository, RepositoryState, Signature};
 use parking_lot::Mutex;
 use std::fmt::{self, Debug};
 use std::fs::{self, File};
@@ -58,14 +58,19 @@ impl RevisionStore {
         }
     }
 
-    fn path(repo_root: &Path, slug: &str) -> Result<PathBuf> {
+    fn path(root: Option<&Path>, slug: &str) -> Result<PathBuf> {
         if !is_normal(slug, false) {
             return Err(Error::StaticMsg("slug not in wikidot normal form"));
         }
 
         let path = {
             let mut path = PathBuf::new();
-            path.push(repo_root);
+
+            if let Some(root) = root {
+                // If passed, make an absolute path
+                path.push(root);
+            }
+
             path.push(slug);
             path.set_extension(FILE_EXTENSION);
             path
@@ -133,28 +138,68 @@ impl RevisionStore {
         Ok(commit)
     }
 
-    /// For the given slug, create a revision with the new contents provided.
+    /// For the given slug, create or edit a page to have the specified contents.
     pub fn commit(&self, slug: &str, contents: &[u8], info: CommitInfo) -> Result<GitHash> {
         let repo = self.repo.lock();
         check_repo!(repo);
 
-        let path = Self::path(repo.path(), slug)?;
+        let path = Self::path(Some(repo.path()), slug)?;
         self.write_file(&path, contents)?;
-        let commit = self.raw_commit(&repo, &path, info)?;
+        let commit_oid = self.raw_commit(&repo, &path, info)?;
 
-        Ok(GitHash::from(commit))
+        Ok(GitHash::from(commit_oid))
     }
 
-    /// Remove the given slug from the repository.
+    /// Remove the given page from the repository.
     pub fn remove(&self, slug: &str, info: CommitInfo) -> Result<GitHash> {
         let repo = self.repo.lock();
         check_repo!(repo);
 
-        let path = Self::path(repo.path(), slug)?;
+        let path = Self::path(Some(repo.path()), slug)?;
         fs::remove_file(&path)?;
-        let commit = self.raw_commit(&repo, &path, info)?;
+        let commit_oid = self.raw_commit(&repo, &path, info)?;
 
-        Ok(GitHash::from(commit))
+        Ok(GitHash::from(commit_oid))
+    }
+
+    /// Gets the current version of a page.
+    /// Returns `None` if the page does not exist.
+    pub fn get_page(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
+        unimplemented!()
+    }
+
+    /// Gets the version of a page at the specified commit.
+    /// Returns `None` if the page did not at exist at the time.
+    pub fn get_page_version(&self, slug: &str, hash: GitHash) -> Result<Option<Box<[u8]>>> {
+        let repo = self.repo.lock();
+        check_repo!(repo);
+
+        let oid = Oid::from_bytes(hash.as_ref())?;
+        let commit = match repo.find_commit(oid) {
+            Ok(commit) => commit,
+            Err(error) => {
+                return match error.code() {
+                    ErrorCode::NotFound => Ok(None),
+                    _ => Err(Error::from(error)),
+                };
+            }
+        };
+
+        let tree = commit.tree()?;
+        let path = Self::path(None, slug)?;
+        let entry = tree.get_path(&path)?;
+        let obj = entry.to_object(&repo)?;
+        let blob = obj
+            .into_blob()
+            .map_err(|_| Error::StaticMsg("tree object is not a blob"))?;
+
+        let bytes = blob.content().to_vec().into_boxed_slice();
+        Ok(Some(bytes))
+    }
+
+    /// Gets all revisions which affected the given page.
+    pub fn get_revisions(&self, slug: &str) -> Result<Vec<()>> {
+        unimplemented!()
     }
 }
 
