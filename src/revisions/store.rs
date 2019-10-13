@@ -277,11 +277,13 @@ impl RevisionStore {
         let repo = self.repo.lock();
         check_repo!(repo);
 
+        // Get commit from hash
         let commit = match Self::find_commit(&repo, hash)? {
             Some(commit) => commit,
             None => return Ok(None),
         };
 
+        // Get blob from commit
         let slug = slug.as_ref();
         let tree = commit.tree()?;
         check_normal(slug)?;
@@ -292,6 +294,7 @@ impl RevisionStore {
             .into_blob()
             .map_err(|_| Error::StaticMsg("tree object is not a blob"))?;
 
+        // Read bytes into result
         let bytes = blob.content().to_vec().into_boxed_slice();
         Ok(Some(bytes))
     }
@@ -307,6 +310,7 @@ impl RevisionStore {
         let repo = self.repo.lock();
         check_repo!(repo);
 
+        // Get commits from hashes
         let first_commit = Self::find_commit(&repo, first)?;
         let second_commit = Self::find_commit(&repo, second)?;
 
@@ -320,6 +324,7 @@ impl RevisionStore {
             _ => return Ok(None),
         };
 
+        // Get diff from repository
         let slug = slug.as_ref();
         let path = self.root.join(slug);
         let raw_diff = repo.diff_tree_to_tree(
