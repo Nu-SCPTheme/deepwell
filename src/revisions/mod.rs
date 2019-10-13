@@ -1,5 +1,5 @@
 /*
- * lib.rs
+ * revisions/mod.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,20 +18,29 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#![deny(missing_debug_implementations)]
+use git2::Repository;
+use std::fmt::{self, Debug};
 
-extern crate chrono;
+pub struct RevisionStore {
+    repo: Repository,
+}
 
-#[macro_use]
-extern crate diesel;
-extern crate git2;
+impl RevisionStore {
+    #[inline]
+    pub fn new(repo: Repository) -> Self {
+        RevisionStore { repo }
+    }
+}
 
-#[macro_use]
-extern crate serde;
-extern crate serde_json;
+impl Debug for RevisionStore {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let repo = format!(
+            "git2::Repository {{ path: {}, .. }}",
+            self.repo.path().display(),
+        );
 
-mod models;
-mod revisions;
-mod schema;
-
-pub use self::revisions::RevisionStore;
+        f.debug_struct("RevisionStore")
+            .field("repo", &repo)
+            .finish()
+    }
+}
