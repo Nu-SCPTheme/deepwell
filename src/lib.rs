@@ -1,5 +1,5 @@
 /*
- * main.rs
+ * lib.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -21,7 +21,6 @@
 #![deny(missing_debug_implementations)]
 
 extern crate chrono;
-extern crate color_backtrace;
 
 #[macro_use]
 extern crate diesel;
@@ -32,9 +31,3 @@ extern crate serde_json;
 
 mod models;
 mod schema;
-
-fn main() {
-    color_backtrace::install();
-
-    // TODO
-}
