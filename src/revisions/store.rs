@@ -113,10 +113,21 @@ impl RevisionStore {
         Ok(())
     }
 
-    fn remove_file(&self, slug: &str) -> Result<()> {
+    fn remove_file(&self, slug: &str) -> Result<Option<()>> {
         let path = self.abs_path(slug);
-        fs::remove_file(path)?;
-        Ok(())
+        match fs::remove_file(path) {
+            Ok(_) => (),
+            Err(error) => {
+                use std::io::ErrorKind;
+
+                return match error.kind() {
+                    ErrorKind::NotFound => Ok(None),
+                    _ => Err(Error::from(error)),
+                };
+            }
+        }
+
+        Ok(Some(()))
     }
 
     // Git helpers
@@ -224,7 +235,8 @@ impl RevisionStore {
     }
 
     /// Remove the given page from the repository.
-    pub fn remove<S>(&self, slug: S, info: CommitInfo) -> Result<GitHash>
+    /// Returns `None` if the page does not exist.
+    pub fn remove<S>(&self, slug: S, info: CommitInfo) -> Result<Option<GitHash>>
     where
         S: AsRef<str>,
     {
@@ -232,10 +244,16 @@ impl RevisionStore {
         check_repo!(repo);
 
         let slug = slug.as_ref();
-        self.remove_file(slug)?;
-        let commit_oid = self.raw_commit(&repo, slug, info)?;
+        match self.remove_file(slug)? {
+            Some(_) => {
+                // File actually existed before deletion
+                let commit_oid = self.raw_commit(&repo, slug, info)?;
+                let hash = GitHash::from(commit_oid);
 
-        Ok(GitHash::from(commit_oid))
+                Ok(Some(hash))
+            }
+            None => Ok(None),
+        }
     }
 
     /// Gets the current version of a page.
