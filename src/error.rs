@@ -1,5 +1,5 @@
 /*
- * lib.rs
+ * error.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,23 +18,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#![deny(missing_debug_implementations)]
+use git2;
+use std::io;
 
-extern crate chrono;
+#[must_use = "should handle errors"]
+#[derive(Debug, Error)]
+pub enum Error {
+    #[error("general I/O error: {0}")]
+    Io(#[from] io::Error),
 
-#[macro_use]
-extern crate diesel;
-extern crate git2;
-
-#[macro_use]
-extern crate serde;
-extern crate serde_json;
-
-#[macro_use]
-extern crate thiserror;
-
-mod models;
-mod revisions;
-mod schema;
-
-pub use self::revisions::RevisionStore;
+    #[error("error performing git operation: {0}")]
+    Git(#[from] git2::Error),
+}
