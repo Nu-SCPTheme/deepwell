@@ -28,6 +28,7 @@ use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use wikidot_normalize::{is_normal, normalize};
 
+const SYSTEM_USER: &str = "DEEPWELL";
 const FILE_EXTENSION: &str = "ftml";
 
 macro_rules! check_repo {
@@ -110,7 +111,7 @@ impl RevisionStore {
             email.push_str("system@");
             email.push_str(&self.domain);
 
-            Signature::now("DEEPWELL", &email)?
+            Signature::now(SYSTEM_USER, &email)?
         };
 
         Ok((author, committer))
@@ -222,11 +223,6 @@ impl RevisionStore {
     /// Returns `None` if the page does not exist.
     pub fn get_blame(&self, _slug: &str) -> Result<Option<()>> {
         Err(Error::StaticMsg("not implemented yet"))
-    }
-
-    /// Gets all revisions which affected the given page.
-    pub fn get_revisions(&self, slug: &str) -> Result<Vec<()>> {
-        unimplemented!()
     }
 }
 
