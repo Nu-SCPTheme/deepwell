@@ -95,16 +95,19 @@ fn pick<'a, T, R>(rng: &mut R, items: &'a [T]) -> &'a T
 fn main() {
     color_backtrace::install();
 
+    // Create revision store
     let directory = tempdir().expect("Unable to create temporary directory");
     let repo = Repository::init(&directory).expect("Unable to create git repo");
     let store = RevisionStore::new(repo, "example.org");
     store.initial_commit().expect("Unable to create initial commit");
 
+    // Setup shared buffers
     let content_between = Uniform::from(16..8192);
     let mut rng = rand::thread_rng();
     let mut message = String::new();
     let mut contents = String::new();
 
+    // Randomly generate lots of commits
     for _ in 0..10000 {
         let slug = pick(&mut rng, &TEST_SLUGS[..]);
         let username = pick(&mut rng, &TEST_USERNAMES[..]);
