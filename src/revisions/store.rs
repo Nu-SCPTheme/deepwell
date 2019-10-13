@@ -70,6 +70,9 @@ impl RevisionStore {
             if let Some(root) = root {
                 // If passed, make an absolute path
                 path.push(root);
+
+                // Remove the .git directory
+                path.pop();
             }
 
             path.push(slug);
