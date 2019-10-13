@@ -105,7 +105,7 @@ fn main() {
     let content_between = Uniform::from(16..8192);
     let mut rng = rand::thread_rng();
     let mut message = String::new();
-    let mut contents = String::new();
+    let mut content = String::new();
 
     // Randomly generate lots of commits
     for _ in 0..100 {
@@ -119,11 +119,12 @@ fn main() {
         }
 
         // Create random content
-        contents.clear();
+        content.clear();
         let content_len = content_between.sample(&mut rng);
         for _ in 0..content_len {
-            contents.push(rng.sample(Alphanumeric));
+            content.push(rng.sample(Alphanumeric));
         }
+        content.push('\n');
 
         // Commit to repo
         let info = CommitInfo {
@@ -131,7 +132,7 @@ fn main() {
             message: &message,
         };
 
-        store.commit(slug, &contents, info).expect("Unable to commit generated data");
+        store.commit(slug, &content, info).expect("Unable to commit generated data");
     }
 
     // Randomly delete some pages

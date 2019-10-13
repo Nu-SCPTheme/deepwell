@@ -100,16 +100,16 @@ impl RevisionStore {
             }
         };
 
-        let mut contents = Vec::new();
-        file.read_to_end(&mut contents)?;
-        let bytes = contents.into_boxed_slice();
+        let mut content = Vec::new();
+        file.read_to_end(&mut content)?;
+        let bytes = content.into_boxed_slice();
         Ok(Some(bytes))
     }
 
-    fn write_file(&self, slug: &str, contents: &[u8]) -> Result<()> {
+    fn write_file(&self, slug: &str, content: &[u8]) -> Result<()> {
         let path = self.abs_path(slug);
         let mut file = File::create(path)?;
-        file.write_all(contents)?;
+        file.write_all(content)?;
         Ok(())
     }
 
@@ -219,7 +219,7 @@ impl RevisionStore {
     }
 
     /// For the given slug, create or edit a page to have the specified contents.
-    pub fn commit<S, B>(&self, slug: S, contents: B, info: CommitInfo) -> Result<GitHash>
+    pub fn commit<S, B>(&self, slug: S, content: B, info: CommitInfo) -> Result<GitHash>
     where
         S: AsRef<str>,
         B: AsRef<[u8]>,
@@ -228,7 +228,7 @@ impl RevisionStore {
         check_repo!(repo);
 
         let slug = slug.as_ref();
-        self.write_file(slug, contents.as_ref())?;
+        self.write_file(slug, content.as_ref())?;
         let commit_oid = self.raw_commit(&repo, slug, info)?;
 
         Ok(GitHash::from(commit_oid))
