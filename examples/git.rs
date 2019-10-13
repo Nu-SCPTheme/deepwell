@@ -108,7 +108,7 @@ fn main() {
     let mut contents = String::new();
 
     // Randomly generate lots of commits
-    for _ in 0..10000 {
+    for _ in 0..100 {
         let slug = pick(&mut rng, &TEST_SLUGS[..]);
         let username = pick(&mut rng, &TEST_USERNAMES[..]);
 
@@ -132,5 +132,22 @@ fn main() {
         };
 
         store.commit(slug, &contents, info).expect("Unable to commit generated data");
+    }
+
+    // Randomly delete some pages
+    message.clear();
+    message.push_str("Deleting page");
+
+    for _ in 0..5 {
+        let slug = pick(&mut rng, &TEST_SLUGS[..]);
+        let username = pick(&mut rng, &TEST_USERNAMES[..]);
+
+        // Commit to repo
+        let info = CommitInfo {
+            username,
+            message: &message,
+        };
+
+        store.remove(slug, info).expect("Unable to commit removed file");
     }
 }
