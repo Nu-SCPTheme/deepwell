@@ -1,5 +1,5 @@
 /*
- * revisions/data.rs
+ * revisions/diff.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -19,47 +19,8 @@
  */
 
 use crate::Result;
-use git2::{Diff as RawDiff, Oid};
+use git2::Diff as RawDiff;
 use std::str;
-
-#[derive(Debug, Copy, Clone)]
-pub struct CommitInfo<'a> {
-    pub username: &'a str,
-    pub message: &'a str,
-}
-
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
-pub struct GitHash([u8; 20]);
-
-impl From<[u8; 20]> for GitHash {
-    #[inline]
-    fn from(hash: [u8; 20]) -> Self {
-        GitHash(hash)
-    }
-}
-
-impl From<Oid> for GitHash {
-    fn from(oid: Oid) -> Self {
-        let mut hash = [0; 20];
-        let slice = &mut hash[..];
-        slice.copy_from_slice(oid.as_bytes());
-        GitHash(hash)
-    }
-}
-
-impl AsRef<[u8; 20]> for GitHash {
-    #[inline]
-    fn as_ref(&self) -> &[u8; 20] {
-        &self.0
-    }
-}
-
-impl AsRef<[u8]> for GitHash {
-    #[inline]
-    fn as_ref(&self) -> &[u8] {
-        &self.0
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct DiffLine {
