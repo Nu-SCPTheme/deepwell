@@ -143,23 +143,30 @@ impl RevisionStore {
     }
 
     /// For the given slug, create or edit a page to have the specified contents.
-    pub fn commit(&self, slug: &str, contents: &[u8], info: CommitInfo) -> Result<GitHash> {
+    pub fn commit<S, B>(&self, slug: S, contents: B, info: CommitInfo) -> Result<GitHash>
+    where
+        S: AsRef<str>,
+        B: AsRef<[u8]>,
+    {
         let repo = self.repo.lock();
         check_repo!(repo);
 
-        let path = Self::path(Some(repo.path()), slug)?;
-        self.write_file(&path, contents)?;
+        let path = Self::path(Some(repo.path()), slug.as_ref())?;
+        self.write_file(&path, contents.as_ref())?;
         let commit_oid = self.raw_commit(&repo, &path, info)?;
 
         Ok(GitHash::from(commit_oid))
     }
 
     /// Remove the given page from the repository.
-    pub fn remove(&self, slug: &str, info: CommitInfo) -> Result<GitHash> {
+    pub fn remove<S>(&self, slug: S, info: CommitInfo) -> Result<GitHash>
+    where
+        S: AsRef<str>,
+    {
         let repo = self.repo.lock();
         check_repo!(repo);
 
-        let path = Self::path(Some(repo.path()), slug)?;
+        let path = Self::path(Some(repo.path()), slug.as_ref())?;
         fs::remove_file(&path)?;
         let commit_oid = self.raw_commit(&repo, &path, info)?;
 
@@ -168,11 +175,14 @@ impl RevisionStore {
 
     /// Gets the current version of a page.
     /// Returns `None` if the page does not exist.
-    pub fn get_page(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
+    pub fn get_page<S>(&self, slug: S) -> Result<Option<Box<[u8]>>>
+    where
+        S: AsRef<str>,
+    {
         let repo = self.repo.lock();
         check_repo!(repo);
 
-        let path = Self::path(Some(repo.path()), slug)?;
+        let path = Self::path(Some(repo.path()), slug.as_ref())?;
         let mut file = match File::open(&path) {
             Ok(file) => file,
             Err(error) => {
@@ -209,7 +219,10 @@ impl RevisionStore {
 
     /// Gets the version of a page at the specified commit.
     /// Returns `None` if the page did not at exist at the time.
-    pub fn get_page_version(&self, slug: &str, hash: GitHash) -> Result<Option<Box<[u8]>>> {
+    pub fn get_page_version<S>(&self, slug: S, hash: GitHash) -> Result<Option<Box<[u8]>>>
+    where
+        S: AsRef<str>,
+    {
         let repo = self.repo.lock();
         check_repo!(repo);
 
@@ -219,7 +232,7 @@ impl RevisionStore {
         };
 
         let tree = commit.tree()?;
-        let path = Self::path(None, slug)?;
+        let path = Self::path(None, slug.as_ref())?;
         let entry = tree.get_path(&path)?;
         let obj = entry.to_object(&repo)?;
         let blob = obj
@@ -232,7 +245,10 @@ impl RevisionStore {
 
     /// Gets the diff between commits of a particular page.
     /// Returns `None` if the page or commits do not exist.
-    pub fn get_diff(&self, slug: &str, first: GitHash, second: GitHash) -> Result<Option<Diff>> {
+    pub fn get_diff<S>(&self, slug: S, first: GitHash, second: GitHash) -> Result<Option<Diff>>
+    where
+        S: AsRef<str>,
+    {
         use git2::DiffOptions;
 
         let repo = self.repo.lock();
@@ -251,7 +267,7 @@ impl RevisionStore {
             _ => return Ok(None),
         };
 
-        let path = Self::path(None, slug)?;
+        let path = Self::path(None, slug.as_ref())?;
         let raw_diff = repo.diff_tree_to_tree(
             Some(&first_tree),
             Some(&second_tree),
@@ -269,7 +285,10 @@ impl RevisionStore {
 
     /// Gets the blame for a particular page.
     /// Returns `None` if the page does not exist.
-    pub fn get_blame(&self, _slug: &str) -> Result<Option<()>> {
+    pub fn get_blame<S>(&self, _slug: S) -> Result<Option<()>>
+    where
+        S: AsRef<str>,
+    {
         Err(Error::StaticMsg("not implemented yet"))
     }
 }

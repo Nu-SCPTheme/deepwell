@@ -160,6 +160,6 @@ fn main() {
             message: &message,
         };
 
-        store.commit(slug, contents.as_ref(), info).expect("Unable to commit generated data");
+        store.commit(slug, &contents, info).expect("Unable to commit generated data");
     }
 }
