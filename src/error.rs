@@ -24,6 +24,9 @@ use std::io;
 #[must_use = "should handle errors"]
 #[derive(Debug, Error)]
 pub enum Error {
+    #[error("uncommon error: {0}")]
+    StaticMsg(&'static str),
+
     #[error("general I/O error: {0}")]
     Io(#[from] io::Error),
 

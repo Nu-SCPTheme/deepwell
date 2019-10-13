@@ -1,5 +1,5 @@
 /*
- * lib.rs
+ * revisions/data.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,30 +18,36 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#![deny(missing_debug_implementations)]
+use git2::Oid;
 
-extern crate chrono;
+#[derive(Debug, Copy, Clone)]
+pub struct CommitInfo<'a> {
+    pub username: &'a str,
+    pub message: &'a str,
+}
 
-#[macro_use]
-extern crate diesel;
-extern crate git2;
-extern crate parking_lot;
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct GitHash([u8; 20]);
 
-#[macro_use]
-extern crate serde;
-extern crate serde_json;
+impl GitHash {
+    pub fn new(oid: Oid) -> Self {
+        let mut hash = [0; 20];
+        let slice = &mut hash[..];
+        slice.copy_from_slice(oid.as_bytes());
+        GitHash(hash)
+    }
+}
 
-#[macro_use]
-extern crate thiserror;
-extern crate wikidot_normalize;
+impl AsRef<[u8; 20]> for GitHash {
+    #[inline]
+    fn as_ref(&self) -> &[u8; 20] {
+        &self.0
+    }
+}
 
-mod error;
-mod models;
-mod revisions;
-mod schema;
-
-pub type StdResult<T, E> = std::result::Result<T, E>;
-pub type Result<T> = StdResult<T, Error>;
-
-pub use self::error::Error;
-pub use self::revisions::*;
+impl AsRef<[u8]> for GitHash {
+    #[inline]
+    fn as_ref(&self) -> &[u8] {
+        &self.0
+    }
+}

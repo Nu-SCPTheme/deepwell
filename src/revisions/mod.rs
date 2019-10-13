@@ -18,29 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use git2::Repository;
-use std::fmt::{self, Debug};
+mod data;
+mod store;
 
-pub struct RevisionStore {
-    repo: Repository,
-}
-
-impl RevisionStore {
-    #[inline]
-    pub fn new(repo: Repository) -> Self {
-        RevisionStore { repo }
-    }
-}
-
-impl Debug for RevisionStore {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let repo = format!(
-            "git2::Repository {{ path: {}, .. }}",
-            self.repo.path().display(),
-        );
-
-        f.debug_struct("RevisionStore")
-            .field("repo", &repo)
-            .finish()
-    }
-}
+pub use self::data::{CommitInfo, GitHash};
+pub use self::store::RevisionStore;
