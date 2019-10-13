@@ -21,5 +21,5 @@
 mod data;
 mod store;
 
-pub use self::data::{CommitInfo, GitHash};
+pub use self::data::{CommitInfo, Diff, GitHash};
 pub use self::store::RevisionStore;

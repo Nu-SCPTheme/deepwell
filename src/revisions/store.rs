@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::{CommitInfo, GitHash};
+use super::{CommitInfo, Diff, GitHash};
 use crate::{Error, Result};
 use git2::{Commit, ObjectType, Oid, Repository, RepositoryState, Signature};
 use parking_lot::Mutex;
@@ -188,23 +188,31 @@ impl RevisionStore {
         Ok(Some(bytes))
     }
 
+    fn find_commit(repo: &Repository, hash: GitHash) -> Result<Option<Commit>> {
+        let oid = Oid::from_bytes(hash.as_ref())?;
+
+        match repo.find_commit(oid) {
+            Ok(commit) => Ok(Some(commit)),
+            Err(error) => {
+                use git2::ErrorCode;
+
+                match error.code() {
+                    ErrorCode::NotFound => Ok(None),
+                    _ => Err(Error::from(error)),
+                }
+            }
+        }
+    }
+
     /// Gets the version of a page at the specified commit.
     /// Returns `None` if the page did not at exist at the time.
     pub fn get_page_version(&self, slug: &str, hash: GitHash) -> Result<Option<Box<[u8]>>> {
         let repo = self.repo.lock();
         check_repo!(repo);
 
-        let oid = Oid::from_bytes(hash.as_ref())?;
-        let commit = match repo.find_commit(oid) {
-            Ok(commit) => commit,
-            Err(error) => {
-                use git2::ErrorCode;
-
-                return match error.code() {
-                    ErrorCode::NotFound => Ok(None),
-                    _ => Err(Error::from(error)),
-                };
-            }
+        let commit = match Self::find_commit(&repo, hash)? {
+            Some(commit) => commit,
+            None => return Ok(None),
         };
 
         let tree = commit.tree()?;
@@ -217,6 +225,43 @@ impl RevisionStore {
 
         let bytes = blob.content().to_vec().into_boxed_slice();
         Ok(Some(bytes))
+    }
+
+    /// Gets the diff between commits of a particular page.
+    /// Returns `None` if the page or commits do not exist.
+    pub fn get_diff(&self, slug: &str, first: GitHash, second: GitHash) -> Result<Option<Diff>> {
+        use git2::DiffOptions;
+
+        let repo = self.repo.lock();
+        check_repo!(repo);
+
+        let first_commit = Self::find_commit(&repo, first)?;
+        let second_commit = Self::find_commit(&repo, second)?;
+
+        let (first_tree, second_tree) = match (first_commit, second_commit) {
+            (Some(first_commit), Some(second_commit)) => {
+                let first_tree = first_commit.tree()?;
+                let second_tree = second_commit.tree()?;
+
+                (first_tree, second_tree)
+            }
+            _ => return Ok(None),
+        };
+
+        let path = Self::path(None, slug)?;
+        let raw_diff = repo.diff_tree_to_tree(
+            Some(&first_tree),
+            Some(&second_tree),
+            Some(
+                DiffOptions::new()
+                    .minimal(true)
+                    .force_text(true)
+                    .pathspec(path),
+            ),
+        )?;
+
+        let diff = Diff::new(raw_diff)?;
+        Ok(Some(diff))
     }
 
     /// Gets the blame for a particular page.
