@@ -20,10 +20,10 @@
 
 use super::{CommitInfo, GitHash};
 use crate::{Error, Result};
-use git2::{Commit, ObjectType, Repository, RepositoryState, Signature};
+use git2::{Commit, ObjectType, Oid, Repository, RepositoryState, Signature};
 use parking_lot::Mutex;
 use std::fmt::{self, Debug};
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use wikidot_normalize::{is_normal, normalize};
@@ -58,7 +58,7 @@ impl RevisionStore {
         }
     }
 
-    fn write_file(&self, repo_root: &Path, slug: &str, contents: &[u8]) -> Result<PathBuf> {
+    fn path(repo_root: &Path, slug: &str) -> Result<PathBuf> {
         if !is_normal(slug, false) {
             return Err(Error::StaticMsg("slug not in wikidot normal form"));
         }
@@ -71,10 +71,14 @@ impl RevisionStore {
             path
         };
 
-        let mut file = File::create(&path)?;
+        Ok(path)
+    }
+
+    fn write_file(&self, path: &Path, contents: &[u8]) -> Result<()> {
+        let mut file = File::create(path)?;
         file.write_all(contents)?;
 
-        Ok(path)
+        Ok(())
     }
 
     fn find_last_commit(repo: &Repository) -> Result<Commit> {
@@ -107,18 +111,13 @@ impl RevisionStore {
         Ok((author, committer))
     }
 
-    /// For the given slug, create a revision with the new contents provided.
-    pub fn commit(&self, slug: &str, contents: &[u8], info: CommitInfo) -> Result<GitHash> {
-        let repo = self.repo.lock();
-        check_repo!(repo);
-
+    fn raw_commit(&self, repo: &Repository, path: &Path, info: CommitInfo) -> Result<Oid> {
         // Stage file changes
         let mut index = repo.index()?;
-        let path = self.write_file(repo.path(), slug, contents)?;
         index.add_path(&path)?;
         let oid = index.write_tree()?;
 
-        // Create commit
+        // Commit to branch
         let parent = Self::find_last_commit(&repo)?;
         let tree = repo.find_tree(oid)?;
         let (author, committer) = self.get_signatures(&info)?;
@@ -130,6 +129,30 @@ impl RevisionStore {
             &tree,
             &[&parent],
         )?;
+
+        Ok(commit)
+    }
+
+    /// For the given slug, create a revision with the new contents provided.
+    pub fn commit(&self, slug: &str, contents: &[u8], info: CommitInfo) -> Result<GitHash> {
+        let repo = self.repo.lock();
+        check_repo!(repo);
+
+        let path = Self::path(repo.path(), slug)?;
+        self.write_file(&path, contents)?;
+        let commit = self.raw_commit(&repo, &path, info)?;
+
+        Ok(GitHash::from(commit))
+    }
+
+    /// Remove the given slug from the repository.
+    pub fn remove(&self, slug: &str, info: CommitInfo) -> Result<GitHash> {
+        let repo = self.repo.lock();
+        check_repo!(repo);
+
+        let path = Self::path(repo.path(), slug)?;
+        fs::remove_file(&path)?;
+        let commit = self.raw_commit(&repo, &path, info)?;
 
         Ok(GitHash::from(commit))
     }
