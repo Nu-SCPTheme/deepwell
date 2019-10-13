@@ -218,6 +218,12 @@ impl RevisionStore {
         Ok(Some(bytes))
     }
 
+    /// Gets the blame for a particular page.
+    /// Returns `None` if the page does not exist.
+    pub fn get_blame(&self, _slug: &str) -> Result<Option<()>> {
+        Err(Error::StaticMsg("not implemented yet"))
+    }
+
     /// Gets all revisions which affected the given page.
     pub fn get_revisions(&self, slug: &str) -> Result<Vec<()>> {
         unimplemented!()
