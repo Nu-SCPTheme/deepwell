@@ -142,6 +142,37 @@ impl RevisionStore {
         Ok(commit)
     }
 
+    /// Create the first commit of the repo.
+    /// Should only be called on empty repositories.
+    #[cold]
+    pub fn initial_commit(&self) -> Result<GitHash> {
+        let repo = self.repo.lock();
+        check_repo!(repo);
+
+        let path = Self::path(Some(repo.path()), ".gitignore")?;
+        self.write_file(&path, &[])?;
+
+        // Stage file changes
+        let mut index = repo.index()?;
+        index.add_path(&path)?;
+        let oid = index.write_tree()?;
+
+        // Create first commit
+        let tree = repo.find_tree(oid)?;
+        let email = format!("system@{}", self.domain);
+        let signature = Signature::now(SYSTEM_USER, &email)?;
+        let commit = repo.commit(
+            Some("HEAD"),
+            &signature,
+            &signature,
+            "Initial commit",
+            &tree,
+            &[],
+        )?;
+
+        Ok(GitHash::from(commit))
+    }
+
     /// For the given slug, create or edit a page to have the specified contents.
     pub fn commit<S, B>(&self, slug: S, contents: B, info: CommitInfo) -> Result<GitHash>
     where
