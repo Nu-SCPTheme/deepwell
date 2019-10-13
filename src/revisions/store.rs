@@ -20,11 +20,11 @@
 
 use super::{CommitInfo, GitHash};
 use crate::{Error, Result};
-use git2::{Commit, ErrorCode, ObjectType, Oid, Repository, RepositoryState, Signature};
+use git2::{Commit, ObjectType, Oid, Repository, RepositoryState, Signature};
 use parking_lot::Mutex;
 use std::fmt::{self, Debug};
 use std::fs::{self, File};
-use std::io::Write;
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 use wikidot_normalize::{is_normal, normalize};
 
@@ -165,7 +165,26 @@ impl RevisionStore {
     /// Gets the current version of a page.
     /// Returns `None` if the page does not exist.
     pub fn get_page(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
-        unimplemented!()
+        let repo = self.repo.lock();
+        check_repo!(repo);
+
+        let path = Self::path(Some(repo.path()), slug)?;
+        let mut file = match File::open(&path) {
+            Ok(file) => file,
+            Err(error) => {
+                use std::io::ErrorKind;
+
+                return match error.kind() {
+                    ErrorKind::NotFound => Ok(None),
+                    _ => Err(Error::from(error)),
+                };
+            }
+        };
+
+        let mut contents = Vec::new();
+        file.read_to_end(&mut contents)?;
+        let bytes = contents.into_boxed_slice();
+        Ok(Some(bytes))
     }
 
     /// Gets the version of a page at the specified commit.
@@ -178,6 +197,8 @@ impl RevisionStore {
         let commit = match repo.find_commit(oid) {
             Ok(commit) => commit,
             Err(error) => {
+                use git2::ErrorCode;
+
                 return match error.code() {
                     ErrorCode::NotFound => Ok(None),
                     _ => Err(Error::from(error)),
