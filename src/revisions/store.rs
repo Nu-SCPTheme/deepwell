@@ -64,23 +64,23 @@ impl RevisionStore {
             return Err(Error::StaticMsg("slug not in wikidot normal form"));
         }
 
-        let path = {
-            let mut path = PathBuf::new();
+        Ok(Self::unchecked_path(root, slug))
+    }
 
-            if let Some(root) = root {
-                // If passed, make an absolute path
-                path.push(root);
+    fn unchecked_path(root: Option<&Path>, slug: &str) -> PathBuf {
+        let mut path = PathBuf::new();
 
-                // Remove the .git directory
-                path.pop();
-            }
+        if let Some(root) = root {
+            // If passed, make an absolute path
+            path.push(root);
 
-            path.push(slug);
-            path.set_extension(FILE_EXTENSION);
-            path
-        };
+            // Remove the .git directory
+            path.pop();
+        }
 
-        Ok(path)
+        path.push(slug);
+        path.set_extension(FILE_EXTENSION);
+        path
     }
 
     fn write_file(&self, path: &Path, contents: &[u8]) -> Result<()> {
@@ -149,7 +149,7 @@ impl RevisionStore {
         let repo = self.repo.lock();
         check_repo!(repo);
 
-        let path = Self::path(Some(repo.path()), ".gitignore")?;
+        let path = Self::unchecked_path(Some(repo.path()), ".gitignore");
         self.write_file(&path, &[])?;
 
         // Stage file changes
