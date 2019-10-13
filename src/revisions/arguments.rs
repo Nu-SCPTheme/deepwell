@@ -1,5 +1,5 @@
 /*
- * revisions/mod.rs
+ * revisions/arguments.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,11 +18,30 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-mod arguments;
-mod git_hash;
-mod info;
-mod store;
+use arrayvec::ArrayVec;
+use std::ffi::OsStr;
 
-pub use self::git_hash::GitHash;
-pub use self::info::CommitInfo;
-pub use self::store::RevisionStore;
+// Sets the maximum number of arguments
+type ArgumentArray<'s> = [&'s OsStr; 16];
+
+#[derive(Debug, Clone, Default)]
+pub struct Arguments<'s> {
+    inner: ArrayVec<ArgumentArray<'s>>,
+}
+
+impl<'s> Arguments<'s> {
+    pub fn push<S: AsRef<&'s OsStr>>(&mut self, argument: S) {
+        self.inner.push(argument.as_ref());
+    }
+
+    pub fn push_multiple(&mut self, args: &'s [&str]) {
+        args.iter().for_each(|arg| self.inner.push(OsStr::new(arg)));
+    }
+}
+
+impl<'s> AsRef<[&'s OsStr]> for Arguments<'s> {
+    #[inline]
+    fn as_ref(&self) -> &[&'s OsStr] {
+        &self.inner
+    }
+}

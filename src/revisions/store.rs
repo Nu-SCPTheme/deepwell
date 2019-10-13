@@ -20,26 +20,11 @@
 
 use super::{CommitInfo, GitHash};
 use crate::{Error, Result};
-use arrayvec::ArrayVec;
 use parking_lot::RwLock;
-use std::ffi::OsStr;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::PathBuf;
 use wikidot_normalize::is_normal;
-
-macro_rules! arguments {
-    ($($arg:expr),*) => (
-        let mut args = ArrayVec::<[OsStr; 16]>::new();
-
-        $(
-            args.push(OsStr::new($arg));
-        )*
-
-        args
-    );
-    ($($arg:expr,)*) => (arguments![$($arg),*]);
-}
 
 /// Represents a git repository to store page contents and their histories.
 #[derive(Debug)]
@@ -199,12 +184,7 @@ impl RevisionStore {
         let lock = self.lock.read();
         let slug = slug.as_ref();
 
-        let args = vec![
-            "git",
-            "show",
-            "--format=%B",
-            "{}:{}",
-        ];
+        let args = vec!["git", "show", "--format=%B", "{}:{}"];
 
         unimplemented!()
     }

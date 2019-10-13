@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use std::fmt::{self, UpperHex, LowerHex};
+use std::fmt::{self, LowerHex, UpperHex};
 use std::iter::FromIterator;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
