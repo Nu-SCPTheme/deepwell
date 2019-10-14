@@ -26,6 +26,22 @@ use std::io::{Read, Write};
 use std::path::PathBuf;
 use wikidot_normalize::is_normal;
 
+macro_rules! arguments {
+    ($($x:expr), *) => {{
+        use arrayvec::ArrayVec;
+        use std::ffi::OsStr;
+
+        let mut arguments = ArrayVec::<[&OsStr; 16]>::new();
+
+        $(
+            arguments.push(OsStr::new($x));
+        )*
+
+        arguments
+    }};
+    ($($x:expr,)*) => (arguments![$($x),*]);
+}
+
 /// Represents a git repository to store page contents and their histories.
 #[derive(Debug)]
 pub struct RevisionStore {
@@ -97,18 +113,29 @@ impl RevisionStore {
         Ok(Some(()))
     }
 
+    // Argument helpers
+    fn arg_author(&self, name: &str) -> String {
+        format!("{} <noreply@{}>", name, self.domain)
+    }
+
+    fn arg_message(&self, message: &str) -> String {
+        format!("--message={}", message)
+    }
+
     /// Create the first commit of the repo.
     /// Should only be called on empty repositories.
     #[cold]
     pub fn initial_commit(&self) -> Result<GitHash> {
         let lock = self.lock.write();
 
-        let args = vec![
+        let author = self.arg_author("DEEPWELL");
+        let message = self.arg_message("Initial commit");
+        let args = arguments![
             "git",
             "commit",
             "--allow-empty",
-            "--author={} <deepwell@{}>",
-            "--message={}",
+            &author,
+            &message,
         ];
 
         unimplemented!()
