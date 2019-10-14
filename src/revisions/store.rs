@@ -151,17 +151,18 @@ impl RevisionStore {
         let slug = slug.as_ref();
         self.write_file(slug, content.as_ref())?;
 
-        let args = vec![
+        let author = self.arg_author(info.username);
+        let message = self.arg_message(info.message);
+        let args = arguments![
             "git",
             "commit",
-            "--author={} <deepwell@{}>",
-            "--message={}",
+            &author,
+            &message,
             "--",
             slug,
         ];
 
         unimplemented!()
-        //Ok(GitHash::from(commit_oid))
     }
 
     /// Remove the given page from the repository.
@@ -177,11 +178,13 @@ impl RevisionStore {
             return Ok(None);
         }
 
-        let args = vec![
+        let author = self.arg_author(info.username);
+        let message = self.arg_message(info.message);
+        let args = arguments![
             "git",
             "commit",
-            "--author={} <deepwell@{}>",
-            "--message={}",
+            &author,
+            &message,
             "--",
             slug,
         ];
@@ -211,7 +214,13 @@ impl RevisionStore {
         let lock = self.lock.read();
         let slug = slug.as_ref();
 
-        let args = vec!["git", "show", "--format=%B", "{}:{}"];
+        let spec = format!("{:x}:{}", hash, slug);
+        let args = arguments![
+            "git",
+            "show",
+            "--format=%B",
+            &spec,
+        ];
 
         unimplemented!()
     }
