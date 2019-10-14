@@ -5,6 +5,9 @@ Wikidot-like storage and maintenance system. Tracks pages, revisions, files, and
 You will need the `diesel_cli` crate installed. For all commands you will need to set the
 `DATABASE_URL` or `--database-url` corresponding to the database you wish to modify.
 
+### Compilation
+This library targets the latest stable Rust. At time of writing, that is 1.38.0
+
 ```sh
 $ diesel migration run
 $ cargo build --release
