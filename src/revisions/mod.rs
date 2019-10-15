@@ -20,8 +20,10 @@
 
 mod git_hash;
 mod info;
+mod process;
 mod store;
 
 pub use self::git_hash::GitHash;
 pub use self::info::CommitInfo;
+pub use self::process::{spawn, spawn_output};
 pub use self::store::RevisionStore;

@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::{CommitInfo, GitHash};
+use super::{spawn, spawn_output, CommitInfo, GitHash};
 use crate::{Error, Result};
 use parking_lot::RwLock;
 use std::fs::{self, File};
@@ -125,7 +125,7 @@ impl RevisionStore {
     /// Create the first commit of the repo.
     /// Should only be called on empty repositories.
     #[cold]
-    pub fn initial_commit(&self) -> Result<GitHash> {
+    pub fn initial_commit(&self) -> Result<()> {
         let lock = self.lock.write();
 
         let author = self.arg_author("DEEPWELL");
@@ -138,7 +138,8 @@ impl RevisionStore {
             &message,
         ];
 
-        unimplemented!()
+        spawn(&args)?;
+        Ok(())
     }
 
     /// For the given slug, create or edit a page to have the specified contents.
@@ -160,6 +161,13 @@ impl RevisionStore {
             &message,
             "--",
             slug,
+        ];
+
+        let args = arguments![
+            "git",
+            "rev-parse",
+            "--verify",
+            "HEAD",
         ];
 
         unimplemented!()

@@ -32,4 +32,7 @@ pub enum Error {
 
     #[error("error running subprocess: {0}")]
     Subprocess(#[from] PopenError),
+
+    #[error("command failed: {0}")]
+    CommandFailed(String),
 }
