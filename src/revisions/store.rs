@@ -183,7 +183,8 @@ impl RevisionStore {
         let message = self.arg_message(info.message);
         let args = arguments!["git", "commit", &author, &message, "--", slug];
 
-        unimplemented!()
+        spawn(&args)?;
+        self.get_commit().map(Some)
     }
 
     /// Gets the current version of a page.
