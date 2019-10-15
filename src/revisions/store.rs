@@ -221,11 +221,25 @@ impl RevisionStore {
 
     /// Gets the diff between commits of a particular page.
     /// Returns `None` if the page or commits do not exist.
-    pub fn get_diff<S>(&self, _slug: S, _first: GitHash, _second: GitHash) -> Result<Option<()>>
+    pub fn get_diff<S>(&self, slug: S, first: GitHash, second: GitHash) -> Result<Box<[u8]>>
     where
         S: AsRef<str>,
     {
-        Err(Error::StaticMsg("not implemented yet"))
+        let _guard = self.lock.read();
+        let slug = slug.as_ref();
+        let first = format!("{:x}", first);
+        let second = format!("{:x}", second);
+
+        let args = arguments![
+            "git",
+            "diff",
+            "--word-diff=porcelain",
+            &first,
+            &second,
+            "--",
+            slug,
+        ];
+        spawn_output(&args)
     }
 
     /// Gets the blame for a particular page.
