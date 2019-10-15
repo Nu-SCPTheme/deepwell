@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::{spawn, spawn_output, CommitInfo, GitHash};
+use super::{spawn, spawn_output, Blame, CommitInfo, GitHash};
 use crate::{Error, Result};
 use parking_lot::RwLock;
 use std::fs::{self, File};
@@ -248,11 +248,30 @@ impl RevisionStore {
 
     /// Gets the blame for a particular page.
     /// Returns `None` if the page does not exist.
-    pub fn get_blame<S>(&self, _slug: S) -> Result<Option<()>>
+    pub fn get_blame<S>(&self, slug: S) -> Result<Option<Blame>>
     where
         S: AsRef<str>,
     {
-        Err(Error::StaticMsg("not implemented yet"))
+        let _guard = self.lock.read();
+        let slug = slug.as_ref();
+        check_normal(slug)?;
+
+        let args = arguments![
+            "git",
+            "blame",
+            "--porcelain",
+            "--",
+            slug,
+        ];
+
+        let raw_blame = match spawn_output(&args) {
+            Ok(bytes) => bytes,
+            Err(Error::CommandFailed(_)) => return Ok(None),
+            Err(error) => return Err(error),
+        };
+
+        let blame = Blame::from_porcelain(&raw_blame)?;
+        Ok(Some(blame))
     }
 }
 
