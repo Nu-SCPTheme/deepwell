@@ -20,9 +20,10 @@
 
 use crate::{Error, Result};
 use std::ffi::OsStr;
+use std::fmt::Write;
 use std::io::Read;
 use std::time::Duration;
-use subprocess::{Pipeline, Popen, PopenConfig, Redirection};
+use subprocess::{ExitStatus, Popen, PopenConfig, Redirection};
 
 const TIMEOUT: Duration = Duration::from_millis(200);
 
@@ -63,19 +64,21 @@ fn spawn_inner(arguments: &[&OsStr], output: bool) -> Result<Option<Box<[u8]>>> 
             }
         }
         Some(status) => {
-            let error = {
-                let stderr = mut_borrow!(popen.stderr);
-                let mut buffer = String::new();
-                stderr.read_to_string(&mut buffer)?;
+            let mut buffer = String::new();
+            let stderr = mut_borrow!(popen.stderr);
+            let written = stderr.read_to_string(&mut buffer)?;
 
-                if !buffer.is_empty() {
-                    buffer.insert_str(0, ": ");
-                }
+            if written != 0 {
+                buffer.insert_str(0, "command failed: ");
+            }
 
-                buffer
-            };
+            match status {
+                ExitStatus::Exited(code) => write!(&mut buffer, "({})", code).unwrap(),
+                ExitStatus::Signaled(code) => write!(&mut buffer, "(killed by signal {})", code).unwrap(),
+                _ => (),
+            }
 
-            Err(Error::CommandFailed(format!("command failed{}", error)))
+            Err(Error::CommandFailed(buffer))
         }
         None => {
             popen.terminate()?;

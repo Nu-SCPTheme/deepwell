@@ -19,7 +19,6 @@
  */
 
 use std::fmt::{self, LowerHex, UpperHex};
-use std::iter::FromIterator;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct GitHash([u8; 20]);
