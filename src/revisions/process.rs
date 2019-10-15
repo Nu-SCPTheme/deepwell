@@ -28,15 +28,17 @@ use subprocess::{ExitStatus, Popen, PopenConfig, Redirection};
 const TIMEOUT: Duration = Duration::from_millis(200);
 
 macro_rules! mut_borrow {
-    ($option:expr) => (
+    ($option:expr) => {
         $option.as_mut().unwrap()
-    )
+    };
 }
 
+/// Runs a process to completion, returning `Err` if it fails.
 pub fn spawn(arguments: &[&OsStr]) -> Result<()> {
     spawn_inner(arguments, false).map(|_| ())
 }
 
+/// Runs a process to completion, returning its `stdout`, or `Err` if it fails.
 pub fn spawn_output(arguments: &[&OsStr]) -> Result<Box<[u8]>> {
     spawn_inner(arguments, true).map(|out| out.unwrap())
 }
@@ -74,7 +76,9 @@ fn spawn_inner(arguments: &[&OsStr], output: bool) -> Result<Option<Box<[u8]>>> 
 
             match status {
                 ExitStatus::Exited(code) => write!(&mut buffer, "({})", code).unwrap(),
-                ExitStatus::Signaled(code) => write!(&mut buffer, "(killed by signal {})", code).unwrap(),
+                ExitStatus::Signaled(code) => {
+                    write!(&mut buffer, "(killed by signal {})", code).unwrap()
+                }
                 _ => (),
             }
 
@@ -88,7 +92,10 @@ fn spawn_inner(arguments: &[&OsStr], output: bool) -> Result<Option<Box<[u8]>>> 
                 popen.kill()?;
             }
 
-            Err(Error::CommandFailed(format!("command timed out ({} ms)", TIMEOUT.as_millis())))
+            Err(Error::CommandFailed(format!(
+                "command timed out ({} ms)",
+                TIMEOUT.as_millis()
+            )))
         }
     }
 }

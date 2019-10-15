@@ -25,6 +25,7 @@ extern crate chrono;
 
 #[macro_use]
 extern crate diesel;
+extern crate hex;
 extern crate parking_lot;
 
 #[macro_use]

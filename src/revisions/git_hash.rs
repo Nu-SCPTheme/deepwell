@@ -18,10 +18,25 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use hex::decode_to_slice;
 use std::fmt::{self, LowerHex, UpperHex};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct GitHash([u8; 20]);
+
+impl GitHash {
+    pub fn from_str<B>(hex_digest: B) -> Option<Self>
+    where
+        B: AsRef<[u8]>,
+    {
+        let mut hash = [0; 20];
+        if let Err(_) = decode_to_slice(hex_digest, &mut hash[..]) {
+            return None;
+        }
+
+        Some(GitHash(hash))
+    }
+}
 
 impl From<[u8; 20]> for GitHash {
     #[inline]

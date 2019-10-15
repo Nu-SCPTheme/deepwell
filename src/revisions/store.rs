@@ -122,6 +122,17 @@ impl RevisionStore {
         format!("--message={}", message)
     }
 
+    // Git helpers
+    fn get_commit(&self) -> Result<GitHash> {
+        let args = arguments!["git", "rev-parse", "--verify", "HEAD",];
+
+        let hex_digest = spawn_output(&args)?;
+        match GitHash::from_str(&hex_digest) {
+            Some(hash) => Ok(hash),
+            None => Err(Error::StaticMsg("unable to parse git hash from output")),
+        }
+    }
+
     /// Create the first commit of the repo.
     /// Should only be called on empty repositories.
     #[cold]
@@ -130,13 +141,7 @@ impl RevisionStore {
 
         let author = self.arg_author("DEEPWELL");
         let message = self.arg_message("Initial commit");
-        let args = arguments![
-            "git",
-            "commit",
-            "--allow-empty",
-            &author,
-            &message,
-        ];
+        let args = arguments!["git", "commit", "--allow-empty", &author, &message];
 
         spawn(&args)?;
 
@@ -155,23 +160,10 @@ impl RevisionStore {
 
         let author = self.arg_author(info.username);
         let message = self.arg_message(info.message);
-        let args = arguments![
-            "git",
-            "commit",
-            &author,
-            &message,
-            "--",
-            slug,
-        ];
+        let args = arguments!["git", "commit", &author, &message, "--", slug];
 
-        let args = arguments![
-            "git",
-            "rev-parse",
-            "--verify",
-            "HEAD",
-        ];
-
-        unimplemented!()
+        spawn(&args)?;
+        self.get_commit()
     }
 
     /// Remove the given page from the repository.
@@ -189,14 +181,7 @@ impl RevisionStore {
 
         let author = self.arg_author(info.username);
         let message = self.arg_message(info.message);
-        let args = arguments![
-            "git",
-            "commit",
-            &author,
-            &message,
-            "--",
-            slug,
-        ];
+        let args = arguments!["git", "commit", &author, &message, "--", slug];
 
         unimplemented!()
     }
@@ -224,12 +209,7 @@ impl RevisionStore {
         let slug = slug.as_ref();
 
         let spec = format!("{:x}:{}", hash, slug);
-        let args = arguments![
-            "git",
-            "show",
-            "--format=%B",
-            &spec,
-        ];
+        let args = arguments!["git", "show", "--format=%B", &spec,];
 
         match spawn_output(&args) {
             Ok(bytes) => Ok(Some(bytes)),
