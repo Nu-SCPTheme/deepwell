@@ -126,7 +126,7 @@ impl RevisionStore {
     /// Should only be called on empty repositories.
     #[cold]
     pub fn initial_commit(&self) -> Result<()> {
-        let lock = self.lock.write();
+        let _guard = self.lock.write();
 
         let author = self.arg_author("DEEPWELL");
         let message = self.arg_message("Initial commit");
@@ -139,6 +139,7 @@ impl RevisionStore {
         ];
 
         spawn(&args)?;
+
         Ok(())
     }
 
@@ -148,7 +149,7 @@ impl RevisionStore {
         S: AsRef<str>,
         B: AsRef<[u8]>,
     {
-        let lock = self.lock.write();
+        let _guard = self.lock.write();
         let slug = slug.as_ref();
         self.write_file(slug, content.as_ref())?;
 
@@ -179,7 +180,7 @@ impl RevisionStore {
     where
         S: AsRef<str>,
     {
-        let lock = self.lock.write();
+        let _guard = self.lock.write();
         let slug = slug.as_ref();
 
         if let None = self.remove_file(slug)? {
@@ -206,7 +207,7 @@ impl RevisionStore {
     where
         S: AsRef<str>,
     {
-        let lock = self.lock.read();
+        let _guard = self.lock.read();
         let slug = slug.as_ref();
 
         check_normal(slug)?;
@@ -219,7 +220,7 @@ impl RevisionStore {
     where
         S: AsRef<str>,
     {
-        let lock = self.lock.read();
+        let _guard = self.lock.read();
         let slug = slug.as_ref();
 
         let spec = format!("{:x}:{}", hash, slug);
@@ -235,7 +236,7 @@ impl RevisionStore {
 
     /// Gets the diff between commits of a particular page.
     /// Returns `None` if the page or commits do not exist.
-    pub fn get_diff<S>(&self, slug: S, first: GitHash, second: GitHash) -> Result<Option<()>>
+    pub fn get_diff<S>(&self, _slug: S, _first: GitHash, _second: GitHash) -> Result<Option<()>>
     where
         S: AsRef<str>,
     {
