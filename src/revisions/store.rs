@@ -231,7 +231,11 @@ impl RevisionStore {
             &spec,
         ];
 
-        unimplemented!()
+        match spawn_output(&args) {
+            Ok(bytes) => Ok(Some(bytes)),
+            Err(Error::CommandFailed(_)) => Ok(None),
+            Err(error) => Err(error),
+        }
     }
 
     /// Gets the diff between commits of a particular page.
