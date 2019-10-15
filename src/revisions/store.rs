@@ -156,6 +156,7 @@ impl RevisionStore {
     {
         let _guard = self.lock.write();
         let slug = slug.as_ref();
+        check_normal(slug)?;
         self.write_file(slug, content.as_ref())?;
 
         let author = self.arg_author(info.username);
@@ -174,6 +175,7 @@ impl RevisionStore {
     {
         let _guard = self.lock.write();
         let slug = slug.as_ref();
+        check_normal(slug)?;
 
         if let None = self.remove_file(slug)? {
             return Ok(None);
@@ -195,8 +197,8 @@ impl RevisionStore {
     {
         let _guard = self.lock.read();
         let slug = slug.as_ref();
-
         check_normal(slug)?;
+
         self.read_file(slug)
     }
 
@@ -208,6 +210,7 @@ impl RevisionStore {
     {
         let _guard = self.lock.read();
         let slug = slug.as_ref();
+        check_normal(slug)?;
 
         let spec = format!("{:x}:{}", hash, slug);
         let args = arguments!["git", "show", "--format=%B", &spec,];
@@ -229,6 +232,7 @@ impl RevisionStore {
         let slug = slug.as_ref();
         let first = format!("{:x}", first);
         let second = format!("{:x}", second);
+        check_normal(slug)?;
 
         let args = arguments![
             "git",
