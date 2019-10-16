@@ -1,5 +1,5 @@
 /*
- * revisions/blame.rs
+ * revisions/blame/mod.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,15 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::Result;
+mod data;
+mod parse;
 
-#[derive(Debug, Clone)]
-pub struct Blame {
-    _todo: (),
-}
-
-impl Blame {
-    pub fn from_porcelain(raw_bytes: &[u8]) -> Result<Self> {
-        unimplemented!()
-    }
-}
+pub use self::data::*;

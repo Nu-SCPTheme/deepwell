@@ -1,5 +1,5 @@
 /*
- * lib.rs
+ * revisions/blame/data.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,36 +18,31 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#![deny(missing_debug_implementations)]
+use crate::revisions::GitHash;
+use chrono::{DateTime, FixedOffset};
 
-extern crate arrayvec;
-extern crate chrono;
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BlameAuthor {
+    pub name: String,
+    pub email: String,
+    pub time: DateTime<FixedOffset>,
+}
 
-#[macro_use]
-extern crate diesel;
-extern crate hex;
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BlameLine {
+    pub commit: GitHash,
+    pub old_lineno: u32,
+    pub new_lineno: u32,
+}
 
-#[macro_use]
-extern crate lazy_static;
-extern crate parking_lot;
-extern crate regex;
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BlameGroup {
+    pub author: BlameAuthor,
+    pub summary: String,
+    pub lines: Vec<BlameLine>,
+}
 
-#[macro_use]
-extern crate serde;
-extern crate serde_json;
-extern crate subprocess;
-
-#[macro_use]
-extern crate thiserror;
-extern crate wikidot_normalize;
-
-mod error;
-mod models;
-mod revisions;
-mod schema;
-
-pub type StdResult<T, E> = std::result::Result<T, E>;
-pub type Result<T> = StdResult<T, Error>;
-
-pub use self::error::Error;
-pub use self::revisions::*;
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Blame {
+    pub groups: Vec<BlameGroup>,
+}
