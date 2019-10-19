@@ -22,12 +22,10 @@
 
 extern crate color_backtrace;
 extern crate deepwell;
-extern crate git2;
 extern crate rand;
 extern crate tempfile;
 
 use deepwell::{CommitInfo, RevisionStore};
-use git2::Repository;
 use rand::Rng;
 use rand::distributions::{Alphanumeric, Distribution, Uniform};
 use tempfile::tempdir;
@@ -97,7 +95,7 @@ fn main() {
 
     // Create revision store
     let directory = tempdir().expect("Unable to create temporary directory");
-    let repo = Repository::init(&directory).expect("Unable to create git repo");
+    let repo = directory.path();
     let store = RevisionStore::new(repo, "example.org");
     store.initial_commit().expect("Unable to create initial commit");
 
