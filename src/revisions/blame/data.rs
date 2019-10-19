@@ -33,12 +33,15 @@ pub struct BlameLine {
     pub commit: GitHash,
     pub old_lineno: u32,
     pub new_lineno: u32,
+    pub line: Box<[u8]>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct BlameGroup {
     pub author: BlameAuthor,
+    pub committer: BlameAuthor,
     pub summary: String,
+    pub previous: Option<GitHash>,
     pub lines: Vec<BlameLine>,
 }
 

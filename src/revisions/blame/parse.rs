@@ -21,9 +21,11 @@
 use super::*;
 use crate::{Error, Result};
 use crate::revisions::GitHash;
-use chrono::{DateTime, FixedOffset};
+use chrono::{DateTime, FixedOffset, NaiveDateTime};
 use regex::bytes::Regex;
-use std::str;
+use std::{str, mem};
+
+// TODO split into separate crate
 
 lazy_static! {
     static ref GIT_HASH_REGEX: Regex = Regex::new(r"
@@ -65,22 +67,32 @@ enum State {
 struct Author {
     name: String,
     email: String,
-    time: u64,
+    timestamp: i64,
     tz: i32,
 }
+
+impl Into<BlameAuthor> for Author {
+    fn into(self) -> BlameAuthor {
+        let Author { name, email, timestamp, tz } = self;
+
+        let tz_secs = (tz * 60) / 100;
+        let offset = FixedOffset::west(tz_secs);
+        let time_naive = NaiveDateTime::from_timestamp(timestamp, 0);
+        let time = DateTime::from_utc(time_naive, offset);
+
+        BlameAuthor {
+            name,
+            email,
+            time,
+        }
+    }
+}
+
+// Blame implementation
 
 impl Blame {
     pub fn from_porcelain(raw_bytes: &[u8]) -> Result<Self> {
         const BLAME_ERROR: Error = Error::StaticMsg("unexpected or mismatched input line in blame data");
-
-        macro_rules! capture {
-            ($regex:expr, $line:expr) => {
-                match $regex.captures($line) {
-                    Some(captures) => captures,
-                    None => return Err(BLAME_ERROR),
-                }
-            }
-        }
 
         macro_rules! utf {
             ($captures:expr, $name:expr) => (
@@ -88,20 +100,38 @@ impl Blame {
             )
         }
 
-        let lines = raw_bytes.split(|&b| b == b'\n');
-        let mut state = State::Headers;
+        macro_rules! set_string {
+            ($field:expr, $value:expr) => {{
+                $field.clear();
+                $field.push_str($value);
+            }}
+        }
 
+        // FSM state
+        let lines = raw_bytes.split(|&b| b == b'\n');
+        let mut state = State::Commit;
+        let mut new_group = false;
+
+        // Temporary state to build next item
         let mut author = Author::default();
         let mut committer = Author::default();
         let mut summary = String::new();
+        let mut previous_commit = None;
+        let mut commit_info = None;
 
+        // In-progress result data
+        let mut blame_groups = Vec::new();
         let mut blame_lines = Vec::new();
 
         for line in lines {
             match state {
                 State::Commit => {
-                    let captures = capture!(GIT_HASH_REGEX, line);
+                    let captures = match GIT_HASH_REGEX.captures(line) {
+                        Some(captures) => captures,
+                        None => return Err(BLAME_ERROR),
+                    };
 
+                    // Unwraps are safe because the values are regex-verified
                     let old_lineno = utf!(captures, "old-line").parse().unwrap();
                     let new_lineno = utf!(captures, "new-line").parse().unwrap();
                     let commit = {
@@ -109,17 +139,122 @@ impl Blame {
                         GitHash::from_str(sha1).unwrap()
                     };
 
+                    commit_info = Some((commit, old_lineno, new_lineno));
+                    state = State::Headers;
+                }
+                State::Headers => {
+                    let captures = match METADATA_REGEX.captures(line) {
+                        Some(captures) => captures,
+                        None => {
+                            new_group = true;
+                            state = State::Content;
+                            continue;
+                        }
+                    };
+
+                    let key = utf!(captures, "key");
+                    let value = captures
+                        .name("value")
+                        .map(|mtch| str::from_utf8(mtch.as_bytes()).unwrap());
+
+                    match key {
+                        "author" => {
+                            let value = value.expect("No value for key author");
+                            set_string!(&mut author.name, value);
+                        }
+                        "author-mail" => {
+                            let value = value.expect("No value for key author-mail");
+                            set_string!(&mut author.email, value);
+                        }
+                        "author-time" => {
+                            let value = value.expect("No value for key author-time");
+                            author.timestamp = value.parse().unwrap();
+                        }
+                        "author-tz" => {
+                            let value = value.expect("No value for key author-tz");
+                            author.tz = value.parse().unwrap();
+                        }
+                        "committer" => {
+                            let value = value.expect("No value for key author");
+                            set_string!(&mut committer.name, value);
+                        }
+                        "committer-mail" => {
+                            let value = value.expect("No value for key author-mail");
+                            set_string!(&mut committer.email, value);
+                        }
+                        "committer-time" => {
+                            let value = value.expect("No value for key author-time");
+                            committer.timestamp = value.parse().unwrap();
+                        }
+                        "committer-tz" => {
+                            let value = value.expect("No value for key author-tz");
+                            committer.tz = value.parse().unwrap();
+                        }
+                        "summary" => {
+                            let value = value.expect("No value for key summary");
+                            set_string!(summary, value);
+                        }
+                        "previous" => {
+                            let (value, _) = value.expect("No value for key previous").split_at(40);
+                            let hash = GitHash::from_str(value).expect("Unable to parse git hash");
+                            previous_commit = Some(hash);
+                        }
+                        "boundary" => (),
+                        "filename" => state = State::Content,
+                        _ => (),
+                    }
+                }
+                State::Content => {
+                    let (first, line) = line.split_at(1);
+                    assert_eq!(first, &[b'\t'], "In content state but doesn't start with tab");
+
+                    // Push new blame line
+                    let line = line.into();
+                    let (commit, old_lineno, new_lineno) = match commit_info.take() {
+                        Some(values) => values,
+                        None => return Err(BLAME_ERROR),
+                    };
+
                     blame_lines.push(BlameLine {
                         commit,
                         old_lineno,
                         new_lineno,
+                        line,
                     });
 
-                    state = State::Headers;
+                    // Push new blame group
+                    if new_group {
+                        let author = mem::replace(&mut author, Author::default());
+                        let committer = mem::replace(&mut committer, Author::default());
+                        let summary = mem::replace(&mut summary, String::new());
+                        let previous = previous_commit.take();
+                        let blame_lines = mem::replace(&mut blame_lines, Vec::new());
+
+                        blame_groups.push(BlameGroup {
+                            author: author.into(),
+                            committer: committer.into(),
+                            summary,
+                            previous,
+                            lines: blame_lines,
+                        });
+                    }
+
+                    state = State::Commit;
                 }
             }
         }
 
-        unimplemented!()
+        // Final blame group
+        if !blame_lines.is_empty() {
+            blame_groups.push(BlameGroup {
+                author: author.into(),
+                committer: committer.into(),
+                summary,
+                previous: previous_commit,
+                lines: blame_lines,
+            });
+        }
+
+        Ok(Blame { groups: blame_groups })
     }
 }
