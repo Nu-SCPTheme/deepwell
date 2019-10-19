@@ -115,7 +115,7 @@ impl RevisionStore {
 
     // Argument helpers
     fn arg_author(&self, name: &str) -> String {
-        format!("{} <noreply@{}>", name, self.domain)
+        format!("--author={} <noreply@{}>", name, self.domain)
     }
 
     fn arg_message(&self, message: &str) -> String {
