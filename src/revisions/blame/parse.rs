@@ -19,16 +19,17 @@
  */
 
 use super::*;
-use crate::{Error, Result};
 use crate::revisions::GitHash;
+use crate::{Error, Result};
 use chrono::{DateTime, FixedOffset, NaiveDateTime};
 use regex::bytes::Regex;
-use std::{str, mem};
+use std::{mem, str};
 
 // TODO split into separate crate
 
 lazy_static! {
-    static ref GIT_HASH_REGEX: Regex = Regex::new(r"
+    static ref GIT_HASH_REGEX: Regex = Regex::new(
+        r"
         (?x)
         ^
         (?P<sha1>[0-9a-f]{40})
@@ -38,16 +39,19 @@ lazy_static! {
         (?P<new-line>[0-9]+)
         (\s(?P<group-lines>[0-9]+))?
         $
-    ").unwrap();
-
-    static ref METADATA_REGEX: Regex = Regex::new(r"
+    "
+    )
+    .unwrap();
+    static ref METADATA_REGEX: Regex = Regex::new(
+        r"
         (?x)
         ^
         (?P<key>[a-z\-]+
         (\s(?P<value>.+))?
         $
-    ").unwrap();
-
+    "
+    )
+    .unwrap();
     static ref CONTENT_REGEX: Regex = Regex::new("\t(?P<content>.*)").unwrap();
 }
 
@@ -73,18 +77,19 @@ struct Author {
 
 impl Into<BlameAuthor> for Author {
     fn into(self) -> BlameAuthor {
-        let Author { name, email, timestamp, tz } = self;
+        let Author {
+            name,
+            email,
+            timestamp,
+            tz,
+        } = self;
 
         let tz_secs = (tz * 60) / 100;
         let offset = FixedOffset::west(tz_secs);
         let time_naive = NaiveDateTime::from_timestamp(timestamp, 0);
         let time = DateTime::from_utc(time_naive, offset);
 
-        BlameAuthor {
-            name,
-            email,
-            time,
-        }
+        BlameAuthor { name, email, time }
     }
 }
 
@@ -92,19 +97,20 @@ impl Into<BlameAuthor> for Author {
 
 impl Blame {
     pub fn from_porcelain(raw_bytes: &[u8]) -> Result<Self> {
-        const BLAME_ERROR: Error = Error::StaticMsg("unexpected or mismatched input line in blame data");
+        const BLAME_ERROR: Error =
+            Error::StaticMsg("unexpected or mismatched input line in blame data");
 
         macro_rules! utf {
-            ($captures:expr, $name:expr) => (
+            ($captures:expr, $name:expr) => {
                 str::from_utf8(&$captures[$name]).unwrap()
-            )
+            };
         }
 
         macro_rules! set_string {
             ($field:expr, $value:expr) => {{
                 $field.clear();
                 $field.push_str($value);
-            }}
+            }};
         }
 
         // FSM state
@@ -206,7 +212,11 @@ impl Blame {
                 }
                 State::Content => {
                     let (first, line) = line.split_at(1);
-                    assert_eq!(first, &[b'\t'], "In content state but doesn't start with tab");
+                    assert_eq!(
+                        first,
+                        &[b'\t'],
+                        "In content state but doesn't start with tab"
+                    );
 
                     // Push new blame line
                     let line = line.into();
@@ -255,6 +265,8 @@ impl Blame {
             });
         }
 
-        Ok(Blame { groups: blame_groups })
+        Ok(Blame {
+            groups: blame_groups,
+        })
     }
 }

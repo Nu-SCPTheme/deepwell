@@ -256,13 +256,7 @@ impl RevisionStore {
         let slug = slug.as_ref();
         check_normal(slug)?;
 
-        let args = arguments![
-            "git",
-            "blame",
-            "--porcelain",
-            "--",
-            slug,
-        ];
+        let args = arguments!["git", "blame", "--porcelain", "--", slug];
 
         let raw_blame = match spawn_output(&args) {
             Ok(bytes) => bytes,
