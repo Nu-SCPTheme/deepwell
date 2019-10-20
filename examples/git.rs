@@ -31,7 +31,9 @@ extern crate tempfile;
 use deepwell::{CommitInfo, RevisionStore};
 use rand::distributions::Uniform;
 use rand::prelude::*;
+use std::cmp;
 use std::fmt::Write;
+use std::ops::{Bound, Range, RangeBounds};
 use tempfile::tempdir;
 
 const TEST_SLUGS: [&str; 21] = [
@@ -107,12 +109,39 @@ fn pick<'a, T, R>(rng: &mut R, items: &'a [T]) -> &'a T
 }
 
 #[inline]
-fn pick_str<'a, R>(rng: &mut R, string: &mut String, chars: &[char], count: usize)
-    where R: Rng + ?Sized
+fn pick_str<'a, R, B>(
+    rng: &mut R,
+    string: &mut String,
+    chars: &[char],
+    count: usize,
+    range: B,
+)
+    where R: Rng + ?Sized,
+          B: RangeBounds<usize> + Clone,
 {
+    string.replace_range(range.clone(), "");
+
+    let idx = match range.start_bound() {
+        Bound::Included(idx) => *idx,
+        Bound::Excluded(idx) => *idx + 1,
+        Bound::Unbounded => 0,
+    };
+
     for &c in chars.choose_multiple(rng, count) {
-        string.push(c);
+        string.insert(idx, c);
     }
+}
+
+// Assumes ASCII since getting bounds is annoying, sad.
+fn random_range<R>(rng: &mut R, len: usize) -> Range<usize>
+    where R: Rng + ?Sized,
+{
+    let a = rng.gen_range(0, len);
+    let b = rng.gen_range(0, len);
+
+    let start = cmp::min(a, b);
+    let stop = cmp::max(a, b);
+    start..stop
 }
 
 fn main() {
@@ -128,7 +157,6 @@ fn main() {
     let content_between = Uniform::from(16..8192);
     let mut rng = rand::thread_rng();
     let mut message = String::new();
-    let mut content = String::new();
 
     // Randomly generate lots of commits
     for _ in 0..500 {
@@ -136,15 +164,18 @@ fn main() {
         let username = pick(&mut rng, TEST_USERNAMES.as_ref());
 
         // Create random message
-        message.clear();
         write!(&mut message, "Editing file {}: ", slug).unwrap();
-        pick_str(&mut rng, &mut message, &MESSAGE_CHARACTERS, 32);
+        pick_str(&mut rng, &mut message, &MESSAGE_CHARACTERS, 32, ..);
 
         // Create random content
-        content.clear();
-        let content_len = content_between.sample(&mut rng);
-        pick_str(&mut rng, &mut content, &CONTENT_CHARACTERS, content_len);
-        content.push('\n');
+        let mut content = match store.get_page(slug).expect("Unable to get existing page") {
+            Some(bytes) => String::from_utf8(Vec::from(bytes)).expect("Content wasn't UTF-8"),
+            None => String::new(),
+        };
+
+        let new_content_len = content_between.sample(&mut rng);
+        let range = random_range(&mut rng, content.len());
+        pick_str(&mut rng, &mut content, &CONTENT_CHARACTERS, new_content_len, range);
 
         // Commit to repo
         let info = CommitInfo {
@@ -161,9 +192,8 @@ fn main() {
         let username = pick(&mut rng, TEST_USERNAMES.as_ref());
 
         // Create random message
-        message.clear();
         write!(&mut message, "Deleting file {}: ", slug).unwrap();
-        pick_str(&mut rng, &mut message, &MESSAGE_CHARACTERS, 32);
+        pick_str(&mut rng, &mut message, &MESSAGE_CHARACTERS, 32, ..);
 
         // Commit to repo
         let info = CommitInfo {
