@@ -36,6 +36,8 @@ impl<'d> WikiService<'d> {
     }
 
     pub fn create(&mut self, name: &str, slug: &str) -> Result<()> {
+        info!("Creating new wiki with name '{}' ('{}')", name, slug);
+
         let model = NewWiki { name, slug };
         let result = diesel::insert_into(wikis::table)
             .values(&model)
@@ -51,6 +53,8 @@ impl<'d> WikiService<'d> {
         use self::wikis::dsl;
 
         let id: i64 = id.into();
+        info!("Editing wiki id {}, name: {:?}, slug: {:?}", id, name, slug);
+
         let model = UpdateWiki { name, slug };
         diesel::update(dsl::wikis.filter(dsl::wiki_id.eq(id)))
             .set(&model)
@@ -65,6 +69,8 @@ impl<'d> WikiService<'d> {
         // TODO delete all other rows that are FK'ed
 
         let id: i64 = id.into();
+        info!("Removing wiki id {}", id);
+
         diesel::delete(dsl::wikis.filter(dsl::wiki_id.eq(id)))
             .execute(self.conn)?;
 
