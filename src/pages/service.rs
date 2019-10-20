@@ -19,10 +19,21 @@
  */
 
 use crate::revisions::RevisionStore;
+use crate::wikis::WikiId;
 use crate::service_prelude::*;
 use std::collections::HashMap;
 
-#[derive(Debug)]
-pub struct PageService {
-    //stores: HashMap<
+pub struct PageService<'d> {
+    conn: &'d PgConnection,
+    stores: HashMap<WikiId, RevisionStore>,
+}
+
+impl<'d> PageService<'d> {
+    #[inline]
+    pub fn new(conn: &'d PgConnection) -> Self {
+        PageService {
+            conn,
+            stores: HashMap::new(),
+        }
+    }
 }
