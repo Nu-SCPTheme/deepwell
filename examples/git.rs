@@ -218,6 +218,7 @@ fn main() {
     let repo = directory.path();
     let store = RevisionStore::new(repo, "example.org");
     store.initial_commit().expect("Unable to create initial commit");
+    println!("Starting generation...");
 
     // Setup shared buffers
     let mut rng = rand::thread_rng();
