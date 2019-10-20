@@ -28,6 +28,7 @@ extern crate tempfile;
 use deepwell::{CommitInfo, RevisionStore};
 use rand::Rng;
 use rand::distributions::{Alphanumeric, Distribution, Uniform};
+use std::fmt::Write;
 use tempfile::tempdir;
 
 const TEST_SLUGS: [&str; 21] = [
@@ -112,6 +113,7 @@ fn main() {
 
         // Create random message
         message.clear();
+        write!(&mut message, "Editing file {}: ", slug).unwrap();
         for _ in 0..32 {
             message.push(rng.sample(Alphanumeric));
         }
@@ -134,12 +136,16 @@ fn main() {
     }
 
     // Randomly delete some pages
-    message.clear();
-    message.push_str("Deleting page");
-
     for _ in 0..5 {
         let slug = pick(&mut rng, &TEST_SLUGS[..]);
         let username = pick(&mut rng, &TEST_USERNAMES[..]);
+
+        // Create random message
+        message.clear();
+        write!(&mut message, "Deleting file {}: ", slug).unwrap();
+        for _ in 0..32 {
+            message.push(rng.sample(Alphanumeric));
+        }
 
         // Commit to repo
         let info = CommitInfo {
