@@ -218,11 +218,7 @@ impl Blame {
                 }
                 State::Content => {
                     let (first, line) = line.split_at(1);
-                    assert_eq!(
-                        first,
-                        b"\t",
-                        "In content state but doesn't start with tab"
-                    );
+                    assert_eq!(first, b"\t", "In content state but doesn't start with tab");
 
                     // Push new blame line
                     let line = line.into();

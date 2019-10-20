@@ -178,7 +178,6 @@ lazy_static! {
             .chars()
             .collect()
     };
-
     static ref CONTENT_CHARACTERS: Vec<char> = {
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,!?'\" \n\n\n\n"
             .chars()
@@ -188,21 +187,17 @@ lazy_static! {
 
 #[inline]
 fn pick<'a, T, R>(rng: &mut R, items: &'a [T]) -> &'a T
-    where R: Rng + ?Sized
+where
+    R: Rng + ?Sized,
 {
     items.choose(rng).unwrap()
 }
 
 #[inline]
-fn pick_str<'a, R, B>(
-    rng: &mut R,
-    string: &mut String,
-    chars: &[char],
-    count: usize,
-    range: B,
-)
-    where R: Rng + ?Sized,
-          B: RangeBounds<usize> + Clone,
+fn pick_str<'a, R, B>(rng: &mut R, string: &mut String, chars: &[char], count: usize, range: B)
+where
+    R: Rng + ?Sized,
+    B: RangeBounds<usize> + Clone,
 {
     string.replace_range(range.clone(), "");
 
@@ -219,7 +214,8 @@ fn pick_str<'a, R, B>(
 
 // Assumes ASCII since getting bounds is annoying, sad.
 fn random_range<R>(rng: &mut R, len: usize) -> Range<usize>
-    where R: Rng + ?Sized,
+where
+    R: Rng + ?Sized,
 {
     let start = rng.gen_range(0, len);
     let size = rng.gen_range(3, 64);
@@ -236,7 +232,9 @@ fn test_git() {
     let directory = tempdir().expect("Unable to create temporary directory");
     let repo = directory.path();
     let store = RevisionStore::new(repo, "example.org");
-    store.initial_commit().expect("Unable to create initial commit");
+    store
+        .initial_commit()
+        .expect("Unable to create initial commit");
 
     // Setup shared buffers
     let mut rng = rand::thread_rng();
@@ -272,7 +270,13 @@ fn test_git() {
 
         let content_len = rng.gen_range(8, 128);
         let range = random_range(&mut rng, content.len());
-        pick_str(&mut rng, &mut content, &CONTENT_CHARACTERS, content_len, range);
+        pick_str(
+            &mut rng,
+            &mut content,
+            &CONTENT_CHARACTERS,
+            content_len,
+            range,
+        );
 
         // Commit to repo
         let info = CommitInfo {
@@ -280,7 +284,9 @@ fn test_git() {
             message: &message,
         };
 
-        let hash = store.commit(slug, &content, info).expect("Unable to commit generated data");
+        let hash = store
+            .commit(slug, &content, info)
+            .expect("Unable to commit generated data");
 
         // Maybe add commit for checking diff
         if hashes.len() < 2 || rng.gen_range(0, 100) < 10 {
@@ -309,7 +315,9 @@ fn test_git() {
             message: &message,
         };
 
-        store.remove(slug, info).expect("Unable to commit removed file");
+        store
+            .remove(slug, info)
+            .expect("Unable to commit removed file");
     }
 
     // Get a diff
@@ -317,7 +325,9 @@ fn test_git() {
         let slug = pick(&mut rng, TEST_SLUGS.as_ref());
         let second = hashes.pop().unwrap();
         let first = hashes.pop().unwrap();
-        let diff = store.get_diff(slug, first, second).expect("Unable to get diff");
+        let diff = store
+            .get_diff(slug, first, second)
+            .expect("Unable to get diff");
 
         println!();
         println!("Diff between {} and {} for {}:", first, second, slug);
