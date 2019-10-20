@@ -225,8 +225,8 @@ fn main() {
     let mut rng = rand::thread_rng();
     let mut message = String::new();
 
-    // Randomly generate lots of commits
-    for _ in 0..500 {
+    // Randomly generate some commits
+    for _ in 0..100 {
         let slug = pick(&mut rng, TEST_SLUGS.as_ref());
         let username = pick(&mut rng, TEST_USERNAMES.as_ref());
 
