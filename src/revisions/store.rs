@@ -95,7 +95,7 @@ impl RevisionStore {
     }
 
     fn read_file(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
-        let path = self.repo.join(slug);
+        let path = self.get_path(slug, true);
         let mut file = match File::open(&path) {
             Ok(file) => file,
             Err(error) => {
@@ -115,14 +115,14 @@ impl RevisionStore {
     }
 
     fn write_file(&self, slug: &str, content: &[u8]) -> Result<()> {
-        let path = self.repo.join(slug);
+        let path = self.get_path(slug, true);
         let mut file = File::create(path)?;
         file.write_all(content)?;
         Ok(())
     }
 
     fn remove_file(&self, slug: &str) -> Result<Option<()>> {
-        let path = self.repo.join(slug);
+        let path = self.get_path(slug, true);
         match fs::remove_file(path) {
             Ok(_) => (),
             Err(error) => {
@@ -199,12 +199,13 @@ impl RevisionStore {
         check_normal(slug)?;
         self.write_file(slug, content.as_ref())?;
 
-        let args = arguments!["git", "add", slug];
+        let path = self.get_path(slug, false);
+        let args = arguments!["git", "add", &path];
         self.spawn(&args)?;
 
         let author = self.arg_author(info.username);
         let message = self.arg_message(info.message);
-        let args = arguments!["git", "commit", &author, &message, "--", slug];
+        let args = arguments!["git", "commit", &author, &message, "--", &path];
         self.spawn(&args)?;
 
         self.get_commit()
@@ -226,7 +227,8 @@ impl RevisionStore {
 
         let author = self.arg_author(info.username);
         let message = self.arg_message(info.message);
-        let args = arguments!["git", "commit", &author, &message, "--", slug];
+        let path = self.get_path(slug, false);
+        let args = arguments!["git", "commit", &author, &message, "--", &path];
 
         self.spawn(&args)?;
         self.get_commit().map(Some)
@@ -255,8 +257,9 @@ impl RevisionStore {
         let slug = slug.as_ref();
         check_normal(slug)?;
 
-        let spec = format!("{:x}:{}", hash, slug);
-        let args = arguments!["git", "show", "--format=%B", &spec,];
+        let path = self.get_path(slug, false);
+        let spec = format!("{:x}:{}", hash, path.display());
+        let args = arguments!["git", "show", "--format=%B", &spec];
 
         match self.spawn_output(&args) {
             Ok(bytes) => Ok(Some(bytes)),
@@ -276,6 +279,7 @@ impl RevisionStore {
         let first = format!("{:x}", first);
         let second = format!("{:x}", second);
         check_normal(slug)?;
+        let path = self.get_path(slug, false);
 
         let args = arguments![
             "git",
@@ -284,7 +288,7 @@ impl RevisionStore {
             &first,
             &second,
             "--",
-            slug,
+            &path,
         ];
         self.spawn_output(&args)
     }
@@ -298,8 +302,9 @@ impl RevisionStore {
         let _guard = self.lock.read();
         let slug = slug.as_ref();
         check_normal(slug)?;
+        let path = self.get_path(slug, false);
 
-        let args = arguments!["git", "blame", "--porcelain", "--", slug];
+        let args = arguments!["git", "blame", "--porcelain", "--", &path];
 
         let raw_blame = match self.spawn_output(&args) {
             Ok(bytes) => bytes,
