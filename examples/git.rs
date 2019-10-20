@@ -29,7 +29,6 @@ extern crate rand;
 extern crate tempfile;
 
 use deepwell::{CommitInfo, RevisionStore};
-use rand::distributions::Uniform;
 use rand::prelude::*;
 use std::cmp;
 use std::fmt::Write;
@@ -136,12 +135,11 @@ fn pick_str<'a, R, B>(
 fn random_range<R>(rng: &mut R, len: usize) -> Range<usize>
     where R: Rng + ?Sized,
 {
-    let a = rng.gen_range(0, len);
-    let b = rng.gen_range(0, len);
+    let start = rng.gen_range(0, len);
+    let size = rng.gen_range(3, 64);
+    let end = start + cmp::min(size, len - start);
 
-    let start = cmp::min(a, b);
-    let stop = cmp::max(a, b);
-    start..stop
+    start..end
 }
 
 fn main() {
@@ -154,7 +152,6 @@ fn main() {
     store.initial_commit().expect("Unable to create initial commit");
 
     // Setup shared buffers
-    let content_between = Uniform::from(16..8192);
     let mut rng = rand::thread_rng();
     let mut message = String::new();
 
@@ -169,13 +166,22 @@ fn main() {
 
         // Create random content
         let mut content = match store.get_page(slug).expect("Unable to get existing page") {
-            Some(bytes) => String::from_utf8(Vec::from(bytes)).expect("Content wasn't UTF-8"),
-            None => String::new(),
+            Some(bytes) => {
+                let bytes = Vec::from(bytes);
+                String::from_utf8(bytes).expect("Content wasn't UTF-8")
+            }
+            None => {
+                let mut content = String::new();
+                let len = rng.gen_range(48, 8192);
+                pick_str(&mut rng, &mut content, &CONTENT_CHARACTERS, len, ..);
+                content
+            }
         };
 
-        let new_content_len = content_between.sample(&mut rng);
+        let content_len = rng.gen_range(8, 64);
         let range = random_range(&mut rng, content.len());
-        pick_str(&mut rng, &mut content, &CONTENT_CHARACTERS, new_content_len, range);
+        pick_str(&mut rng, &mut content, &CONTENT_CHARACTERS, content_len, range);
+        content.push('\n');
 
         // Commit to repo
         let info = CommitInfo {
