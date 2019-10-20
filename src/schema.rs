@@ -73,7 +73,7 @@ table! {
         page_id -> Int8,
         user_id -> Int8,
         git_commit -> Text,
-        changes -> Jsonb,
+        change_type -> Varchar,
     }
 }
 
@@ -98,14 +98,15 @@ table! {
 table! {
     users (user_id) {
         user_id -> Int8,
-        name -> Text,
         created_at -> Timestamp,
+        name -> Text,
         email -> Text,
+        is_verified -> Bool,
         author_page -> Text,
         website -> Text,
         about -> Text,
-        location -> Text,
         gender -> Text,
+        location -> Text,
     }
 }
 
