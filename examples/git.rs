@@ -127,7 +127,7 @@ const TEST_SLUGS: [&str; 89] = [
     "scp-series-5",
 ];
 
-const TEST_USERNAMES: [&str; 24] = [
+const TEST_USERNAMES: [&str; 25] = [
     "djkaktus",
     "Roget",
     "ihp",
@@ -145,6 +145,7 @@ const TEST_USERNAMES: [&str; 24] = [
     "The Great Hippo",
     "Captain Kirby",
     "Weryllium",
+    "not_a_seagull",
     "NatVoltaic",
     "DarkStuff",
     "MaliceAforethought",
@@ -252,7 +253,6 @@ fn main() {
         let content_len = rng.gen_range(8, 128);
         let range = random_range(&mut rng, content.len());
         pick_str(&mut rng, &mut content, &CONTENT_CHARACTERS, content_len, range);
-        content.push('\n');
 
         // Commit to repo
         let info = CommitInfo {
