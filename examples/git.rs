@@ -162,7 +162,7 @@ lazy_static! {
     };
 
     static ref CONTENT_CHARACTERS: Vec<char> = {
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,!?'\" \n"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,!?'\" \n\n\n\n"
             .chars()
             .collect()
     };
@@ -230,8 +230,10 @@ fn main() {
         let username = pick(&mut rng, TEST_USERNAMES.as_ref());
 
         // Create random message
+        message.clear();
         write!(&mut message, "Editing file {}: ", slug).unwrap();
-        pick_str(&mut rng, &mut message, &MESSAGE_CHARACTERS, 32, ..);
+        let range = message.len()..;
+        pick_str(&mut rng, &mut message, &MESSAGE_CHARACTERS, 32, range);
 
         // Create random content
         let mut content = match store.get_page(slug).expect("Unable to get existing page") {
@@ -241,13 +243,13 @@ fn main() {
             }
             None => {
                 let mut content = String::new();
-                let len = rng.gen_range(48, 8192);
+                let len = rng.gen_range(4096, 100_000);
                 pick_str(&mut rng, &mut content, &CONTENT_CHARACTERS, len, ..);
                 content
             }
         };
 
-        let content_len = rng.gen_range(8, 64);
+        let content_len = rng.gen_range(8, 128);
         let range = random_range(&mut rng, content.len());
         pick_str(&mut rng, &mut content, &CONTENT_CHARACTERS, content_len, range);
         content.push('\n');
@@ -267,8 +269,10 @@ fn main() {
         let username = pick(&mut rng, TEST_USERNAMES.as_ref());
 
         // Create random message
+        message.clear();
         write!(&mut message, "Deleting file {}: ", slug).unwrap();
-        pick_str(&mut rng, &mut message, &MESSAGE_CHARACTERS, 32, ..);
+        let range = message.len()..;
+        pick_str(&mut rng, &mut message, &MESSAGE_CHARACTERS, 32, range);
 
         // Commit to repo
         let info = CommitInfo {
