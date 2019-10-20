@@ -80,17 +80,21 @@ impl RevisionStore {
     }
 
     // Filesystem helpers
-    fn get_path(&self, slug: &str, absolute: bool) -> PathBuf {
+    fn get_path(&self, wiki_slug: &str, page_slug: &str, absolute: bool) -> PathBuf {
         trace!(
-            "Converting slug '{}' to path (absolute: {})",
-            slug,
+            "Converting slug '{}' in wiki '{}' to path (absolute: {})",
+            page_slug,
+            wiki_slug,
             absolute,
         );
 
         let filename = {
             let mut filename = String::new();
 
-            for part in slug.split(':') {
+            filename.push_str(wiki_slug);
+            filename.push('/');
+
+            for part in page_slug.split(':') {
                 filename.push_str(part);
                 filename.push('$');
             }
@@ -110,8 +114,8 @@ impl RevisionStore {
         path
     }
 
-    fn read_file(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
-        let path = self.get_path(slug, true);
+    fn read_file(&self, wiki_slug: &str, page_slug: &str) -> Result<Option<Box<[u8]>>> {
+        let path = self.get_path(wiki_slug, page_slug, true);
 
         debug!("Reading file from {}", path.display());
 
@@ -133,8 +137,8 @@ impl RevisionStore {
         Ok(Some(bytes))
     }
 
-    fn write_file(&self, slug: &str, content: &[u8]) -> Result<()> {
-        let path = self.get_path(slug, true);
+    fn write_file(&self, wiki_slug: &str, page_slug: &str, content: &[u8]) -> Result<()> {
+        let path = self.get_path(wiki_slug, page_slug, true);
 
         debug!("Writing {} bytes to {}", content.len(), path.display());
 
@@ -143,8 +147,8 @@ impl RevisionStore {
         Ok(())
     }
 
-    fn remove_file(&self, slug: &str) -> Result<Option<()>> {
-        let path = self.get_path(slug, true);
+    fn remove_file(&self, wiki_slug: &str, page_slug: &str) -> Result<Option<()>> {
+        let path = self.get_path(wiki_slug, page_slug, true);
 
         debug!("Removing file {}", path.display());
 
@@ -217,25 +221,27 @@ impl RevisionStore {
     }
 
     /// For the given slug, create or edit a page to have the specified contents.
-    pub fn commit<S, B>(&self, slug: S, content: B, info: CommitInfo) -> Result<GitHash>
-    where
-        S: AsRef<str>,
-        B: AsRef<[u8]>,
-    {
-        let slug = slug.as_ref();
-        let content = content.as_ref();
-
+    pub fn commit<S, B>(
+        &self,
+        wiki_slug: &str,
+        page_slug: &str,
+        content: &[u8],
+        info: CommitInfo,
+    ) -> Result<GitHash> {
         info!(
-            "Committing file changes for slug '{}' ({} bytes)",
-            slug,
+            "Committing file changes for slug '{}/{}' ({} bytes)",
+            wiki_slug,
+            page_slug,
             content.len(),
         );
 
-        let _guard = self.lock.write();
-        check_normal(slug)?;
-        self.write_file(slug, content)?;
+        check_normal(wiki_slug)?;
+        check_normal(page_slug)?;
 
-        let path = self.get_path(slug, false);
+        let _guard = self.lock.write();
+        self.write_file(wiki_slug, page_slug, content)?;
+
+        let path = self.get_path(wiki_slug, page_slug, false);
         let args = arguments!["git", "add", &path];
         self.spawn(&args)?;
 
@@ -257,23 +263,28 @@ impl RevisionStore {
 
     /// Remove the given page from the repository.
     /// Returns `None` if the page does not exist.
-    pub fn remove<S>(&self, slug: S, info: CommitInfo) -> Result<Option<GitHash>>
-    where
-        S: AsRef<str>,
-    {
-        let slug = slug.as_ref();
-        info!("Removing file for slug '{}' (info: {:?})", slug, info);
+    pub fn remove<S>(
+        &self,
+        wiki_slug: &str,
+        page_slug: &str,
+        info: CommitInfo,
+    ) -> Result<Option<GitHash>> {
+        info!(
+            "Removing file for slug '{}/{}' (info: {:?})",
+            wiki_slug, page_slug, info
+        );
+
+        check_normal(wiki_slug)?;
+        check_normal(page_slug)?;
 
         let _guard = self.lock.write();
-        check_normal(slug)?;
-
-        if self.remove_file(slug)?.is_none() {
+        if self.remove_file(wiki_slug, page_slug)?.is_none() {
             return Ok(None);
         }
 
         let author = self.arg_author(info.username);
         let message = self.arg_message(info.message);
-        let path = self.get_path(slug, false);
+        let path = self.get_path(wiki_slug, page_slug, false);
         let args = arguments!["git", "commit", &author, &message, "--", &path];
 
         self.spawn(&args)?;
@@ -282,35 +293,37 @@ impl RevisionStore {
 
     /// Gets the current version of a page.
     /// Returns `None` if the page does not exist.
-    pub fn get_page<S>(&self, slug: S) -> Result<Option<Box<[u8]>>>
-    where
-        S: AsRef<str>,
-    {
-        let slug = slug.as_ref();
-        info!("Getting page content for slug '{}'", slug);
+    pub fn get_page<S>(&self, wiki_slug: &str, page_slug: &str) -> Result<Option<Box<[u8]>>> {
+        info!(
+            "Getting page content for slug '{}/{}'",
+            wiki_slug, page_slug
+        );
+
+        check_normal(wiki_slug)?;
+        check_normal(page_slug)?;
 
         let _guard = self.lock.read();
-        check_normal(slug)?;
-
-        self.read_file(slug)
+        self.read_file(wiki_slug, page_slug)
     }
 
     /// Gets the version of a page at the specified commit.
     /// Returns `None` if the page did not at exist at the time.
-    pub fn get_page_version<S>(&self, slug: S, hash: GitHash) -> Result<Option<Box<[u8]>>>
-    where
-        S: AsRef<str>,
-    {
-        let slug = slug.as_ref();
+    pub fn get_page_version<S>(
+        &self,
+        wiki_slug: &str,
+        page_slug: &str,
+        hash: GitHash,
+    ) -> Result<Option<Box<[u8]>>> {
         info!(
-            "Getting page content for slug '{}' at commit {}",
-            slug, hash,
+            "Getting page content for slug '{}/{}' at commit {}",
+            wiki_slug, page_slug, hash,
         );
 
-        let _guard = self.lock.read();
-        check_normal(slug)?;
+        check_normal(wiki_slug)?;
+        check_normal(page_slug)?;
 
-        let path = self.get_path(slug, false);
+        let _guard = self.lock.read();
+        let path = self.get_path(wiki_slug, page_slug, false);
         let spec = format!("{:x}:{}", hash, path.display());
         let args = arguments!["git", "show", "--format=%B", &spec];
 
@@ -323,21 +336,25 @@ impl RevisionStore {
 
     /// Gets the diff between commits of a particular page.
     /// Returns `None` if the page or commits do not exist.
-    pub fn get_diff<S>(&self, slug: S, first: GitHash, second: GitHash) -> Result<Box<[u8]>>
-    where
-        S: AsRef<str>,
-    {
-        let slug = slug.as_ref();
+    pub fn get_diff<S>(
+        &self,
+        wiki_slug: &str,
+        page_slug: &str,
+        first: GitHash,
+        second: GitHash,
+    ) -> Result<Box<[u8]>> {
         info!(
-            "Getting diff for slug '{}' between {}..{}",
-            slug, first, second,
+            "Getting diff for slug '{}/{}' between {}..{}",
+            wiki_slug, page_slug, first, second,
         );
+
+        check_normal(wiki_slug)?;
+        check_normal(page_slug)?;
 
         let _guard = self.lock.read();
         let first = format!("{:x}", first);
         let second = format!("{:x}", second);
-        check_normal(slug)?;
-        let path = self.get_path(slug, false);
+        let path = self.get_path(wiki_slug, page_slug, false);
 
         let args = arguments![
             "git",
@@ -353,16 +370,14 @@ impl RevisionStore {
 
     /// Gets the blame for a particular page.
     /// Returns `None` if the page does not exist.
-    pub fn get_blame<S>(&self, slug: S) -> Result<Option<Blame>>
-    where
-        S: AsRef<str>,
-    {
-        let slug = slug.as_ref();
-        info!("Getting blame for slug '{}'", slug);
+    pub fn get_blame<S>(&self, wiki_slug: &str, page_slug: &str) -> Result<Option<Blame>> {
+        info!("Getting blame for slug '{}/{}'", wiki_slug, page_slug);
+
+        check_normal(wiki_slug)?;
+        check_normal(page_slug)?;
 
         let _guard = self.lock.read();
-        check_normal(slug)?;
-        let path = self.get_path(slug, false);
+        let path = self.get_path(wiki_slug, page_slug, false);
 
         let args = arguments!["git", "blame", "--porcelain", "--", &path];
 

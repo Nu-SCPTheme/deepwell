@@ -71,8 +71,7 @@ impl<'d> WikiService<'d> {
         let id: i64 = id.into();
         info!("Removing wiki id {}", id);
 
-        diesel::delete(dsl::wikis.filter(dsl::wiki_id.eq(id)))
-            .execute(self.conn)?;
+        diesel::delete(dsl::wikis.filter(dsl::wiki_id.eq(id))).execute(self.conn)?;
 
         Ok(())
     }
