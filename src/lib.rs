@@ -46,6 +46,15 @@ mod revisions;
 mod schema;
 mod wikis;
 
+mod service_prelude {
+    pub use crate::schema::*;
+    pub use crate::Result;
+    pub use chrono::prelude::*;
+    pub use diesel::prelude::*;
+    pub use std::collections::HashMap;
+    pub use std::fmt::{self, Debug};
+}
+
 pub type StdResult<T, E> = std::result::Result<T, E>;
 pub type Result<T> = StdResult<T, Error>;
 

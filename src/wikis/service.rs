@@ -18,14 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::models::NewWiki;
+use super::models::{NewWiki, UpdateWiki};
 use super::{Wiki, WikiId};
-use crate::schema::wikis;
-use crate::Result;
-use chrono::NaiveDateTime;
-use diesel::prelude::*;
-use std::collections::HashMap;
-use std::fmt::{self, Debug};
+use crate::service_prelude::*;
 
 pub struct WikiService<'d> {
     conn: &'d PgConnection,
@@ -44,11 +39,23 @@ impl<'d> WikiService<'d> {
         let model = NewWiki { name, slug };
         let result = diesel::insert_into(wikis::table)
             .values(&model)
-            .get_result::<(i64, String, String, NaiveDateTime)>(&*self.conn)?;
+            .get_result::<(i64, String, String, NaiveDateTime)>(self.conn)?;
 
         let wiki = Wiki::from_row(result);
-
         self.tenants.insert(wiki.id(), wiki);
+
+        Ok(())
+    }
+
+    pub fn edit(&mut self, id: WikiId, name: Option<&str>, slug: Option<&str>) -> Result<()> {
+        use self::wikis::dsl;
+
+        let id: i64 = id.into();
+        let model = UpdateWiki { name, slug };
+        diesel::update(dsl::wikis.filter(dsl::wiki_id.eq(id)))
+            .set(&model)
+            .execute(self.conn)?;
+
         Ok(())
     }
 }

@@ -26,3 +26,10 @@ pub struct NewWiki<'a> {
     pub name: &'a str,
     pub slug: &'a str,
 }
+
+#[derive(Debug, AsChangeset)]
+#[table_name = "wikis"]
+pub struct UpdateWiki<'a> {
+    pub name: Option<&'a str>,
+    pub slug: Option<&'a str>,
+}

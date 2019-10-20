@@ -19,6 +19,7 @@
  */
 
 use crate::revisions::RevisionStore;
+use crate::service_prelude::*;
 use std::collections::HashMap;
 
 #[derive(Debug)]
