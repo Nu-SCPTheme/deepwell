@@ -70,6 +70,30 @@ impl RevisionStore {
     }
 
     // Filesystem helpers
+    fn get_path(&self, slug: &str, absolute: bool) -> PathBuf {
+        let filename = {
+            let mut filename = String::new();
+
+            for part in slug.split(':') {
+                filename.push_str(part);
+                filename.push('$');
+            }
+
+            filename.pop();
+            filename
+        };
+
+        let mut path = PathBuf::new();
+
+        if absolute {
+            path.push(&self.repo);
+        }
+
+        path.push(&filename);
+        path.set_extension("ftml");
+        path
+    }
+
     fn read_file(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
         let path = self.repo.join(slug);
         let mut file = match File::open(&path) {
