@@ -22,12 +22,15 @@
 
 extern crate color_backtrace;
 extern crate deepwell;
+
+#[macro_use]
+extern crate lazy_static;
 extern crate rand;
 extern crate tempfile;
 
 use deepwell::{CommitInfo, RevisionStore};
-use rand::Rng;
-use rand::distributions::{Alphanumeric, Distribution, Uniform};
+use rand::distributions::Uniform;
+use rand::prelude::*;
 use std::fmt::Write;
 use tempfile::tempdir;
 
@@ -82,13 +85,39 @@ const TEST_USERNAMES: [&str; 24] = [
     "aismallard",
 ];
 
+lazy_static! {
+    static ref MESSAGE_CHARACTERS: Vec<char> = {
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,<>!?/'\""
+            .chars()
+            .collect()
+    };
+
+    static ref CONTENT_CHARACTERS: Vec<char> = {
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 \t\n;:.,<>!?/'\""
+            .chars()
+            .collect()
+    };
+}
+
+#[inline]
 fn pick<'a, T, R>(rng: &mut R, items: &'a [T]) -> &'a T
     where R: Rng + ?Sized
 {
-    let len = items.len();
-    let between = Uniform::from(0..len);
-    let idx = between.sample(rng);
-    return &items[idx];
+    items.choose(rng).unwrap()
+}
+
+#[inline]
+fn pick_str<'a, R>(rng: &mut R, string: &mut String, chars: &[char], count: usize)
+    where R: Rng + ?Sized
+{
+    let selected = chars
+        .iter()
+        .copied()
+        .choose_multiple(rng, count);
+
+    for ch in selected {
+        string.push(ch);
+    }
 }
 
 fn main() {
@@ -108,22 +137,18 @@ fn main() {
 
     // Randomly generate lots of commits
     for _ in 0..500 {
-        let slug = pick(&mut rng, &TEST_SLUGS[..]);
-        let username = pick(&mut rng, &TEST_USERNAMES[..]);
+        let slug = pick(&mut rng, TEST_SLUGS.as_ref());
+        let username = pick(&mut rng, TEST_USERNAMES.as_ref());
 
         // Create random message
         message.clear();
         write!(&mut message, "Editing file {}: ", slug).unwrap();
-        for _ in 0..32 {
-            message.push(rng.sample(Alphanumeric));
-        }
+        pick_str(&mut rng, &mut message, &MESSAGE_CHARACTERS, 32);
 
         // Create random content
         content.clear();
         let content_len = content_between.sample(&mut rng);
-        for _ in 0..content_len {
-            content.push(rng.sample(Alphanumeric));
-        }
+        pick_str(&mut rng, &mut message, &CONTENT_CHARACTERS, content_len);
         content.push('\n');
 
         // Commit to repo
@@ -137,15 +162,13 @@ fn main() {
 
     // Randomly delete some pages
     for _ in 0..20 {
-        let slug = pick(&mut rng, &TEST_SLUGS[..]);
-        let username = pick(&mut rng, &TEST_USERNAMES[..]);
+        let slug = pick(&mut rng, TEST_SLUGS.as_ref());
+        let username = pick(&mut rng, TEST_USERNAMES.as_ref());
 
         // Create random message
         message.clear();
         write!(&mut message, "Deleting file {}: ", slug).unwrap();
-        for _ in 0..32 {
-            message.push(rng.sample(Alphanumeric));
-        }
+        pick_str(&mut rng, &mut message, &MESSAGE_CHARACTERS, 32);
 
         // Commit to repo
         let info = CommitInfo {
