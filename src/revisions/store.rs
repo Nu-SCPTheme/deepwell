@@ -241,7 +241,15 @@ impl RevisionStore {
 
         let author = self.arg_author(info.username);
         let message = self.arg_message(info.message);
-        let args = arguments!["git", "commit", &author, &message, "--", &path];
+        let args = arguments![
+            "git",
+            "commit",
+            "--allow-empty",
+            &author,
+            &message,
+            "--",
+            &path,
+        ];
         self.spawn(&args)?;
 
         self.get_commit()
