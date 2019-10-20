@@ -21,6 +21,7 @@ table! {
     pages (page_id) {
         page_id -> Int8,
         created_at -> Timestamp,
+        deleted_at -> Nullable<Timestamp>,
         slug -> Text,
         title -> Text,
         alt_title -> Nullable<Text>,

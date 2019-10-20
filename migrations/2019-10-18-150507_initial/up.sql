@@ -34,10 +34,12 @@ CREATE TABLE passwords (
 CREATE TABLE pages (
     page_id BIGSERIAL PRIMARY KEY,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    slug TEXT NOT NULL UNIQUE,
+    deleted_at TIMESTAMP,
+    slug TEXT NOT NULL,
     title TEXT NOT NULL,
     alt_title TEXT,
-    tags TEXT[] NOT NULL
+    tags TEXT[] NOT NULL,
+    UNIQUE (deleted_at, slug)
 );
 
 CREATE TABLE parents (
