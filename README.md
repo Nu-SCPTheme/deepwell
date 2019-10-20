@@ -1,4 +1,5 @@
 ## DEEPWELL
+[![Travis CI Build Status](https://travis-ci.org/Nu-SCPTheme/deepwell.svg?branch=master)](https://travis-ci.org/Nu-SCPTheme/deepwell)
 
 Wikidot-like storage and maintenance system. Tracks pages, revisions, files, and manages the database. Its schema and migrations are handled by [Diesel](https://diesel.rs/).
 
