@@ -26,7 +26,7 @@ use std::str;
 pub struct GitHash([u8; 20]);
 
 impl GitHash {
-    pub fn from_str<B>(hex_digest: B) -> Option<Self>
+    pub fn parse_str<B>(hex_digest: B) -> Option<Self>
     where
         B: AsRef<[u8]>,
     {
@@ -36,7 +36,7 @@ impl GitHash {
         };
 
         let mut hash = [0; 20];
-        if let Err(_) = decode_to_slice(hex_digest, &mut hash[..]) {
+        if decode_to_slice(hex_digest, &mut hash[..]).is_err() {
             return None;
         }
 

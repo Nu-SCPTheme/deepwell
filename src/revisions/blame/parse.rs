@@ -142,7 +142,7 @@ impl Blame {
                     let new_lineno = utf!(captures, "new_line").parse().unwrap();
                     let commit = {
                         let sha1 = utf!(captures, "sha1");
-                        GitHash::from_str(sha1).unwrap()
+                        GitHash::parse_str(sha1).unwrap()
                     };
 
                     commit_info = Some((commit, old_lineno, new_lineno));
@@ -202,7 +202,7 @@ impl Blame {
                         }
                         "previous" => {
                             let (value, _) = value.expect("No value for key previous").split_at(40);
-                            let hash = GitHash::from_str(value).expect("Unable to parse git hash");
+                            let hash = GitHash::parse_str(value).expect("Unable to parse git hash");
                             previous_commit = Some(hash);
                         }
                         "boundary" => (),

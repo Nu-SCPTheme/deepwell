@@ -141,7 +141,7 @@ impl RevisionStore {
         let args = arguments!["git", "rev-parse", "--verify", "HEAD",];
 
         let hex_digest = self.spawn_output(&args)?;
-        match GitHash::from_str(&hex_digest) {
+        match GitHash::parse_str(&hex_digest) {
             Some(hash) => Ok(hash),
             None => Err(Error::StaticMsg("unable to parse git hash from output")),
         }
@@ -196,7 +196,7 @@ impl RevisionStore {
         let slug = slug.as_ref();
         check_normal(slug)?;
 
-        if let None = self.remove_file(slug)? {
+        if self.remove_file(slug)?.is_none() {
             return Ok(None);
         }
 
