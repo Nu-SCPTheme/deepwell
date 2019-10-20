@@ -153,6 +153,9 @@ impl RevisionStore {
     pub fn initial_commit(&self) -> Result<()> {
         let _guard = self.lock.write();
 
+        let args = arguments!["git", "init"];
+        self.spawn(&args)?;
+
         let author = self.arg_author("DEEPWELL");
         let message = self.arg_message("Initial commit");
         let args = arguments!["git", "commit", "--allow-empty", &author, &message];
