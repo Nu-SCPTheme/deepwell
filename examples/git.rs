@@ -107,7 +107,7 @@ fn main() {
     let mut content = String::new();
 
     // Randomly generate lots of commits
-    for _ in 0..100 {
+    for _ in 0..500 {
         let slug = pick(&mut rng, &TEST_SLUGS[..]);
         let username = pick(&mut rng, &TEST_USERNAMES[..]);
 
@@ -136,7 +136,7 @@ fn main() {
     }
 
     // Randomly delete some pages
-    for _ in 0..5 {
+    for _ in 0..20 {
         let slug = pick(&mut rng, &TEST_SLUGS[..]);
         let username = pick(&mut rng, &TEST_USERNAMES[..]);
 
