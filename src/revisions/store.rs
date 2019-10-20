@@ -24,7 +24,7 @@ use parking_lot::RwLock;
 use std::ffi::{OsStr, OsString};
 use std::fs::{self, File};
 use std::io::{Read, Write};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use wikidot_normalize::is_normal;
 
 macro_rules! arguments {
@@ -56,7 +56,7 @@ pub struct RevisionStore {
 }
 
 impl RevisionStore {
-    /// Creates a new revision store using the given `git2::Repository` and domain name.
+    /// Creates a new revision store using the given repository and domain name.
     ///
     /// The domain name should not be prefixed with a protocol such as `https://` but does
     /// permit subdomains.
@@ -114,6 +114,19 @@ impl RevisionStore {
         path
     }
 
+    fn create_wiki_dir(&self, file_path: &Path) -> Result<()> {
+        let path = match file_path.parent() {
+            Some(path) => path,
+            None => return Err(Error::StaticMsg("repository directory doesn't have a parent")),
+        };
+
+        if !path.exists() {
+            fs::create_dir(path)?;
+        }
+
+        Ok(())
+    }
+
     fn read_file(&self, wiki_slug: &str, page_slug: &str) -> Result<Option<Box<[u8]>>> {
         let path = self.get_path(wiki_slug, page_slug, true);
 
@@ -142,6 +155,7 @@ impl RevisionStore {
 
         debug!("Writing {} bytes to {}", content.len(), path.display());
 
+        self.create_wiki_dir(&path)?;
         let mut file = File::create(path)?;
         file.write_all(content)?;
         Ok(())
@@ -152,6 +166,7 @@ impl RevisionStore {
 
         debug!("Removing file {}", path.display());
 
+        self.create_wiki_dir(&path)?;
         match fs::remove_file(path) {
             Ok(_) => (),
             Err(error) => {
