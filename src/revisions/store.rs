@@ -236,7 +236,7 @@ impl RevisionStore {
     }
 
     /// For the given slug, create or edit a page to have the specified contents.
-    pub fn commit<S, B>(
+    pub fn commit(
         &self,
         wiki_slug: &str,
         page_slug: &str,
@@ -278,7 +278,7 @@ impl RevisionStore {
 
     /// Remove the given page from the repository.
     /// Returns `None` if the page does not exist.
-    pub fn remove<S>(
+    pub fn remove(
         &self,
         wiki_slug: &str,
         page_slug: &str,
@@ -308,7 +308,7 @@ impl RevisionStore {
 
     /// Gets the current version of a page.
     /// Returns `None` if the page does not exist.
-    pub fn get_page<S>(&self, wiki_slug: &str, page_slug: &str) -> Result<Option<Box<[u8]>>> {
+    pub fn get_page(&self, wiki_slug: &str, page_slug: &str) -> Result<Option<Box<[u8]>>> {
         info!(
             "Getting page content for slug '{}/{}'",
             wiki_slug, page_slug
@@ -323,7 +323,7 @@ impl RevisionStore {
 
     /// Gets the version of a page at the specified commit.
     /// Returns `None` if the page did not at exist at the time.
-    pub fn get_page_version<S>(
+    pub fn get_page_version(
         &self,
         wiki_slug: &str,
         page_slug: &str,
@@ -351,7 +351,7 @@ impl RevisionStore {
 
     /// Gets the diff between commits of a particular page.
     /// Returns `None` if the page or commits do not exist.
-    pub fn get_diff<S>(
+    pub fn get_diff(
         &self,
         wiki_slug: &str,
         page_slug: &str,
@@ -385,7 +385,7 @@ impl RevisionStore {
 
     /// Gets the blame for a particular page.
     /// Returns `None` if the page does not exist.
-    pub fn get_blame<S>(&self, wiki_slug: &str, page_slug: &str) -> Result<Option<Blame>> {
+    pub fn get_blame(&self, wiki_slug: &str, page_slug: &str) -> Result<Option<Blame>> {
         info!("Getting blame for slug '{}/{}'", wiki_slug, page_slug);
 
         check_normal(wiki_slug)?;
