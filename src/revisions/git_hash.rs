@@ -35,6 +35,8 @@ impl GitHash {
             Err(_) => return None,
         };
 
+        debug!("Parsing git hash: '{}'", hex_digest);
+
         let mut hash = [0; 20];
         if decode_to_slice(hex_digest, &mut hash[..]).is_err() {
             return None;
@@ -53,6 +55,8 @@ impl From<[u8; 20]> for GitHash {
 
 impl From<&[u8]> for GitHash {
     fn from(bytes: &[u8]) -> Self {
+        debug!("Extracting git hash from raw bytes: {:?}", bytes);
+
         let mut hash = [0; 20];
         let slice = &mut hash[..];
         slice.copy_from_slice(bytes);

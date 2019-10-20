@@ -111,6 +111,8 @@ impl Blame {
             }};
         }
 
+        debug!("Parsing git blame porcelain ({} bytes)", raw_bytes.len());
+
         // FSM state
         let lines = raw_bytes.split(|&b| b == b'\n');
         let mut state = State::Commit;
@@ -129,12 +131,16 @@ impl Blame {
 
         for line in lines {
             if line.is_empty() {
+                trace!("Skipping empty line");
                 continue;
             }
 
             if line.starts_with(b"\t") {
+                trace!("Line starts with tab");
                 state = State::Content;
             }
+
+            trace!("State: {:?}", state);
 
             match state {
                 State::Commit => {
@@ -151,6 +157,12 @@ impl Blame {
                         GitHash::parse_str(sha1).unwrap()
                     };
 
+                    trace!(
+                        "commit: {}, old_lineno: {}, new_lineno: {}",
+                        commit,
+                        old_lineno,
+                        new_lineno,
+                    );
                     commit_info = Some((commit, old_lineno, new_lineno));
                     state = State::Headers;
                 }
@@ -168,6 +180,8 @@ impl Blame {
                     let value = captures
                         .name("value")
                         .map(|mtch| str::from_utf8(mtch.as_bytes()).unwrap());
+
+                    trace!("Got blame key '{}' -> {:?}", key, value);
 
                     match key {
                         "author" => {
@@ -211,9 +225,12 @@ impl Blame {
                             let hash = GitHash::parse_str(value).expect("Unable to parse git hash");
                             previous_commit = Some(hash);
                         }
-                        "boundary" => (),
-                        "filename" => state = State::Content,
-                        _ => (),
+                        "boundary" => trace!("Hit metadata boundary"),
+                        "filename" => {
+                            trace!("Hit filename, moving to State::Content");
+                            state = State::Content;
+                        }
+                        _ => debug!("Unknown blame key '{}' -> {:?}", key, value),
                     }
                 }
                 State::Content => {
@@ -227,6 +244,8 @@ impl Blame {
                         None => return Err(BLAME_ERROR),
                     };
 
+                    trace!("Creating new blame line");
+
                     blame_lines.push(BlameLine {
                         commit,
                         old_lineno,
@@ -236,6 +255,8 @@ impl Blame {
 
                     // Push new blame group
                     if new_group {
+                        trace!("Creating new blame group");
+
                         let author = mem::replace(&mut author, Author::default());
                         let committer = mem::replace(&mut committer, Author::default());
                         let summary = mem::replace(&mut summary, String::new());
@@ -258,6 +279,8 @@ impl Blame {
 
         // Final blame group
         if !blame_lines.is_empty() {
+            trace!("Moving remaining blame lines to final blame group");
+
             blame_groups.push(BlameGroup {
                 author: author.into(),
                 committer: committer.into(),

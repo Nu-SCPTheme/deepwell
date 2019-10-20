@@ -11,6 +11,7 @@ chrono = { version = "0.4", features = ["serde"] }
 diesel = { version = "1", features = ["postgres"] }
 hex = "0.4"
 lazy_static = "1"
+log = "0.4"
 parking_lot = "0.9"
 regex = "1"
 subprocess = "0.1"

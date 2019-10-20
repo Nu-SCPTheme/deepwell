@@ -43,10 +43,14 @@ macro_rules! arguments {
     ($($x:expr,)*) => (arguments![$($x),*]);
 }
 
+/// An object that can't be copied or cloned for a `RwLock`.
+#[derive(Debug)]
+struct RevisionBlock;
+
 /// Represents a git repository to store page contents and their histories.
 #[derive(Debug)]
 pub struct RevisionStore {
-    lock: RwLock<()>,
+    lock: RwLock<RevisionBlock>,
     repo: PathBuf,
     domain: String,
 }
@@ -62,15 +66,27 @@ impl RevisionStore {
         P: Into<PathBuf>,
         S: Into<String>,
     {
-        RevisionStore {
-            lock: RwLock::new(()),
-            repo: repo.into(),
-            domain: domain.into(),
-        }
+        let lock = RwLock::new(RevisionBlock);
+        let repo = repo.into();
+        let domain = domain.into();
+
+        info!(
+            "Creating new revision store for repository {}, domain {}",
+            repo.display(),
+            domain,
+        );
+
+        RevisionStore { lock, repo, domain }
     }
 
     // Filesystem helpers
     fn get_path(&self, slug: &str, absolute: bool) -> PathBuf {
+        trace!(
+            "Converting slug '{}' to path (absolute: {})",
+            slug,
+            absolute,
+        );
+
         let filename = {
             let mut filename = String::new();
 
@@ -96,6 +112,9 @@ impl RevisionStore {
 
     fn read_file(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
         let path = self.get_path(slug, true);
+
+        debug!("Reading file from {}", path.display());
+
         let mut file = match File::open(&path) {
             Ok(file) => file,
             Err(error) => {
@@ -116,6 +135,9 @@ impl RevisionStore {
 
     fn write_file(&self, slug: &str, content: &[u8]) -> Result<()> {
         let path = self.get_path(slug, true);
+
+        debug!("Writing {} bytes to {}", content.len(), path.display());
+
         let mut file = File::create(path)?;
         file.write_all(content)?;
         Ok(())
@@ -123,6 +145,9 @@ impl RevisionStore {
 
     fn remove_file(&self, slug: &str) -> Result<Option<()>> {
         let path = self.get_path(slug, true);
+
+        debug!("Removing file {}", path.display());
+
         match fs::remove_file(path) {
             Ok(_) => (),
             Err(error) => {
@@ -162,7 +187,9 @@ impl RevisionStore {
 
     // Git helpers
     fn get_commit(&self) -> Result<GitHash> {
-        let args = arguments!["git", "rev-parse", "--verify", "HEAD",];
+        let args = arguments!["git", "rev-parse", "--verify", "HEAD"];
+
+        debug!("Getting current HEAD commit");
 
         let hex_digest = self.spawn_output(&args)?;
         match GitHash::parse_str(&hex_digest) {
@@ -175,8 +202,9 @@ impl RevisionStore {
     /// Should only be called on empty repositories.
     #[cold]
     pub fn initial_commit(&self) -> Result<()> {
-        let _guard = self.lock.write();
+        info!("Initializing new git repository");
 
+        let _guard = self.lock.write();
         let args = arguments!["git", "init"];
         self.spawn(&args)?;
 
@@ -194,10 +222,18 @@ impl RevisionStore {
         S: AsRef<str>,
         B: AsRef<[u8]>,
     {
-        let _guard = self.lock.write();
         let slug = slug.as_ref();
+        let content = content.as_ref();
+
+        info!(
+            "Committing file changes for slug '{}' ({} bytes)",
+            slug,
+            content.len(),
+        );
+
+        let _guard = self.lock.write();
         check_normal(slug)?;
-        self.write_file(slug, content.as_ref())?;
+        self.write_file(slug, content)?;
 
         let path = self.get_path(slug, false);
         let args = arguments!["git", "add", &path];
@@ -217,8 +253,10 @@ impl RevisionStore {
     where
         S: AsRef<str>,
     {
-        let _guard = self.lock.write();
         let slug = slug.as_ref();
+        info!("Removing file for slug '{}' (info: {:?})", slug, info);
+
+        let _guard = self.lock.write();
         check_normal(slug)?;
 
         if self.remove_file(slug)?.is_none() {
@@ -240,8 +278,10 @@ impl RevisionStore {
     where
         S: AsRef<str>,
     {
-        let _guard = self.lock.read();
         let slug = slug.as_ref();
+        info!("Getting page content for slug '{}'", slug);
+
+        let _guard = self.lock.read();
         check_normal(slug)?;
 
         self.read_file(slug)
@@ -253,8 +293,13 @@ impl RevisionStore {
     where
         S: AsRef<str>,
     {
-        let _guard = self.lock.read();
         let slug = slug.as_ref();
+        info!(
+            "Getting page content for slug '{}' at commit {}",
+            slug, hash,
+        );
+
+        let _guard = self.lock.read();
         check_normal(slug)?;
 
         let path = self.get_path(slug, false);
@@ -274,8 +319,13 @@ impl RevisionStore {
     where
         S: AsRef<str>,
     {
-        let _guard = self.lock.read();
         let slug = slug.as_ref();
+        info!(
+            "Getting diff for slug '{}' between {}..{}",
+            slug, first, second,
+        );
+
+        let _guard = self.lock.read();
         let first = format!("{:x}", first);
         let second = format!("{:x}", second);
         check_normal(slug)?;
@@ -299,8 +349,10 @@ impl RevisionStore {
     where
         S: AsRef<str>,
     {
-        let _guard = self.lock.read();
         let slug = slug.as_ref();
+        info!("Getting blame for slug '{}'", slug);
+
+        let _guard = self.lock.read();
         check_normal(slug)?;
         let path = self.get_path(slug, false);
 
@@ -318,6 +370,8 @@ impl RevisionStore {
 }
 
 fn check_normal(slug: &str) -> Result<()> {
+    trace!("Checking slug for normal form: {}", slug);
+
     if is_normal(slug, false) {
         Ok(())
     } else {

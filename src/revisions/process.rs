@@ -35,11 +35,17 @@ macro_rules! mut_borrow {
 
 /// Runs a process to completion, returning `Err` if it fails.
 pub fn spawn(repo: OsString, arguments: &[&OsStr]) -> Result<()> {
+    debug!("Running process: {:?} (no capture)", arguments);
+    trace!("Running command in {:?}", repo);
+
     spawn_inner(repo, arguments, false).map(|_| ())
 }
 
 /// Runs a process to completion, returning its `stdout`, or `Err` if it fails.
 pub fn spawn_output(repo: OsString, arguments: &[&OsStr]) -> Result<Box<[u8]>> {
+    debug!("Running process: {:?} (capturing stdout)", arguments);
+    trace!("Running command in {:?}", repo);
+
     spawn_inner(repo, arguments, true).map(|out| out.unwrap())
 }
 
@@ -53,8 +59,17 @@ fn spawn_inner(repo: OsString, arguments: &[&OsStr], output: bool) -> Result<Opt
     };
 
     let mut popen = Popen::create(arguments, config)?;
+
+    trace!(
+        "Created {:?}, waiting {}ms for completion",
+        popen,
+        TIMEOUT.as_millis(),
+    );
+
     match popen.wait_timeout(TIMEOUT)? {
         Some(status) if status.success() => {
+            trace!("Command succeeded, gathering stdout");
+
             if output {
                 let stdout = mut_borrow!(popen.stdout);
                 let mut buffer = Vec::new();
@@ -67,6 +82,8 @@ fn spawn_inner(repo: OsString, arguments: &[&OsStr], output: bool) -> Result<Opt
             }
         }
         Some(status) => {
+            trace!("Command failed, status {:?}", status);
+
             let mut buffer = String::new();
             for argument in &arguments[..2] {
                 write!(&mut buffer, "{} ", argument.to_string_lossy()).unwrap();
@@ -88,8 +105,12 @@ fn spawn_inner(repo: OsString, arguments: &[&OsStr], output: bool) -> Result<Opt
             Err(Error::CommandFailed(buffer))
         }
         None => {
+            trace!("Command timed out, killing");
+
+            const KILL_TIMEOUT: Duration = Duration::from_millis(2000);
+
             popen.terminate()?;
-            let timeout = Duration::from_millis(100);
+            let timeout = KILL_TIMEOUT;
             let result = popen.wait_timeout(timeout)?;
             if result.is_none() {
                 popen.kill()?;
