@@ -18,9 +18,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::{spawn, spawn_output, Blame, CommitInfo, GitHash};
+use super::{Blame, CommitInfo, GitHash};
 use crate::{Error, Result};
 use parking_lot::RwLock;
+use std::ffi::{OsStr, OsString};
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::PathBuf;
@@ -122,11 +123,24 @@ impl RevisionStore {
         format!("--message={}", message)
     }
 
+    // Process helpers
+    fn repo(&self) -> OsString {
+        self.repo.as_os_str().to_os_string()
+    }
+
+    fn spawn(&self, arguments: &[&OsStr]) -> Result<()> {
+        super::spawn(self.repo(), arguments)
+    }
+
+    fn spawn_output(&self, arguments: &[&OsStr]) -> Result<Box<[u8]>> {
+        super::spawn_output(self.repo(), arguments)
+    }
+
     // Git helpers
     fn get_commit(&self) -> Result<GitHash> {
         let args = arguments!["git", "rev-parse", "--verify", "HEAD",];
 
-        let hex_digest = spawn_output(&args)?;
+        let hex_digest = self.spawn_output(&args)?;
         match GitHash::from_str(&hex_digest) {
             Some(hash) => Ok(hash),
             None => Err(Error::StaticMsg("unable to parse git hash from output")),
@@ -143,8 +157,7 @@ impl RevisionStore {
         let message = self.arg_message("Initial commit");
         let args = arguments!["git", "commit", "--allow-empty", &author, &message];
 
-        spawn(&args)?;
-
+        self.spawn(&args)?;
         Ok(())
     }
 
@@ -163,7 +176,7 @@ impl RevisionStore {
         let message = self.arg_message(info.message);
         let args = arguments!["git", "commit", &author, &message, "--", slug];
 
-        spawn(&args)?;
+        self.spawn(&args)?;
         self.get_commit()
     }
 
@@ -185,7 +198,7 @@ impl RevisionStore {
         let message = self.arg_message(info.message);
         let args = arguments!["git", "commit", &author, &message, "--", slug];
 
-        spawn(&args)?;
+        self.spawn(&args)?;
         self.get_commit().map(Some)
     }
 
@@ -215,7 +228,7 @@ impl RevisionStore {
         let spec = format!("{:x}:{}", hash, slug);
         let args = arguments!["git", "show", "--format=%B", &spec,];
 
-        match spawn_output(&args) {
+        match self.spawn_output(&args) {
             Ok(bytes) => Ok(Some(bytes)),
             Err(Error::CommandFailed(_)) => Ok(None),
             Err(error) => Err(error),
@@ -243,7 +256,7 @@ impl RevisionStore {
             "--",
             slug,
         ];
-        spawn_output(&args)
+        self.spawn_output(&args)
     }
 
     /// Gets the blame for a particular page.
@@ -258,7 +271,7 @@ impl RevisionStore {
 
         let args = arguments!["git", "blame", "--porcelain", "--", slug];
 
-        let raw_blame = match spawn_output(&args) {
+        let raw_blame = match self.spawn_output(&args) {
             Ok(bytes) => bytes,
             Err(Error::CommandFailed(_)) => return Ok(None),
             Err(error) => return Err(error),

@@ -19,7 +19,7 @@
  */
 
 use crate::{Error, Result};
-use std::ffi::OsStr;
+use std::ffi::{OsStr, OsString};
 use std::fmt::Write;
 use std::io::Read;
 use std::time::Duration;
@@ -34,20 +34,21 @@ macro_rules! mut_borrow {
 }
 
 /// Runs a process to completion, returning `Err` if it fails.
-pub fn spawn(arguments: &[&OsStr]) -> Result<()> {
-    spawn_inner(arguments, false).map(|_| ())
+pub fn spawn(repo: OsString, arguments: &[&OsStr]) -> Result<()> {
+    spawn_inner(repo, arguments, false).map(|_| ())
 }
 
 /// Runs a process to completion, returning its `stdout`, or `Err` if it fails.
-pub fn spawn_output(arguments: &[&OsStr]) -> Result<Box<[u8]>> {
-    spawn_inner(arguments, true).map(|out| out.unwrap())
+pub fn spawn_output(repo: OsString, arguments: &[&OsStr]) -> Result<Box<[u8]>> {
+    spawn_inner(repo, arguments, true).map(|out| out.unwrap())
 }
 
-fn spawn_inner(arguments: &[&OsStr], output: bool) -> Result<Option<Box<[u8]>>> {
+fn spawn_inner(repo: OsString, arguments: &[&OsStr], output: bool) -> Result<Option<Box<[u8]>>> {
     let config = PopenConfig {
         stdin: Redirection::Pipe,
         stdout: Redirection::Pipe,
         stderr: Redirection::Pipe,
+        cwd: Some(repo),
         ..PopenConfig::default()
     };
 
