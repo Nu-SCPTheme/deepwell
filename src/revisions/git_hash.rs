@@ -19,10 +19,10 @@
  */
 
 use hex::decode_to_slice;
-use std::fmt::{self, LowerHex, UpperHex};
+use std::fmt::{self, Debug, Display, LowerHex, UpperHex};
 use std::str;
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub struct GitHash([u8; 20]);
 
 impl GitHash {
@@ -71,6 +71,18 @@ impl AsRef<[u8]> for GitHash {
     #[inline]
     fn as_ref(&self) -> &[u8] {
         &self.0
+    }
+}
+
+impl Debug for GitHash {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "GitHash(b\"{:x}\")", self)
+    }
+}
+
+impl Display for GitHash {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:x}", self)
     }
 }
 

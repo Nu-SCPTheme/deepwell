@@ -29,8 +29,7 @@ use std::{mem, str};
 
 lazy_static! {
     static ref GIT_HASH_REGEX: Regex = Regex::new(
-        r"
-        (?x)
+        r"(?x)
         ^
         (?P<sha1>[0-9a-f]{40})
         \s
@@ -43,8 +42,7 @@ lazy_static! {
     )
     .unwrap();
     static ref METADATA_REGEX: Regex = Regex::new(
-        r"
-        (?x)
+        r"(?x)
         ^
         (?P<key>[a-z\-]+)
         (\s(?P<value>.+))?
@@ -130,6 +128,14 @@ impl Blame {
         let mut blame_lines = Vec::new();
 
         for line in lines {
+            if line.is_empty() {
+                continue;
+            }
+
+            if line.starts_with(b"\t") {
+                state = State::Content;
+            }
+
             match state {
                 State::Commit => {
                     let captures = match GIT_HASH_REGEX.captures(line) {
@@ -214,7 +220,7 @@ impl Blame {
                     let (first, line) = line.split_at(1);
                     assert_eq!(
                         first,
-                        &[b'\t'],
+                        b"\t",
                         "In content state but doesn't start with tab"
                     );
 

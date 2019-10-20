@@ -304,7 +304,7 @@ fn main() {
         let diff = store.get_diff(slug, first, second).expect("Unable to get diff");
 
         println!();
-        println!("Diff between {:x} and {:x} for {}:", first, second, slug);
+        println!("Diff between {} and {} for {}:", first, second, slug);
         io::stdout().write_all(&diff).expect("Unable to write bytes to stdout");
     }
 
@@ -315,7 +315,7 @@ fn main() {
 
         println!();
         match blame {
-            Some(blame) => println!("Blame for {}:\n{:?}", slug, blame),
+            Some(blame) => println!("Blame for {}:\n{:#?}", slug, blame),
             None => println!("No page for {}", slug),
         }
     }
