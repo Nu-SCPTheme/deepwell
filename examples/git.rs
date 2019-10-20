@@ -193,7 +193,7 @@ fn main() {
     }
 
     // Randomly delete some pages
-    for _ in 0..20 {
+    for _ in 0..5 {
         let slug = pick(&mut rng, TEST_SLUGS.as_ref());
         let username = pick(&mut rng, TEST_USERNAMES.as_ref());
 
