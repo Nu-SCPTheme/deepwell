@@ -112,7 +112,7 @@ fn main() {
 
         // Create random message
         message.clear();
-        for _ in 0..128 {
+        for _ in 0..32 {
             message.push(rng.sample(Alphanumeric));
         }
 
