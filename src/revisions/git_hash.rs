@@ -20,6 +20,7 @@
 
 use hex::decode_to_slice;
 use std::fmt::{self, LowerHex, UpperHex};
+use std::str;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct GitHash([u8; 20]);
@@ -29,6 +30,11 @@ impl GitHash {
     where
         B: AsRef<[u8]>,
     {
+        let hex_digest = match str::from_utf8(hex_digest.as_ref()) {
+            Ok(digest) => digest.trim(),
+            Err(_) => return None,
+        };
+
         let mut hash = [0; 20];
         if let Err(_) = decode_to_slice(hex_digest, &mut hash[..]) {
             return None;
