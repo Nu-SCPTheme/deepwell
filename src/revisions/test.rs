@@ -1,5 +1,5 @@
 /*
- * examples/git.rs
+ * revisions/test.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,22 +18,24 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#![deny(missing_debug_implementations)]
+//! Tests the [`RevisionStore`] by creating a temporary git repository.
+//! Performs several actions in the same test:
+//! * Adds some files
+//! * Delete some files
+//! * Test a diff
+//! * Test a blame
+//! [`RevisionStore`]: ./struct.RevisionStore.html
 
 extern crate color_backtrace;
-extern crate deepwell;
-
-#[macro_use]
-extern crate lazy_static;
 extern crate rand;
 extern crate tempfile;
 
-use deepwell::{CommitInfo, RevisionStore};
+use crate::{CommitInfo, RevisionStore};
 use rand::prelude::*;
 use std::cmp;
 use std::fmt::Write as _;
-use std::io::{self, Write as _};
 use std::ops::{Bound, Range, RangeBounds};
+use std::str;
 use tempfile::tempdir;
 
 const TEST_SLUGS: [&str; 89] = [
@@ -212,7 +214,8 @@ fn random_range<R>(rng: &mut R, len: usize) -> Range<usize>
     start..end
 }
 
-fn main() {
+#[test]
+fn test_git() {
     color_backtrace::install();
 
     // Create revision store
@@ -220,7 +223,6 @@ fn main() {
     let repo = directory.path();
     let store = RevisionStore::new(repo, "example.org");
     store.initial_commit().expect("Unable to create initial commit");
-    println!("Starting generation...");
 
     // Setup shared buffers
     let mut rng = rand::thread_rng();
@@ -230,7 +232,7 @@ fn main() {
     let mut hashes = Vec::with_capacity(2);
 
     // Randomly generate some commits
-    for _ in 0..100 {
+    for _ in 0..20 {
         let slug = pick(&mut rng, TEST_SLUGS.as_ref());
         let username = pick(&mut rng, TEST_USERNAMES.as_ref());
 
@@ -305,7 +307,7 @@ fn main() {
 
         println!();
         println!("Diff between {} and {} for {}:", first, second, slug);
-        io::stdout().write_all(&diff).expect("Unable to write bytes to stdout");
+        println!("{}", str::from_utf8(&diff).unwrap());
     }
 
     // Get a blame

@@ -57,9 +57,6 @@ jobs:
       script:
         - cargo build --verbose
         - cargo test --verbose -- --nocapture
-    - stage: bin
-      script:
-        - cargo build --verbose --example git
     - stage: doc
       script:
         - cargo doc --verbose

@@ -24,6 +24,9 @@ mod info;
 mod process;
 mod store;
 
+#[cfg(test)]
+mod test;
+
 pub use self::blame::Blame;
 pub use self::git_hash::GitHash;
 pub use self::info::CommitInfo;
