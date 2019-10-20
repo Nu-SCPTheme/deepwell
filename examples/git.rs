@@ -87,13 +87,13 @@ const TEST_USERNAMES: [&str; 24] = [
 
 lazy_static! {
     static ref MESSAGE_CHARACTERS: Vec<char> = {
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .,<>!?/'\""
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
             .chars()
             .collect()
     };
 
     static ref CONTENT_CHARACTERS: Vec<char> = {
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 \t\n;:.,<>!?/'\""
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,!?'\"   \n\n\n\n\n\n\n\n"
             .chars()
             .collect()
     };
@@ -110,13 +110,8 @@ fn pick<'a, T, R>(rng: &mut R, items: &'a [T]) -> &'a T
 fn pick_str<'a, R>(rng: &mut R, string: &mut String, chars: &[char], count: usize)
     where R: Rng + ?Sized
 {
-    let selected = chars
-        .iter()
-        .copied()
-        .choose_multiple(rng, count);
-
-    for ch in selected {
-        string.push(ch);
+    for &c in chars.choose_multiple(rng, count) {
+        string.push(c);
     }
 }
 
@@ -148,7 +143,7 @@ fn main() {
         // Create random content
         content.clear();
         let content_len = content_between.sample(&mut rng);
-        pick_str(&mut rng, &mut message, &CONTENT_CHARACTERS, content_len);
+        pick_str(&mut rng, &mut content, &CONTENT_CHARACTERS, content_len);
         content.push('\n');
 
         // Commit to repo
