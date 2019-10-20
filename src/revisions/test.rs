@@ -172,8 +172,6 @@ const TEST_USERNAMES: [&str; 25] = [
     "aismallard",
 ];
 
-const TEST_TENANT: &str = "scp-wiki";
-
 lazy_static! {
     static ref MESSAGE_CHARACTERS: Vec<char> = {
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
@@ -257,7 +255,7 @@ fn test_git() {
         pick_str(&mut rng, &mut message, &MESSAGE_CHARACTERS, 32, range);
 
         // Create random content
-        let mut content = match store.get_page(TEST_TENANT, slug).expect("Unable to get existing page") {
+        let mut content = match store.get_page(slug).expect("Unable to get existing page") {
             Some(bytes) => {
                 let bytes = Vec::from(bytes);
                 String::from_utf8(bytes).expect("Content wasn't UTF-8")
@@ -287,7 +285,7 @@ fn test_git() {
         };
 
         let hash = store
-            .commit(TEST_TENANT, slug, content.as_bytes(), info)
+            .commit(slug, &content, info)
             .expect("Unable to commit generated data");
 
         // Maybe add commit for checking diff
@@ -318,7 +316,7 @@ fn test_git() {
         };
 
         store
-            .remove(TEST_TENANT, slug, info)
+            .remove(slug, info)
             .expect("Unable to commit removed file");
     }
 
@@ -328,7 +326,7 @@ fn test_git() {
         let second = hashes.pop().unwrap();
         let first = hashes.pop().unwrap();
         let diff = store
-            .get_diff(TEST_TENANT, slug, first, second)
+            .get_diff(slug, first, second)
             .expect("Unable to get diff");
 
         println!();
@@ -339,7 +337,7 @@ fn test_git() {
     // Get a blame
     {
         let slug = pick(&mut rng, TEST_SLUGS.as_ref());
-        let blame = store.get_blame(TEST_TENANT, slug).expect("Unable to get blame");
+        let blame = store.get_blame(slug).expect("Unable to get blame");
 
         println!();
         match blame {
