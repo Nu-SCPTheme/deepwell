@@ -31,7 +31,8 @@ extern crate tempfile;
 use deepwell::{CommitInfo, RevisionStore};
 use rand::prelude::*;
 use std::cmp;
-use std::fmt::Write;
+use std::fmt::Write as _;
+use std::io::{self, Write as _};
 use std::ops::{Bound, Range, RangeBounds};
 use tempfile::tempdir;
 
@@ -225,6 +226,9 @@ fn main() {
     let mut rng = rand::thread_rng();
     let mut message = String::new();
 
+    // Commits for diffs later
+    let mut hashes = Vec::with_capacity(2);
+
     // Randomly generate some commits
     for _ in 0..100 {
         let slug = pick(&mut rng, TEST_SLUGS.as_ref());
@@ -260,7 +264,16 @@ fn main() {
             message: &message,
         };
 
-        store.commit(slug, &content, info).expect("Unable to commit generated data");
+        let hash = store.commit(slug, &content, info).expect("Unable to commit generated data");
+
+        // Maybe add commit for checking diff
+        if hashes.len() < 2 || rng.gen_range(0, 100) < 10 {
+            if hashes.len() == 2 {
+                hashes.remove(1);
+            }
+
+            hashes.push(hash);
+        }
     }
 
     // Randomly delete some pages
@@ -281,5 +294,17 @@ fn main() {
         };
 
         store.remove(slug, info).expect("Unable to commit removed file");
+    }
+
+    // Get a diff
+    {
+        let slug = pick(&mut rng, TEST_SLUGS.as_ref());
+        let second = hashes.pop().unwrap();
+        let first = hashes.pop().unwrap();
+        let diff = store.get_diff(slug, first, second).expect("Unable to get diff");
+
+        println!();
+        println!("Diff between {:x} and {:x}:", first, second);
+        io::stdout().write_all(&diff).expect("Unable to write bytes to stdout");
     }
 }
