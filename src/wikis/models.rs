@@ -1,5 +1,5 @@
 /*
- * error.rs
+ * wikis/models.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,25 +18,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use diesel::result::Error as DieselError;
-use std::io;
-use subprocess::PopenError;
+use crate::schema::wikis;
 
-#[must_use = "should handle errors"]
-#[derive(Debug, Error)]
-pub enum Error {
-    #[error("uncommon error: {0}")]
-    StaticMsg(&'static str),
-
-    #[error("general I/O error: {0}")]
-    Io(#[from] io::Error),
-
-    #[error("database error: {0}")]
-    Database(#[from] DieselError),
-
-    #[error("error running subprocess: {0}")]
-    Subprocess(#[from] PopenError),
-
-    #[error("command failed: {0}")]
-    CommandFailed(String),
+#[derive(Debug, Insertable)]
+#[table_name = "wikis"]
+pub struct NewWiki<'a> {
+    pub name: &'a str,
+    pub slug: &'a str,
 }

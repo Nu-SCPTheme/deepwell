@@ -41,9 +41,10 @@ extern crate thiserror;
 extern crate wikidot_normalize;
 
 mod error;
-mod models;
+mod pages;
 mod revisions;
 mod schema;
+mod wikis;
 
 pub type StdResult<T, E> = std::result::Result<T, E>;
 pub type Result<T> = StdResult<T, Error>;

@@ -1,5 +1,5 @@
 /*
- * error.rs
+ * wikis/mod.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,25 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use diesel::result::Error as DieselError;
-use std::io;
-use subprocess::PopenError;
+mod models;
+mod object;
+mod service;
 
-#[must_use = "should handle errors"]
-#[derive(Debug, Error)]
-pub enum Error {
-    #[error("uncommon error: {0}")]
-    StaticMsg(&'static str),
-
-    #[error("general I/O error: {0}")]
-    Io(#[from] io::Error),
-
-    #[error("database error: {0}")]
-    Database(#[from] DieselError),
-
-    #[error("error running subprocess: {0}")]
-    Subprocess(#[from] PopenError),
-
-    #[error("command failed: {0}")]
-    CommandFailed(String),
-}
+pub use self::object::{Wiki, WikiId};
+pub use self::service::WikiService;

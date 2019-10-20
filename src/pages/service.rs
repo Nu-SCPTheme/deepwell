@@ -1,5 +1,5 @@
 /*
- * models.rs
+ * pages/service.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,7 +18,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-// use super::schema::*;
-// use diesel::prelude::*;
-//
-// TODO
+use crate::revisions::RevisionStore;
+use std::collections::HashMap;
+
+#[derive(Debug)]
+pub struct PageService {
+    //stores: HashMap<
+}
