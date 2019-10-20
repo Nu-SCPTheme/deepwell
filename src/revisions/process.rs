@@ -68,12 +68,14 @@ fn spawn_inner(repo: OsString, arguments: &[&OsStr], output: bool) -> Result<Opt
         }
         Some(status) => {
             let mut buffer = String::new();
-            let stderr = mut_borrow!(popen.stderr);
-            let written = stderr.read_to_string(&mut buffer)?;
-
-            if written != 0 {
-                buffer.insert_str(0, "command failed: ");
+            for argument in &arguments[..2] {
+                write!(&mut buffer, "{} ", argument.to_string_lossy()).unwrap();
             }
+
+            buffer.push_str("command failed: ");
+
+            let stderr = mut_borrow!(popen.stderr);
+            stderr.read_to_string(&mut buffer)?;
 
             match status {
                 ExitStatus::Exited(code) => write!(&mut buffer, "(exit status {})", code).unwrap(),
