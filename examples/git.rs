@@ -162,7 +162,7 @@ lazy_static! {
     };
 
     static ref CONTENT_CHARACTERS: Vec<char> = {
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,!?'\"   \n\n\n\n\n\n\n\n"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,!?'\" \n"
             .chars()
             .collect()
     };
