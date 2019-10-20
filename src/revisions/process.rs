@@ -76,7 +76,7 @@ fn spawn_inner(repo: OsString, arguments: &[&OsStr], output: bool) -> Result<Opt
             }
 
             match status {
-                ExitStatus::Exited(code) => write!(&mut buffer, "({})", code).unwrap(),
+                ExitStatus::Exited(code) => write!(&mut buffer, "(exit status {})", code).unwrap(),
                 ExitStatus::Signaled(code) => {
                     write!(&mut buffer, "(killed by signal {})", code).unwrap()
                 }
