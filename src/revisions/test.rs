@@ -38,7 +38,7 @@ use std::ops::{Bound, Range, RangeBounds};
 use std::str;
 use tempfile::tempdir;
 
-const TEST_SLUGS: [&str; 89] = [
+const TEST_SLUGS: [&str; 103] = [
     "main",
     "scp-001",
     "scp-001-ex",
@@ -128,6 +128,20 @@ const TEST_SLUGS: [&str; 89] = [
     "scp-series-3",
     "scp-series-4",
     "scp-series-5",
+    "component:aesthetic-theme",
+    "component:black-highlighter-theme-dev",
+    "component:black-market-theme",
+    "component:collapsible-bottom",
+    "component:collapsible-top",
+    "component:dustjacket-theme",
+    "component:expose-theme",
+    "component:image-block",
+    "component:image-block-base",
+    "component:raisa-theme",
+    "component:the-way-out-theme",
+    "component:wilderness-theme",
+    "component:uiu-bhl-theme",
+    "fragment:component:decommissioned:page",
 ];
 
 const TEST_USERNAMES: [&str; 25] = [

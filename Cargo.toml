@@ -15,7 +15,7 @@ parking_lot = "0.9"
 regex = "1"
 subprocess = "0.1"
 thiserror = "1"
-wikidot-normalize = "0.2"
+wikidot-normalize = "0.3"
 
 [dev-dependencies]
 color-backtrace = "0.2"
