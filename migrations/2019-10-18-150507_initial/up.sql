@@ -19,7 +19,7 @@ CREATE TABLE passwords (
     salt BYTEA NOT NULL,
     iterations INTEGER NOT NULL CHECK (iterations > 50000),
     key_size SMALLINT NOT NULL CHECK (key_size % 16 = 0),
-    digest VARCHAR(12) NOT NULL CHECK (
+    digest VARCHAR(8) NOT NULL CHECK (
         digest IN (
             'sha224',
             'sha256',
@@ -54,7 +54,14 @@ CREATE TABLE revisions (
     page_id BIGSERIAL NOT NULL REFERENCES pages(page_id),
     user_id BIGSERIAL NOT NULL REFERENCES users(user_id),
     git_commit TEXT NOT NULL UNIQUE,
-    changes JSONB NOT NULL
+    change_type VARCHAR(8) NOT NULL CHECK (
+        change_type IN (
+            'create',
+            'modify',
+            'delete',
+            'metadata'
+        )
+    )
 );
 
 CREATE TABLE ratings (
