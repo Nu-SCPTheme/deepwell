@@ -46,4 +46,3 @@ pub type StdResult<T, E> = std::result::Result<T, E>;
 pub type Result<T> = StdResult<T, Error>;
 
 pub use self::error::Error;
-pub use self::revisions::*;

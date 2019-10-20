@@ -30,7 +30,7 @@ extern crate color_backtrace;
 extern crate rand;
 extern crate tempfile;
 
-use crate::{CommitInfo, RevisionStore};
+use super::{CommitInfo, RevisionStore};
 use rand::prelude::*;
 use std::cmp;
 use std::fmt::Write as _;
