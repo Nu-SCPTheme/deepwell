@@ -34,10 +34,10 @@ lazy_static! {
         ^
         (?P<sha1>[0-9a-f]{40})
         \s
-        (?P<old-line>[0-9]+)
+        (?P<old_line>[0-9]+)
         \s
-        (?P<new-line>[0-9]+)
-        (\s(?P<group-lines>[0-9]+))?
+        (?P<new_line>[0-9]+)
+        (\s(?P<group_lines>[0-9]+))?
         $
     "
     )
@@ -46,7 +46,7 @@ lazy_static! {
         r"
         (?x)
         ^
-        (?P<key>[a-z\-]+
+        (?P<key>[a-z\-]+)
         (\s(?P<value>.+))?
         $
     "
@@ -138,8 +138,8 @@ impl Blame {
                     };
 
                     // Unwraps are safe because the values are regex-verified
-                    let old_lineno = utf!(captures, "old-line").parse().unwrap();
-                    let new_lineno = utf!(captures, "new-line").parse().unwrap();
+                    let old_lineno = utf!(captures, "old_line").parse().unwrap();
+                    let new_lineno = utf!(captures, "new_line").parse().unwrap();
                     let commit = {
                         let sha1 = utf!(captures, "sha1");
                         GitHash::from_str(sha1).unwrap()
