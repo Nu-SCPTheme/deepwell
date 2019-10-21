@@ -285,7 +285,7 @@ fn test_git() {
         };
 
         let hash = store
-            .commit(slug, &content, info)
+            .commit(slug, content.as_bytes(), info)
             .expect("Unable to commit generated data");
 
         // Maybe add commit for checking diff
