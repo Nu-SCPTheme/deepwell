@@ -17,12 +17,6 @@ addons:
       - postgresql-10
       - postgresql-client-10
 
-before_script:
-  - rustup component add rustfmt
-  - psql -c "CREATE USER overseer PASSWORD 'blackmoon';" -U postgres
-  - psql -c "CREATE DATABASE deepwell OWNER overseer;" -U postgres
-  - which diesel || cargo install diesel_cli --no-default-features --features postgres
-
 stages:
   - format
   - clippy
@@ -34,14 +28,21 @@ stages:
 jobs:
   include:
     - stage: format
+      before_script:
+        - rustup component add rustfmt
       script:
         - rustfmt src/lib.rs --check
     - stage: clippy
-      script:
+      before_script:
         - rustup toolchain install nightly-2019-09-25-x86_64-unknown-linux-gnu
         - rustup component add clippy --toolchain nightly-2019-09-25-x86_64-unknown-linux-gnu
+      script:
         - cargo +nightly-2019-09-25 clippy
     - stage: diesel
+      before_script:
+        - psql -c "CREATE USER overseer PASSWORD 'blackmoon';" -U postgres
+        - psql -c "CREATE DATABASE deepwell OWNER overseer;" -U postgres
+        - which diesel || cargo install diesel_cli --no-default-features --features postgres
       script:
         - diesel migration run
         - diesel migration redo
