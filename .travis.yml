@@ -56,11 +56,11 @@ jobs:
         - osx
         - windows
       script:
-        - cargo build --verbose
-        - cargo test --verbose -- --nocapture
+        - cargo build --verbose --release
+        - cargo test --verbose --release -- --nocapture
     - stage: doc
       script:
-        - cargo doc --verbose
+        - cargo doc --verbose --release
 
 notifications:
   email:
