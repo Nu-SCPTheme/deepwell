@@ -24,6 +24,7 @@ macro_rules! make_id_type {
         use diesel::pg::Pg;
         use diesel::sql_types::BigInt;
         use std::borrow::Borrow;
+        use std::fmt::{self, Display};
 
         #[derive(Serialize, Deserialize, Debug, Copy, Clone, Hash, PartialEq, Eq)]
         pub struct $name(i64);
@@ -46,6 +47,13 @@ macro_rules! make_id_type {
             #[inline]
             fn borrow(&self) -> &i64 {
                 &self.0
+            }
+        }
+
+        impl Display for $name {
+            #[inline]
+            fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+                write!(f, "{}", self.0)
             }
         }
 
