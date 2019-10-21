@@ -117,6 +117,7 @@ impl Debug for UserService<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("UserService")
             .field("conn", &"PgConnection { .. }")
+            .field("cache", &"LruCache { .. }")
             .finish()
     }
 }
