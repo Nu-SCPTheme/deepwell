@@ -217,14 +217,7 @@ impl RevisionStore {
     }
 
     /// For the given slug, create or edit a page to have the specified contents.
-    pub fn commit<S, B>(&self, slug: S, content: B, info: CommitInfo) -> Result<GitHash>
-    where
-        S: AsRef<str>,
-        B: AsRef<[u8]>,
-    {
-        let slug = slug.as_ref();
-        let content = content.as_ref();
-
+    pub fn commit(&self, slug: &str, content: &[u8], info: CommitInfo) -> Result<GitHash> {
         info!(
             "Committing file changes for slug '{}' ({} bytes)",
             slug,
@@ -257,11 +250,7 @@ impl RevisionStore {
 
     /// Remove the given page from the repository.
     /// Returns `None` if the page does not exist.
-    pub fn remove<S>(&self, slug: S, info: CommitInfo) -> Result<Option<GitHash>>
-    where
-        S: AsRef<str>,
-    {
-        let slug = slug.as_ref();
+    pub fn remove(&self, slug: &str, info: CommitInfo) -> Result<Option<GitHash>> {
         info!("Removing file for slug '{}' (info: {:?})", slug, info);
 
         let _guard = self.lock.write();
@@ -282,11 +271,7 @@ impl RevisionStore {
 
     /// Gets the current version of a page.
     /// Returns `None` if the page does not exist.
-    pub fn get_page<S>(&self, slug: S) -> Result<Option<Box<[u8]>>>
-    where
-        S: AsRef<str>,
-    {
-        let slug = slug.as_ref();
+    pub fn get_page(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
         info!("Getting page content for slug '{}'", slug);
 
         let _guard = self.lock.read();
@@ -297,11 +282,7 @@ impl RevisionStore {
 
     /// Gets the version of a page at the specified commit.
     /// Returns `None` if the page did not at exist at the time.
-    pub fn get_page_version<S>(&self, slug: S, hash: GitHash) -> Result<Option<Box<[u8]>>>
-    where
-        S: AsRef<str>,
-    {
-        let slug = slug.as_ref();
+    pub fn get_page_version(&self, slug: &str, hash: GitHash) -> Result<Option<Box<[u8]>>> {
         info!(
             "Getting page content for slug '{}' at commit {}",
             slug, hash,
@@ -323,11 +304,7 @@ impl RevisionStore {
 
     /// Gets the diff between commits of a particular page.
     /// Returns `None` if the page or commits do not exist.
-    pub fn get_diff<S>(&self, slug: S, first: GitHash, second: GitHash) -> Result<Box<[u8]>>
-    where
-        S: AsRef<str>,
-    {
-        let slug = slug.as_ref();
+    pub fn get_diff(&self, slug: &str, first: GitHash, second: GitHash) -> Result<Box<[u8]>> {
         info!(
             "Getting diff for slug '{}' between {}..{}",
             slug, first, second,
@@ -353,11 +330,7 @@ impl RevisionStore {
 
     /// Gets the blame for a particular page.
     /// Returns `None` if the page does not exist.
-    pub fn get_blame<S>(&self, slug: S) -> Result<Option<Blame>>
-    where
-        S: AsRef<str>,
-    {
-        let slug = slug.as_ref();
+    pub fn get_blame(&self, slug: &str) -> Result<Option<Blame>> {
         info!("Getting blame for slug '{}'", slug);
 
         let _guard = self.lock.read();
