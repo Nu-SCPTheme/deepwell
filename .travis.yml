@@ -44,6 +44,7 @@ jobs:
     - stage: diesel
       script:
         - diesel migration run
+        - diesel migration redo
     - stage: test
       rust:
         - stable
