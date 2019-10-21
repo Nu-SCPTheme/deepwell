@@ -19,8 +19,8 @@
  */
 
 use crate::revisions::RevisionStore;
-use crate::wikis::WikiId;
 use crate::service_prelude::*;
+use crate::wikis::WikiId;
 use std::collections::HashMap;
 
 pub struct PageService<'d> {

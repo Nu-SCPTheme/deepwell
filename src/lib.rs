@@ -34,6 +34,10 @@ extern crate lazy_static;
 extern crate log;
 extern crate parking_lot;
 extern crate regex;
+
+#[macro_use]
+extern crate serde;
+extern crate serde_json;
 extern crate subprocess;
 
 #[macro_use]
