@@ -20,7 +20,7 @@ addons:
 before_script:
   - rustup component add rustfmt
   - psql -c "CREATE USER overseer PASSWORD 'blackmoon';" -U postgres
-  - psql -C "CREATE DATABASE deepwell OWNER overseer;" -U postgres
+  - psql -c "CREATE DATABASE deepwell OWNER overseer;" -U postgres
   - which diesel || cargo install diesel_cli --no-default-features --features postgres
 
 stages:
