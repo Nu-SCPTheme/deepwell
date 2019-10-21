@@ -26,7 +26,9 @@ macro_rules! make_id_type {
         use std::borrow::Borrow;
         use std::fmt::{self, Display};
 
-        #[derive(Serialize, Deserialize, Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq)]
+        #[derive(
+            Serialize, Deserialize, Debug, Copy, Clone, Hash, PartialOrd, Ord, PartialEq, Eq,
+        )]
         pub struct $name(i64);
 
         impl Into<i64> for $name {

@@ -20,8 +20,8 @@
 
 use super::models::{NewWiki, UpdateWiki};
 use super::{Wiki, WikiId};
-use crate::service_prelude::*;
 use crate::schema::wikis;
+use crate::service_prelude::*;
 
 pub struct WikiService<'d> {
     conn: &'d PgConnection,
@@ -31,7 +31,8 @@ pub struct WikiService<'d> {
 impl<'d> WikiService<'d> {
     pub fn new(conn: &'d PgConnection) -> Result<Self> {
         let cache = {
-            let values = wikis::table.filter(wikis::wiki_id.ge(0))
+            let values = wikis::table
+                .filter(wikis::wiki_id.ge(0))
                 .load::<Wiki>(conn)?;
 
             let mut map = HashMap::with_capacity(values.len());
