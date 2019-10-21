@@ -21,40 +21,50 @@
 use super::models::{NewWiki, UpdateWiki};
 use super::{Wiki, WikiId};
 use crate::service_prelude::*;
+use crate::schema::wikis;
 
 pub struct WikiService<'d> {
     conn: &'d PgConnection,
-    tenants: HashMap<WikiId, Wiki>,
+    cache: Mutex<HashMap<WikiId, Arc<Wiki>>>,
 }
 
 impl<'d> WikiService<'d> {
-    #[inline]
-    pub fn new(conn: &'d PgConnection) -> Self {
-        WikiService {
-            conn,
-            tenants: HashMap::new(),
-        }
+    pub fn new(conn: &'d PgConnection) -> Result<Self> {
+        let cache = {
+            let values = wikis::table.filter(wikis::wiki_id.ge(0))
+                .load::<Wiki>(conn)?;
+
+            let mut map = HashMap::with_capacity(values.len());
+            for wiki in values {
+                map.insert(wiki.id(), Arc::new(wiki));
+            }
+
+            Mutex::new(map)
+        };
+
+        Ok(WikiService { conn, cache })
     }
 
-    pub fn create(&mut self, name: &str, slug: &str) -> Result<()> {
+    pub fn create(&self, name: &str, slug: &str) -> Result<Arc<Wiki>> {
         info!("Creating new wiki with name '{}' ('{}')", name, slug);
 
+        let mut cache = self.cache.lock();
         let model = NewWiki { name, slug };
         let wiki = diesel::insert_into(wikis::table)
             .values(&model)
             .get_result::<Wiki>(self.conn)?;
 
-        self.tenants.insert(wiki.id(), wiki);
-
-        Ok(())
+        let wiki = Arc::new(wiki);
+        cache.insert(wiki.id(), Arc::clone(&wiki));
+        Ok(wiki)
     }
 
-    pub fn edit(&mut self, id: WikiId, name: Option<&str>, slug: Option<&str>) -> Result<()> {
+    pub fn edit(&self, id: WikiId, name: Option<&str>, slug: Option<&str>) -> Result<()> {
         use self::wikis::dsl;
 
-        let id: i64 = id.into();
         info!("Editing wiki id {}, name: {:?}, slug: {:?}", id, name, slug);
 
+        let id: i64 = id.into();
         let model = UpdateWiki { name, slug };
         diesel::update(dsl::wikis.filter(dsl::wiki_id.eq(id)))
             .set(&model)
@@ -68,7 +78,7 @@ impl Debug for WikiService<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("WikiService")
             .field("conn", &"PgConnection { .. }")
-            .field("tenants", &self.tenants)
+            .field("cache", &self.cache)
             .finish()
     }
 }

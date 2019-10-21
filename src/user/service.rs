@@ -22,9 +22,6 @@ use super::models::{NewUser, UpdateUser};
 use super::object::{User, UserId};
 use crate::schema::users;
 use crate::service_prelude::*;
-use lru_time_cache::LruCache;
-use parking_lot::Mutex;
-use std::sync::Arc;
 
 pub struct UserService<'d> {
     conn: &'d PgConnection,
