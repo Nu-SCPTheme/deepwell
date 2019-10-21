@@ -40,11 +40,10 @@ impl<'d> WikiService<'d> {
         info!("Creating new wiki with name '{}' ('{}')", name, slug);
 
         let model = NewWiki { name, slug };
-        let result = diesel::insert_into(wikis::table)
+        let wiki = diesel::insert_into(wikis::table)
             .values(&model)
-            .get_result::<(i64, String, String, NaiveDateTime)>(self.conn)?;
+            .get_result::<Wiki>(self.conn)?;
 
-        let wiki = Wiki::from_row(result);
         self.tenants.insert(wiki.id(), wiki);
 
         Ok(())

@@ -22,7 +22,7 @@ use chrono::NaiveDateTime;
 
 make_id_type!(WikiId);
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
 pub struct Wiki {
     id: WikiId,
     name: String,
@@ -30,19 +30,9 @@ pub struct Wiki {
     created_at: NaiveDateTime,
 }
 
+pub type WikiDatabaseRow = (i64, String, String, NaiveDateTime);
+
 impl Wiki {
-    #[inline]
-    pub fn from_row((id, name, slug, created_at): (i64, String, String, NaiveDateTime)) -> Self {
-        let id = WikiId(id);
-
-        Wiki {
-            id,
-            name,
-            slug,
-            created_at,
-        }
-    }
-
     #[inline]
     pub fn id(&self) -> WikiId {
         self.id

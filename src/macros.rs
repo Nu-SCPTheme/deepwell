@@ -20,6 +20,9 @@
 
 macro_rules! make_id_type {
     ($name:tt) => {
+        use diesel::deserialize::{self, FromSql, Queryable};
+        use diesel::pg::Pg;
+        use diesel::sql_types::BigInt;
         use std::borrow::Borrow;
 
         #[derive(Serialize, Deserialize, Debug, Copy, Clone, Hash, PartialEq, Eq)]
@@ -43,6 +46,23 @@ macro_rules! make_id_type {
             #[inline]
             fn borrow(&self) -> &i64 {
                 &self.0
+            }
+        }
+
+        impl Queryable<BigInt, Pg> for $name {
+            type Row = <i64 as Queryable<BigInt, Pg>>::Row;
+
+            fn build(row: Self::Row) -> Self {
+                let id = <i64 as Queryable<BigInt, Pg>>::build(row);
+                $name(id)
+            }
+        }
+
+        impl FromSql<BigInt, Pg> for $name {
+            #[inline]
+            fn from_sql(bytes: Option<&[u8]>) -> deserialize::Result<Self> {
+                let id = <i64 as FromSql<BigInt, Pg>>::from_sql(bytes)?;
+                Ok($name(id))
             }
         }
     };

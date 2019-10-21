@@ -42,3 +42,12 @@ impl<'d> PageService<'d> {
         unimplemented!()
     }
 }
+
+impl Debug for PageService<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("PageService")
+            .field("conn", &"PgConnection { .. }")
+            .field("stores", &self.stores)
+            .finish()
+    }
+}

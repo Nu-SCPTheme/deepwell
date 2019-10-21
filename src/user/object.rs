@@ -22,7 +22,7 @@ use chrono::NaiveDateTime;
 
 make_id_type!(UserId);
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
 pub struct User {
     id: UserId,
     name: String,
@@ -35,5 +35,3 @@ pub struct User {
     location: String,
     created_at: NaiveDateTime,
 }
-
-impl User {}

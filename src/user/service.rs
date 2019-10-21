@@ -30,3 +30,11 @@ impl<'d> UserService<'d> {
         UserService { conn }
     }
 }
+
+impl Debug for UserService<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("UserService")
+            .field("conn", &"PgConnection { .. }")
+            .finish()
+    }
+}
