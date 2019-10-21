@@ -1,5 +1,5 @@
 /*
- * user/mod.rs
+ * macros.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,8 +18,32 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-mod object;
-mod service;
+macro_rules! make_id_type {
+    ($name:tt) => {
+        use std::borrow::Borrow;
 
-pub use self::object::{User, UserId};
-pub use self::service::UserService;
+        #[derive(Serialize, Deserialize, Debug, Copy, Clone, Hash, PartialEq, Eq)]
+        pub struct $name(i64);
+
+        impl Into<i64> for $name {
+            #[inline]
+            fn into(self) -> i64 {
+                self.0
+            }
+        }
+
+        impl AsRef<i64> for $name {
+            #[inline]
+            fn as_ref(&self) -> &i64 {
+                &self.0
+            }
+        }
+
+        impl Borrow<i64> for $name {
+            #[inline]
+            fn borrow(&self) -> &i64 {
+                &self.0
+            }
+        }
+    };
+}

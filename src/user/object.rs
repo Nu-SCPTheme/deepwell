@@ -20,4 +20,20 @@
 
 use chrono::NaiveDateTime;
 
-// TODO
+make_id_type!(UserId);
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct User {
+    id: UserId,
+    name: String,
+    email: String,
+    is_verified: bool,
+    author_page: String,
+    website: String,
+    about: String,
+    gender: String,
+    location: String,
+    created_at: NaiveDateTime,
+}
+
+impl User {}

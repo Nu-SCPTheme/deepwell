@@ -20,24 +20,9 @@
 
 use chrono::NaiveDateTime;
 
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub struct WikiId(i64);
+make_id_type!(WikiId);
 
-impl AsRef<i64> for WikiId {
-    #[inline]
-    fn as_ref(&self) -> &i64 {
-        &self.0
-    }
-}
-
-impl Into<i64> for WikiId {
-    #[inline]
-    fn into(self) -> i64 {
-        self.0
-    }
-}
-
-#[derive(Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Wiki {
     id: WikiId,
     name: String,

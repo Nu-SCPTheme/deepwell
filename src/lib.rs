@@ -44,6 +44,9 @@ extern crate subprocess;
 extern crate thiserror;
 extern crate wikidot_normalize;
 
+#[macro_use]
+mod macros;
+
 mod error;
 mod page;
 mod revision;
