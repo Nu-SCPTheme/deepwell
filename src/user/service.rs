@@ -20,18 +20,23 @@
 
 use super::models::{NewUser, UpdateUser};
 use super::object::{User, UserId};
+use cached::{Cached, SizedCache};
 use crate::schema::users;
 use crate::service_prelude::*;
 
+const DEFAULT_CACHE_SIZE: usize = 4096;
+
 pub struct UserService<'d> {
     conn: &'d PgConnection,
-    cache: (),
+    users: SizedCache<UserId, User>,
 }
 
 impl<'d> UserService<'d> {
     #[inline]
-    pub fn new(conn: &'d PgConnection) -> Self {
-        UserService { conn, cache: () }
+    pub fn new(conn: &'d PgConnection, cache_size: Option<usize>) -> Self {
+        let users = SizedCache::with_size(cache_size.unwrap_or(DEFAULT_CACHE_SIZE));
+
+        UserService { conn, users }
     }
 
     pub fn create(&mut self, name: &str, email: &str) -> Result<()> {
@@ -45,8 +50,7 @@ impl<'d> UserService<'d> {
             .values(&model)
             .get_result::<User>(self.conn)?;
 
-        //self.users.insert(user.id(), user);
-
+        self.users.cache_set(user.id(), user);
         Ok(())
     }
 
@@ -56,10 +60,11 @@ impl<'d> UserService<'d> {
         let id: i64 = id.into();
         info!("Editing user id {}, changes: {:?}", id, model);
 
-        diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
+        let user = diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
             .set(model)
-            .execute(self.conn)?;
+            .get_result::<User>(self.conn)?;
 
+        self.users.cache_set(user.id(), user);
         Ok(())
     }
 
@@ -70,11 +75,17 @@ impl<'d> UserService<'d> {
         let id: i64 = id.into();
         info!("Marking user id {} as inactive", id);
 
-        diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
+        let user = diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
             .set(dsl::deleted_at.eq(now))
-            .execute(self.conn)?;
+            .get_result::<User>(self.conn)?;
 
+        self.users.cache_set(user.id(), user);
         Ok(())
+    }
+
+    #[inline]
+    pub fn purge(&mut self) {
+        self.users.cache_clear();
     }
 }
 

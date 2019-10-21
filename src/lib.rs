@@ -21,6 +21,7 @@
 #![deny(missing_debug_implementations)]
 
 extern crate arrayvec;
+extern crate cached;
 extern crate chrono;
 
 #[macro_use]
