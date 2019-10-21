@@ -48,6 +48,7 @@ mod error;
 mod page;
 mod revision;
 mod schema;
+mod user;
 mod wiki;
 
 mod service_prelude {

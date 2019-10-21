@@ -28,6 +28,7 @@ pub struct WikiService<'d> {
 }
 
 impl<'d> WikiService<'d> {
+    #[inline]
     pub fn new(conn: &'d PgConnection) -> Self {
         WikiService {
             conn,
