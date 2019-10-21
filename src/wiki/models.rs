@@ -1,5 +1,5 @@
 /*
- * wikis/mod.rs
+ * wiki/models.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,9 +18,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-mod models;
-mod object;
-mod service;
+use crate::schema::wikis;
 
-pub use self::object::{Wiki, WikiId};
-pub use self::service::WikiService;
+#[derive(Debug, Insertable)]
+#[table_name = "wikis"]
+pub struct NewWiki<'a> {
+    pub name: &'a str,
+    pub slug: &'a str,
+}
+
+#[derive(Debug, AsChangeset)]
+#[table_name = "wikis"]
+pub struct UpdateWiki<'a> {
+    pub name: Option<&'a str>,
+    pub slug: Option<&'a str>,
+}

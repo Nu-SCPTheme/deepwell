@@ -1,5 +1,5 @@
 /*
- * wikis/models.rs
+ * revision/info.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,18 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::schema::wikis;
-
-#[derive(Debug, Insertable)]
-#[table_name = "wikis"]
-pub struct NewWiki<'a> {
-    pub name: &'a str,
-    pub slug: &'a str,
-}
-
-#[derive(Debug, AsChangeset)]
-#[table_name = "wikis"]
-pub struct UpdateWiki<'a> {
-    pub name: Option<&'a str>,
-    pub slug: Option<&'a str>,
+#[derive(Debug, Copy, Clone)]
+pub struct CommitInfo<'a> {
+    pub username: &'a str,
+    pub message: &'a str,
 }

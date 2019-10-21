@@ -1,5 +1,5 @@
 /*
- * revisions/blame/data.rs
+ * page/service.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,34 +18,27 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::revisions::GitHash;
-use chrono::{DateTime, FixedOffset};
+use crate::revision::RevisionStore;
+use crate::service_prelude::*;
+use crate::wiki::WikiId;
+use std::collections::HashMap;
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct BlameAuthor {
-    pub name: String,
-    pub email: String,
-    pub time: DateTime<FixedOffset>,
+pub struct PageService<'d> {
+    conn: &'d PgConnection,
+    stores: HashMap<WikiId, RevisionStore>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct BlameLine {
-    pub commit: GitHash,
-    pub old_lineno: u32,
-    pub new_lineno: u32,
-    pub line: Box<[u8]>,
-}
+impl<'d> PageService<'d> {
+    #[inline]
+    pub fn new(conn: &'d PgConnection) -> Self {
+        PageService {
+            conn,
+            stores: HashMap::new(),
+        }
+    }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct BlameGroup {
-    pub author: BlameAuthor,
-    pub committer: BlameAuthor,
-    pub summary: String,
-    pub previous: Option<GitHash>,
-    pub lines: Vec<BlameLine>,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Blame {
-    pub groups: Vec<BlameGroup>,
+    /// Records the given page revision into the database and page store.
+    pub fn commit<S, B>(&self, slug: S, content: B, wiki: WikiId, user: ()) -> Result<()> {
+        unimplemented!()
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * revisions/git_hash.rs
+ * revision/git_hash.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith

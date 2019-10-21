@@ -1,5 +1,5 @@
 /*
- * wikis/object.rs
+ * wiki/object.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith

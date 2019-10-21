@@ -1,5 +1,5 @@
 /*
- * revisions/info.rs
+ * page/mod.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,8 +18,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#[derive(Debug, Copy, Clone)]
-pub struct CommitInfo<'a> {
-    pub username: &'a str,
-    pub message: &'a str,
-}
+mod service;
+
+pub use self::service::PageService;

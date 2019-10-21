@@ -1,5 +1,5 @@
 /*
- * revisions/blame/parse.rs
+ * revision/blame/parse.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -19,7 +19,7 @@
  */
 
 use super::*;
-use crate::revisions::GitHash;
+use crate::revision::GitHash;
 use crate::{Error, Result};
 use chrono::{DateTime, FixedOffset, NaiveDateTime};
 use regex::bytes::Regex;

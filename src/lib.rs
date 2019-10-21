@@ -45,10 +45,10 @@ extern crate thiserror;
 extern crate wikidot_normalize;
 
 mod error;
-mod pages;
-mod revisions;
+mod page;
+mod revision;
 mod schema;
-mod wikis;
+mod wiki;
 
 mod service_prelude {
     pub use crate::schema::*;

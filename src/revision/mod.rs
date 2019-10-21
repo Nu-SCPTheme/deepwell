@@ -1,5 +1,5 @@
 /*
- * pages/service.rs
+ * revision/mod.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,27 +18,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::revisions::RevisionStore;
-use crate::service_prelude::*;
-use crate::wikis::WikiId;
-use std::collections::HashMap;
+mod blame;
+mod git_hash;
+mod info;
+mod process;
+mod store;
 
-pub struct PageService<'d> {
-    conn: &'d PgConnection,
-    stores: HashMap<WikiId, RevisionStore>,
-}
+#[cfg(test)]
+mod test;
 
-impl<'d> PageService<'d> {
-    #[inline]
-    pub fn new(conn: &'d PgConnection) -> Self {
-        PageService {
-            conn,
-            stores: HashMap::new(),
-        }
-    }
-
-    /// Records the given page revision into the database and page store.
-    pub fn commit<S, B>(&self, slug: S, content: B, wiki: WikiId, user: ()) -> Result<()> {
-        unimplemented!()
-    }
-}
+pub use self::blame::Blame;
+pub use self::git_hash::GitHash;
+pub use self::info::CommitInfo;
+pub use self::process::{spawn, spawn_output};
+pub use self::store::RevisionStore;

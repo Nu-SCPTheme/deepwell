@@ -1,5 +1,5 @@
 /*
- * revisions/store.rs
+ * revision/store.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith

@@ -1,5 +1,5 @@
 /*
- * revisions/mod.rs
+ * revision/blame/data.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,17 +18,34 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-mod blame;
-mod git_hash;
-mod info;
-mod process;
-mod store;
+use crate::revision::GitHash;
+use chrono::{DateTime, FixedOffset};
 
-#[cfg(test)]
-mod test;
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BlameAuthor {
+    pub name: String,
+    pub email: String,
+    pub time: DateTime<FixedOffset>,
+}
 
-pub use self::blame::Blame;
-pub use self::git_hash::GitHash;
-pub use self::info::CommitInfo;
-pub use self::process::{spawn, spawn_output};
-pub use self::store::RevisionStore;
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BlameLine {
+    pub commit: GitHash,
+    pub old_lineno: u32,
+    pub new_lineno: u32,
+    pub line: Box<[u8]>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BlameGroup {
+    pub author: BlameAuthor,
+    pub committer: BlameAuthor,
+    pub summary: String,
+    pub previous: Option<GitHash>,
+    pub lines: Vec<BlameLine>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Blame {
+    pub groups: Vec<BlameGroup>,
+}
