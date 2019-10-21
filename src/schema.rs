@@ -99,7 +99,6 @@ table! {
 table! {
     users (user_id) {
         user_id -> Int8,
-        created_at -> Timestamp,
         name -> Text,
         email -> Text,
         is_verified -> Bool,
@@ -108,6 +107,8 @@ table! {
         about -> Text,
         gender -> Text,
         location -> Text,
+        created_at -> Timestamp,
+        deleted_at -> Nullable<Timestamp>,
     }
 }
 

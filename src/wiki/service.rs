@@ -62,19 +62,6 @@ impl<'d> WikiService<'d> {
 
         Ok(())
     }
-
-    pub fn remove(&mut self, id: WikiId) -> Result<()> {
-        use self::wikis::dsl;
-
-        // TODO delete all other rows that are FK'ed
-
-        let id: i64 = id.into();
-        info!("Removing wiki id {}", id);
-
-        diesel::delete(dsl::wikis.filter(dsl::wiki_id.eq(id))).execute(self.conn)?;
-
-        Ok(())
-    }
 }
 
 impl Debug for WikiService<'_> {

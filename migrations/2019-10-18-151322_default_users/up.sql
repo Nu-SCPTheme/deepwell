@@ -10,5 +10,9 @@ VALUES (2, 'system', 'system@example.com', true, 'https://example.com/', 'Standa
 INSERT INTO users (user_id, name, email, is_verified, website, about, location)
 VALUES (3, 'anonymous', 'anonymous@example.com', true, 'https://example.com/', 'Standard account for anonymous users', 'unknown');
 
+
 INSERT INTO users (user_id, name, email, is_verified, website, about, location)
-VALUES (4, 'nobody', 'nobody@example.com', true, 'https://example.com/', 'Standard account for unprivileged users', '?');
+VALUES (4, 'deleted', 'deleted@example.com', true, 'https://example.com/', 'Standard account for deleted users', 'deleted');
+
+INSERT INTO users (user_id, name, email, is_verified, website, about, location)
+VALUES (5, 'nobody', 'nobody@example.com', true, 'https://example.com/', 'Standard account for unprivileged users', '?');

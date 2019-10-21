@@ -18,16 +18,63 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use super::models::{NewUser, UpdateUser};
+use super::object::{User, UserId};
+use crate::schema::users;
 use crate::service_prelude::*;
 
 pub struct UserService<'d> {
     conn: &'d PgConnection,
+    cache: (),
 }
 
 impl<'d> UserService<'d> {
     #[inline]
     pub fn new(conn: &'d PgConnection) -> Self {
-        UserService { conn }
+        UserService { conn, cache: () }
+    }
+
+    pub fn create(&mut self, name: &str, email: &str) -> Result<()> {
+        info!(
+            "Creating new user with name '{}' with email '{}'",
+            name, email
+        );
+
+        let model = NewUser { name, email };
+        let user = diesel::insert_into(users::table)
+            .values(&model)
+            .get_result::<User>(self.conn)?;
+
+        //self.users.insert(user.id(), user);
+
+        Ok(())
+    }
+
+    pub fn edit(&mut self, id: UserId, model: UpdateUser) -> Result<()> {
+        use self::users::dsl;
+
+        let id: i64 = id.into();
+        info!("Editing user id {}, changes: {:?}", id, model);
+
+        diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
+            .set(model)
+            .execute(self.conn)?;
+
+        Ok(())
+    }
+
+    pub fn mark_inactive(&mut self, id: UserId) -> Result<()> {
+        use self::users::dsl;
+        use diesel::dsl::now;
+
+        let id: i64 = id.into();
+        info!("Marking user id {} as inactive", id);
+
+        diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
+            .set(dsl::deleted_at.eq(now))
+            .execute(self.conn)?;
+
+        Ok(())
     }
 }
 

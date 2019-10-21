@@ -1,5 +1,5 @@
 /*
- * user/mod.rs
+ * user/models.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,10 +18,26 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-mod models;
-mod object;
-mod service;
+use crate::schema::users;
+use chrono::NaiveDateTime;
 
-pub use self::models::{NewUser, UpdateUser};
-pub use self::object::{User, UserId};
-pub use self::service::UserService;
+#[derive(Debug, Insertable)]
+#[table_name = "users"]
+pub struct NewUser<'a> {
+    pub name: &'a str,
+    pub email: &'a str,
+}
+
+#[derive(Debug, Default, AsChangeset)]
+#[table_name = "users"]
+pub struct UpdateUser<'a> {
+    pub name: Option<&'a str>,
+    pub email: Option<&'a str>,
+    pub is_verified: Option<bool>,
+    pub author_page: Option<&'a str>,
+    pub website: Option<&'a str>,
+    pub about: Option<&'a str>,
+    pub gender: Option<&'a str>,
+    pub location: Option<&'a str>,
+    pub deleted_at: Option<Option<NaiveDateTime>>,
+}

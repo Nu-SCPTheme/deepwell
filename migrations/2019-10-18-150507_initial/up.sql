@@ -2,15 +2,16 @@
 
 CREATE TABLE users (
     user_id BIGSERIAL PRIMARY KEY,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     name TEXT NOT NULL UNIQUE,
     email TEXT NOT NULL UNIQUE,
     is_verified BOOLEAN NOT NULL DEFAULT false,
     author_page TEXT NOT NULL DEFAULT '',
     website TEXT NOT NULL DEFAULT '',
     about TEXT NOT NULL DEFAULT '',
-    gender TEXT NOT NULL DEFAULT '',
-    location TEXT NOT NULL DEFAULT ''
+    gender TEXT NOT NULL DEFAULT '' CHECK (gender = LOWER(gender)),
+    location TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMP
 );
 
 CREATE TABLE passwords (

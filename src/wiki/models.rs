@@ -27,7 +27,7 @@ pub struct NewWiki<'a> {
     pub slug: &'a str,
 }
 
-#[derive(Debug, AsChangeset)]
+#[derive(Debug, Default, AsChangeset)]
 #[table_name = "wikis"]
 pub struct UpdateWiki<'a> {
     pub name: Option<&'a str>,

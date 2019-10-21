@@ -30,8 +30,6 @@ pub struct Wiki {
     created_at: NaiveDateTime,
 }
 
-pub type WikiDatabaseRow = (i64, String, String, NaiveDateTime);
-
 impl Wiki {
     #[inline]
     pub fn id(&self) -> WikiId {
