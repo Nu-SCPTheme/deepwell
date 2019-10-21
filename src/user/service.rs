@@ -23,58 +23,44 @@ use super::object::{User, UserId};
 use crate::schema::users;
 use crate::service_prelude::*;
 use lru_time_cache::LruCache;
+use parking_lot::Mutex;
 use std::sync::Arc;
-
-const DEFAULT_CACHE_SIZE: usize = 4096;
 
 pub struct UserService<'d> {
     conn: &'d PgConnection,
-    cache: LruCache<UserId, Arc<User>>,
+    cache: Mutex<LruCache<UserId, Arc<User>>>,
 }
 
 impl<'d> UserService<'d> {
     #[inline]
-    pub fn new(conn: &'d PgConnection, cache_size: Option<usize>) -> Self {
-        let cache = LruCache::with_capacity(cache_size.unwrap_or(DEFAULT_CACHE_SIZE));
+    pub fn new(conn: &'d PgConnection, cache_size: usize) -> Self {
+        let cache = Mutex::new(LruCache::with_capacity(cache_size));
 
         UserService { conn, cache }
     }
 
-    pub fn create(&mut self, name: &str, email: &str) -> Result<Arc<User>> {
+    pub fn create(&self, name: &str, email: &str) -> Result<Arc<User>> {
         info!(
             "Creating new user with name '{}' with email '{}'",
             name, email
         );
 
+        let mut cache = self.cache.lock();
         let model = NewUser { name, email };
         let user = diesel::insert_into(users::table)
             .values(&model)
             .get_result::<User>(self.conn)?;
 
         let user = Arc::new(user);
-        self.cache.insert(user.id(), Arc::clone(&user));
+        cache.insert(user.id(), Arc::clone(&user));
         Ok(user)
     }
 
-    pub fn edit(&mut self, id: UserId, model: UpdateUser) -> Result<Arc<User>> {
-        use self::users::dsl;
-
-        info!("Editing user id {}, changes: {:?}", id, model);
-
-        let id: i64 = id.into();
-        let user = diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
-            .set(model)
-            .get_result::<User>(self.conn)?;
-
-        let user = Arc::new(user);
-        self.cache.insert(user.id(), Arc::clone(&user));
-        Ok(user)
-    }
-
-    pub fn get(&mut self, id: UserId) -> Result<Option<Arc<User>>> {
+    pub fn get(&self, id: UserId) -> Result<Option<Arc<User>>> {
         info!("Getting user for id {}", id);
 
-        if let Some(user) = self.cache.get(&id) {
+        let mut cache = self.cache.lock();
+        if let Some(user) = cache.get(&id) {
             debug!("Found user in cache");
             return Ok(Some(Arc::clone(user)));
         }
@@ -84,32 +70,49 @@ impl<'d> UserService<'d> {
         match result {
             Some(user) => {
                 let user = Arc::new(user);
-                self.cache.insert(user.id(), Arc::clone(&user));
+                cache.insert(user.id(), Arc::clone(&user));
                 Ok(Some(user))
             }
             None => Ok(None),
         }
     }
 
-    pub fn mark_inactive(&mut self, id: UserId) -> Result<Arc<User>> {
+    pub fn edit(&self, id: UserId, model: UpdateUser) -> Result<Arc<User>> {
+        use self::users::dsl;
+
+        info!("Editing user id {}, changes: {:?}", id, model);
+
+        let id: i64 = id.into();
+        let mut cache = self.cache.lock();
+        let user = diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
+            .set(model)
+            .get_result::<User>(self.conn)?;
+
+        let user = Arc::new(user);
+        cache.insert(user.id(), Arc::clone(&user));
+        Ok(user)
+    }
+
+    pub fn mark_inactive(&self, id: UserId) -> Result<Arc<User>> {
         use self::users::dsl;
         use diesel::dsl::now;
 
         info!("Marking user id {} as inactive", id);
 
         let id: i64 = id.into();
+        let mut cache = self.cache.lock();
         let user = diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
             .set(dsl::deleted_at.eq(now))
             .get_result::<User>(self.conn)?;
 
         let user = Arc::new(user);
-        self.cache.insert(user.id(), Arc::clone(&user));
+        cache.insert(user.id(), Arc::clone(&user));
         Ok(user)
     }
 
     #[inline]
-    pub fn purge(&mut self) {
-        self.cache.clear();
+    pub fn purge(&self) {
+        self.cache.lock().clear();
     }
 }
 
