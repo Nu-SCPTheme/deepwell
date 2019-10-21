@@ -36,4 +36,9 @@ impl<'d> PageService<'d> {
             stores: HashMap::new(),
         }
     }
+
+    /// Records the given page revision into the database and page store.
+    pub fn commit<S, B>(&self, slug: S, content: B, wiki: WikiId, user: ()) -> Result<()> {
+        unimplemented!()
+    }
 }
