@@ -20,23 +20,23 @@
 
 use super::models::{NewUser, UpdateUser};
 use super::object::{User, UserId};
-use cached::{Cached, SizedCache};
 use crate::schema::users;
 use crate::service_prelude::*;
+use lru_time_cache::LruCache;
 
 const DEFAULT_CACHE_SIZE: usize = 4096;
 
 pub struct UserService<'d> {
     conn: &'d PgConnection,
-    users: SizedCache<UserId, User>,
+    cache: LruCache<UserId, User>,
 }
 
 impl<'d> UserService<'d> {
     #[inline]
     pub fn new(conn: &'d PgConnection, cache_size: Option<usize>) -> Self {
-        let users = SizedCache::with_size(cache_size.unwrap_or(DEFAULT_CACHE_SIZE));
+        let cache = LruCache::with_capacity(cache_size.unwrap_or(DEFAULT_CACHE_SIZE));
 
-        UserService { conn, users }
+        UserService { conn, cache }
     }
 
     pub fn create(&mut self, name: &str, email: &str) -> Result<()> {
@@ -50,7 +50,7 @@ impl<'d> UserService<'d> {
             .values(&model)
             .get_result::<User>(self.conn)?;
 
-        self.users.cache_set(user.id(), user);
+        self.cache.insert(user.id(), user);
         Ok(())
     }
 
@@ -64,12 +64,17 @@ impl<'d> UserService<'d> {
             .set(model)
             .get_result::<User>(self.conn)?;
 
-        self.users.cache_set(user.id(), user);
+        self.cache.insert(user.id(), user);
         Ok(())
     }
 
     pub fn get(&mut self, id: UserId) -> Result<Option<User>> {
         info!("Getting user for id {}", id);
+
+        if let Some(user) = self.cache.get(&id) {
+            debug!("Found user in cache");
+            return Ok(Some(user.clone()));
+        }
 
         let id: i64 = id.into();
         let result = users::table.find(id).first::<User>(self.conn).optional()?;
@@ -78,7 +83,7 @@ impl<'d> UserService<'d> {
             None => return Ok(None),
         };
 
-        self.users.cache_set(user.id(), user.clone());
+        self.cache.insert(user.id(), user.clone());
         Ok(Some(user))
     }
 
@@ -93,13 +98,13 @@ impl<'d> UserService<'d> {
             .set(dsl::deleted_at.eq(now))
             .get_result::<User>(self.conn)?;
 
-        self.users.cache_set(user.id(), user);
+        self.cache.insert(user.id(), user);
         Ok(())
     }
 
     #[inline]
     pub fn purge(&mut self) {
-        self.users.cache_clear();
+        self.cache.clear();
     }
 }
 

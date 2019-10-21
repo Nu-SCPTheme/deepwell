@@ -21,7 +21,6 @@
 #![deny(missing_debug_implementations)]
 
 extern crate arrayvec;
-extern crate cached;
 extern crate chrono;
 
 #[macro_use]
@@ -33,6 +32,7 @@ extern crate lazy_static;
 
 #[macro_use]
 extern crate log;
+extern crate lru_time_cache;
 extern crate parking_lot;
 extern crate regex;
 
