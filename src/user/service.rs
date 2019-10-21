@@ -57,9 +57,9 @@ impl<'d> UserService<'d> {
     pub fn edit(&mut self, id: UserId, model: UpdateUser) -> Result<()> {
         use self::users::dsl;
 
-        let id: i64 = id.into();
         info!("Editing user id {}, changes: {:?}", id, model);
 
+        let id: i64 = id.into();
         let user = diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
             .set(model)
             .get_result::<User>(self.conn)?;
@@ -68,13 +68,27 @@ impl<'d> UserService<'d> {
         Ok(())
     }
 
+    pub fn get(&mut self, id: UserId) -> Result<Option<User>> {
+        info!("Getting user for id {}", id);
+
+        let id: i64 = id.into();
+        let result = users::table.find(id).first::<User>(self.conn).optional()?;
+        let user = match result {
+            Some(user) => user,
+            None => return Ok(None),
+        };
+
+        self.users.cache_set(user.id(), user.clone());
+        Ok(Some(user))
+    }
+
     pub fn mark_inactive(&mut self, id: UserId) -> Result<()> {
         use self::users::dsl;
         use diesel::dsl::now;
 
-        let id: i64 = id.into();
         info!("Marking user id {} as inactive", id);
 
+        let id: i64 = id.into();
         let user = diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
             .set(dsl::deleted_at.eq(now))
             .get_result::<User>(self.conn)?;
