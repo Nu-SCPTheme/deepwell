@@ -36,7 +36,6 @@ jobs:
     - stage: format
       script:
         - rustfmt src/lib.rs --check
-        - rustfmt examples/ftml/main.rs --check
     - stage: clippy
       script:
         - rustup toolchain install nightly-2019-09-25-x86_64-unknown-linux-gnu
