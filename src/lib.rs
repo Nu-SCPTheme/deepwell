@@ -59,11 +59,9 @@ mod service_prelude {
     pub use crate::Result;
     pub use chrono::prelude::*;
     pub use diesel::prelude::*;
-    pub use lru_time_cache::LruCache;
     pub use parking_lot::Mutex;
     pub use std::collections::HashMap;
     pub use std::fmt::{self, Debug};
-    pub use std::sync::Arc;
 }
 
 pub type StdResult<T, E> = std::result::Result<T, E>;
