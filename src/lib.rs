@@ -56,7 +56,7 @@ mod wiki;
 
 mod service_prelude {
     pub use crate::schema::*;
-    pub use crate::Result;
+    pub use crate::{Error, Result};
     pub use chrono::prelude::*;
     pub use diesel::prelude::*;
     pub use parking_lot::Mutex;

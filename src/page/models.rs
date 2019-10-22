@@ -1,5 +1,5 @@
 /*
- * page/mod.rs
+ * page/models.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,10 +18,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-mod models;
-mod object;
-mod service;
+use crate::schema::pages;
 
-pub use self::models::NewPage;
-pub use self::object::PageId;
-pub use self::service::PageService;
+#[derive(Debug, Insertable)]
+#[table_name = "pages"]
+pub struct NewPage<'a> {
+    pub wiki_id: i64,
+    pub slug: &'a str,
+    pub title: &'a str,
+    pub alt_title: Option<&'a str>,
+}
+
+#[derive(Debug, AsChangeset)]
+#[table_name = "pages"]
+pub struct UpdatePage<'a> {
+    pub slug: Option<&'a str>,
+    pub title: Option<&'a str>,
+    pub alt_title: Option<&'a str>,
+}

@@ -18,9 +18,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::revision::RevisionStore;
+use super::{NewPage, PageId};
+use crate::revision::{CommitInfo, RevisionStore};
+use crate::schema::pages;
 use crate::service_prelude::*;
+use crate::user::{User, UserId};
 use crate::wiki::WikiId;
+use serde_json as json;
 use std::collections::HashMap;
 
 pub struct PageService<'d> {
@@ -37,9 +41,64 @@ impl<'d> PageService<'d> {
         }
     }
 
-    /// Records the given page revision into the database and page store.
-    pub fn commit<S, B>(&self, slug: S, content: B, wiki: WikiId, user: ()) -> Result<()> {
-        unimplemented!()
+    pub fn create<S, B>(
+        &self,
+        slug: &str,
+        content: &[u8],
+        title: &str,
+        alt_title: Option<&str>,
+        wiki_id: WikiId,
+        user: &User,
+    ) -> Result<()> {
+        use self::pages::dsl;
+
+        #[derive(Debug, Serialize)]
+        struct CommitMessage {
+            wiki_id: WikiId,
+            page_id: PageId,
+            user_id: UserId,
+        }
+
+        self.conn.transaction::<_, Error, _>(|| {
+            let model = NewPage {
+                wiki_id: wiki_id.into(),
+                slug,
+                title,
+                alt_title,
+            };
+
+            let page_id = diesel::insert_into(pages::table)
+                .values(&model)
+                .returning(dsl::page_id)
+                .get_result::<PageId>(self.conn)?;
+
+            let user_id = user.id();
+            let message = CommitMessage {
+                wiki_id,
+                page_id,
+                user_id,
+            };
+            let message = json::to_string(&message)?;
+
+            let info = CommitInfo {
+                username: user.name(),
+                message: &message,
+            };
+
+            let store = match self.stores.get(&wiki_id) {
+                Some(store) => store,
+                None => {
+                    error!("No revision store found for wiki ID {}", wiki_id);
+
+                    return Err(Error::StaticMsg("missing revision store for wiki"));
+                }
+            };
+
+            let hash = store.commit(slug, content, info)?;
+            // add revision
+
+            Ok(())
+        })
     }
 }
 

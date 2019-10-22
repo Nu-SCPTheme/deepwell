@@ -1,5 +1,5 @@
 /*
- * page/mod.rs
+ * page/object.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,10 +18,4 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-mod models;
-mod object;
-mod service;
-
-pub use self::models::NewPage;
-pub use self::object::PageId;
-pub use self::service::PageService;
+make_id_type!(PageId);
