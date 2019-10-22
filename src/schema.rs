@@ -20,12 +20,13 @@ table! {
 table! {
     pages (page_id) {
         page_id -> Int8,
-        created_at -> Timestamp,
-        deleted_at -> Nullable<Timestamp>,
+        wiki_id -> Int8,
         slug -> Text,
         title -> Text,
         alt_title -> Nullable<Text>,
         tags -> Array<Text>,
+        created_at -> Timestamp,
+        deleted_at -> Nullable<Timestamp>,
     }
 }
 
@@ -133,6 +134,7 @@ table! {
 joinable!(authors -> pages (page_id));
 joinable!(authors -> users (user_id));
 joinable!(files -> pages (page_id));
+joinable!(pages -> wikis (wiki_id));
 joinable!(parents -> users (parented_by));
 joinable!(passwords -> users (user_id));
 joinable!(ratings_history -> pages (page_id));

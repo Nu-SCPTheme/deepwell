@@ -30,16 +30,50 @@ CREATE TABLE passwords (
     )
 );
 
+-- Wikis and wiki settings
+
+CREATE TABLE wikis (
+    wiki_id BIGSERIAL PRIMARY KEY,
+    slug TEXT NOT NULL UNIQUE,
+    name TEXT NOT NULL,
+    created_at TIMESTAMP NOT NULL
+);
+
+CREATE TABLE wiki_membership (
+    wiki_id BIGSERIAL NOT NULL REFERENCES wikis(wiki_id),
+    user_id BIGSERIAL NOT NULL REFERENCES users(user_id),
+    applied_at TIMESTAMP NOT NULL,
+    joined_at TIMESTAMP NOT NULL,
+    PRIMARY KEY (wiki_id, user_id)
+);
+
+CREATE TABLE roles (
+    role_id BIGSERIAL PRIMARY KEY,
+    wiki_id BIGSERIAL NOT NULL REFERENCES wikis(wiki_id),
+    name TEXT NOT NULL,
+    permset BIT(20) NOT NULL,
+    UNIQUE (wiki_id, name)
+);
+
+CREATE TABLE role_membership (
+    wiki_id BIGSERIAL REFERENCES wikis(wiki_id),
+    role_id BIGSERIAL REFERENCES roles(role_id),
+    user_id BIGSERIAL REFERENCES users(user_id),
+    applied_at TIMESTAMP NOT NULL,
+    PRIMARY KEY (wiki_id, role_Id, user_id)
+);
+
 -- Pages and revisions
 
 CREATE TABLE pages (
     page_id BIGSERIAL PRIMARY KEY,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    deleted_at TIMESTAMP,
+    wiki_id BIGSERIAL NOT NULL REFERENCES wikis(wiki_id),
     slug TEXT NOT NULL,
     title TEXT NOT NULL,
     alt_title TEXT,
     tags TEXT[] NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMP,
     UNIQUE (deleted_at, slug)
 );
 
@@ -105,37 +139,4 @@ CREATE TABLE files (
     file_uri TEXT NOT NULL UNIQUE,
     description TEXT NOT NULL,
     page_id BIGSERIAL NOT NULL REFERENCES pages(page_id)
-);
-
--- Wikis and wiki settings
-
-CREATE TABLE wikis (
-    wiki_id BIGSERIAL PRIMARY KEY,
-    slug TEXT NOT NULL UNIQUE,
-    name TEXT NOT NULL,
-    created_at TIMESTAMP NOT NULL
-);
-
-CREATE TABLE wiki_membership (
-    wiki_id BIGSERIAL NOT NULL REFERENCES wikis(wiki_id),
-    user_id BIGSERIAL NOT NULL REFERENCES users(user_id),
-    applied_at TIMESTAMP NOT NULL,
-    joined_at TIMESTAMP NOT NULL,
-    PRIMARY KEY (wiki_id, user_id)
-);
-
-CREATE TABLE roles (
-    role_id BIGSERIAL PRIMARY KEY,
-    wiki_id BIGSERIAL NOT NULL REFERENCES wikis(wiki_id),
-    name TEXT NOT NULL,
-    permset BIT(20) NOT NULL,
-    UNIQUE (wiki_id, name)
-);
-
-CREATE TABLE role_membership (
-    wiki_id BIGSERIAL REFERENCES wikis(wiki_id),
-    role_id BIGSERIAL REFERENCES roles(role_id),
-    user_id BIGSERIAL REFERENCES users(user_id),
-    applied_at TIMESTAMP NOT NULL,
-    PRIMARY KEY (wiki_id, role_Id, user_id)
 );
