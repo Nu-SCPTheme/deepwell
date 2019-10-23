@@ -43,4 +43,7 @@ pub enum Error {
 
     #[error("command failed: {0}")]
     CommandFailed(String),
+
+    #[error("the given page already exists")]
+    PageExists,
 }

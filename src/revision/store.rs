@@ -248,6 +248,45 @@ impl RevisionStore {
         self.get_commit()
     }
 
+    /// Renames the given page in the repository.
+    pub fn rename(&self, old_slug: &str, new_slug: &str, info: CommitInfo) -> Result<GitHash> {
+        info!("Renaming file for slug '{}' -> '{}'", old_slug, new_slug);
+
+        let _guard = self.lock.write();
+        check_normal(old_slug)?;
+        check_normal(new_slug)?;
+
+        let new_path = self.get_path(new_slug, true);
+        if new_path.exists() {
+            return Err(Error::PageExists);
+        }
+
+        let old_path = self.get_path(old_slug, false);
+        let new_path = self.get_path(new_slug, false);
+        let args = arguments![
+            "git",
+            "mv",
+            "--",
+            &old_path,
+            &new_path,
+        ];
+        self.spawn(&args)?;
+
+        let author = self.arg_author(info.username);
+        let message = self.arg_message(info.message);
+        let args = arguments![
+            "git",
+            "commit",
+            &author,
+            &message,
+            "--",
+            &new_path,
+        ];
+        self.spawn(&args)?;
+
+        self.get_commit()
+    }
+
     /// Remove the given page from the repository.
     /// Returns `None` if the page does not exist.
     pub fn remove(&self, slug: &str, info: CommitInfo) -> Result<Option<GitHash>> {
