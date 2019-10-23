@@ -41,7 +41,7 @@ impl<'d> PageService<'d> {
         }
     }
 
-    fn commit_message(&self, wiki_id: WikiId, page_id: PageId, user_id: UserId) -> Result<String> {
+    fn commit_data(&self, wiki_id: WikiId, page_id: PageId, user_id: UserId) -> Result<String> {
         #[derive(Debug, Serialize)]
         struct CommitMessage {
             wiki_id: WikiId,
@@ -98,12 +98,12 @@ impl<'d> PageService<'d> {
                 .get_result::<PageId>(self.conn)?;
 
             let user_id = user.id();
-            let message = self.commit_message(wiki_id, page_id, user_id)?;
+            let commit = self.commit_data(wiki_id, page_id, user_id)?;
             let store = self.get_store(wiki_id)?;
 
             let info = CommitInfo {
                 username: user.name(),
-                message: &message,
+                message: &commit,
             };
 
             trace!("Committing content to repository");
@@ -112,7 +112,7 @@ impl<'d> PageService<'d> {
             let model = NewRevision {
                 page_id: page_id.into(),
                 user_id: user_id.into(),
-                message: &message,
+                message,
                 git_commit: hash.as_ref(),
                 change_type: "create",
             };
@@ -140,12 +140,12 @@ impl<'d> PageService<'d> {
 
         self.conn.transaction::<_, Error, _>(|| {
             let user_id = user.id();
-            let message = self.commit_message(wiki_id, page_id, user_id)?;
+            let commit = self.commit_data(wiki_id, page_id, user_id)?;
             let store = self.get_store(wiki_id)?;
 
             let info = CommitInfo {
                 username: user.name(),
-                message: &message,
+                message: &commit,
             };
 
             trace!("Committing content to repository");
@@ -154,7 +154,7 @@ impl<'d> PageService<'d> {
             let model = NewRevision {
                 page_id: page_id.into(),
                 user_id: user_id.into(),
-                message: &message,
+                message,
                 git_commit: hash.as_ref(),
                 change_type: "create",
             };
