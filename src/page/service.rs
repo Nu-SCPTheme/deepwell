@@ -162,9 +162,14 @@ impl<'d> PageService<'d> {
             };
 
             trace!("Updating {:?} in pages table", &model);
-            diesel::update(pages::table)
-                .set(&model)
-                .execute(self.conn)?;
+            {
+                use self::pages::dsl;
+
+                let id: i64 = page_id.into();
+                diesel::update(dsl::pages.filter(dsl::page_id.eq(id)))
+                    .set(&model)
+                    .execute(self.conn)?;
+            }
 
             let user_id = user.id();
             let commit = self.commit_data(wiki_id, page_id, user_id)?;
@@ -215,9 +220,14 @@ impl<'d> PageService<'d> {
             };
 
             trace!("Updating {:?} in pages table", &model);
-            diesel::update(pages::table)
-                .set(&model)
-                .execute(self.conn)?;
+            {
+                use self::pages::dsl;
+
+                let id: i64 = page_id.into();
+                diesel::update(dsl::pages.filter(dsl::page_id.eq(id)))
+                    .set(&model)
+                    .execute(self.conn)?;
+            }
 
             let user_id = user.id();
             let commit = self.commit_data(wiki_id, page_id, user_id)?;
@@ -263,9 +273,14 @@ impl<'d> PageService<'d> {
             use diesel::dsl::now;
 
             trace!("Marking page as deleted in table");
-            diesel::update(pages::table)
-                .set(pages::dsl::deleted_at.eq(now))
-                .execute(self.conn)?;
+            {
+                use self::pages::dsl;
+
+                let id: i64 = page_id.into();
+                diesel::update(dsl::pages.filter(dsl::page_id.eq(id)))
+                    .set(pages::dsl::deleted_at.eq(now))
+                    .execute(self.conn)?;
+            }
 
             let user_id = user.id();
             let commit = self.commit_data(wiki_id, page_id, user_id)?;
