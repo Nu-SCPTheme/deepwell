@@ -34,7 +34,7 @@ pub struct NewPage<'a> {
 pub struct UpdatePage<'a> {
     pub slug: Option<&'a str>,
     pub title: Option<&'a str>,
-    pub alt_title: Option<&'a str>,
+    pub alt_title: Option<Option<&'a str>>,
 }
 
 #[derive(Debug, Insertable)]

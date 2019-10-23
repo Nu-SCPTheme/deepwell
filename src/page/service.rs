@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::{NewPage, NewRevision, PageId, RevisionId, UpdateRevision};
+use super::{NewPage, NewRevision, PageId, RevisionId, UpdatePage, UpdateRevision};
 use crate::revision::{CommitInfo, RevisionStore};
 use crate::schema::{pages, revisions};
 use crate::service_prelude::*;
@@ -79,9 +79,15 @@ impl<'d> PageService<'d> {
         wiki_id: WikiId,
         user: &User,
         title: &str,
-        alt_title: Option<&str>,
+        alt_title: &str,
     ) -> Result<(PageId, RevisionId)> {
         info!("Starting transaction for page creation");
+
+        // Empty string means use default
+        let alt_title: Option<&str> = match alt_title {
+            "" => None,
+            _ => Some(alt_title),
+        };
 
         self.conn.transaction::<_, Error, _>(|| {
             let model = NewPage {
@@ -135,10 +141,31 @@ impl<'d> PageService<'d> {
         wiki_id: WikiId,
         page_id: PageId,
         user: &User,
+        title: Option<&str>,
+        alt_title: Option<&str>,
     ) -> Result<RevisionId> {
         info!("Starting transaction for page commit");
 
+        // Empty string means use default
+        let alt_title: Option<Option<&str>> = alt_title.map(|alt_title| {
+            match alt_title {
+                "" => None,
+                _ => Some(alt_title),
+            }
+        });
+
         self.conn.transaction::<_, Error, _>(|| {
+            let model = UpdatePage {
+                slug: None,
+                title,
+                alt_title,
+            };
+
+            trace!("Updating {:?} in pages table", &model);
+            diesel::update(pages::table)
+                .set(&model)
+                .execute(self.conn)?;
+
             let user_id = user.id();
             let commit = self.commit_data(wiki_id, page_id, user_id)?;
             let store = self.get_store(wiki_id)?;
