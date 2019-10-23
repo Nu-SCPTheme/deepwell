@@ -22,6 +22,7 @@ mod models;
 mod object;
 mod service;
 
-pub use self::models::NewPage;
-pub use self::object::PageId;
+pub use self::object::{PageId, RevisionId};
 pub use self::service::PageService;
+
+use self::models::*;

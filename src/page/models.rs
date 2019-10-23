@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::schema::pages;
+use crate::schema::{pages, revisions};
 
 #[derive(Debug, Insertable)]
 #[table_name = "pages"]
@@ -35,4 +35,20 @@ pub struct UpdatePage<'a> {
     pub slug: Option<&'a str>,
     pub title: Option<&'a str>,
     pub alt_title: Option<&'a str>,
+}
+
+#[derive(Debug, Insertable)]
+#[table_name = "revisions"]
+pub struct NewRevision<'a> {
+    pub page_id: i64,
+    pub user_id: i64,
+    pub message: &'a str,
+    pub git_commit: &'a [u8],
+    pub change_type: &'a str,
+}
+
+#[derive(Debug, AsChangeset)]
+#[table_name = "revisions"]
+pub struct UpdateRevision<'a> {
+    pub message: &'a str,
 }

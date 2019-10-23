@@ -24,3 +24,5 @@ mod service;
 
 pub use self::object::{Wiki, WikiId};
 pub use self::service::WikiService;
+
+use self::models::*;

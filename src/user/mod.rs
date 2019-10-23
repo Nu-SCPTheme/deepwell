@@ -22,6 +22,7 @@ mod models;
 mod object;
 mod service;
 
-pub use self::models::{NewUser, UpdateUser};
 pub use self::object::{User, UserId};
 pub use self::service::UserService;
+
+use self::models::*;

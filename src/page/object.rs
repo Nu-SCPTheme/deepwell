@@ -18,4 +18,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-make_id_type!(PageId);
+mod page_id {
+    make_id_type!(PageId);
+}
+
+mod revision_id {
+    make_id_type!(RevisionId);
+}
+
+pub use self::page_id::PageId;
+pub use self::revision_id::RevisionId;

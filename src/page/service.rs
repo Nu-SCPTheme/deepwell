@@ -18,9 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::{NewPage, PageId};
+use super::{NewPage, NewRevision, PageId, RevisionId, UpdateRevision};
 use crate::revision::{CommitInfo, RevisionStore};
-use crate::schema::pages;
+use crate::schema::{pages, revisions};
 use crate::service_prelude::*;
 use crate::user::{User, UserId};
 use crate::wiki::WikiId;
@@ -45,19 +45,20 @@ impl<'d> PageService<'d> {
         &self,
         slug: &str,
         content: &[u8],
-        title: &str,
-        alt_title: Option<&str>,
+        message: &str,
         wiki_id: WikiId,
         user: &User,
-    ) -> Result<()> {
-        use self::pages::dsl;
-
+        title: &str,
+        alt_title: Option<&str>,
+    ) -> Result<(PageId, RevisionId)> {
         #[derive(Debug, Serialize)]
         struct CommitMessage {
             wiki_id: WikiId,
             page_id: PageId,
             user_id: UserId,
         }
+
+        info!("Starting transaction for page creation");
 
         self.conn.transaction::<_, Error, _>(|| {
             let model = NewPage {
@@ -67,9 +68,10 @@ impl<'d> PageService<'d> {
                 alt_title,
             };
 
+            trace!("Inserting {:?} into pages table", &model);
             let page_id = diesel::insert_into(pages::table)
                 .values(&model)
-                .returning(dsl::page_id)
+                .returning(pages::dsl::page_id)
                 .get_result::<PageId>(self.conn)?;
 
             let user_id = user.id();
@@ -79,7 +81,6 @@ impl<'d> PageService<'d> {
                 user_id,
             };
             let message = json::to_string(&message)?;
-
             let info = CommitInfo {
                 username: user.name(),
                 message: &message,
@@ -94,10 +95,24 @@ impl<'d> PageService<'d> {
                 }
             };
 
+            trace!("Committing content to repository");
             let hash = store.commit(slug, content, info)?;
-            // add revision
 
-            Ok(())
+            let model = NewRevision {
+                page_id: page_id.into(),
+                user_id: user_id.into(),
+                message: &message,
+                git_commit: hash.as_ref(),
+                change_type: "create",
+            };
+
+            trace!("Inserting revision {:?} into revisions table", &model);
+            let revision_id = diesel::insert_into(revisions::table)
+                .values(&model)
+                .returning(revisions::dsl::revision_id)
+                .get_result::<RevisionId>(self.conn)?;
+
+            Ok((page_id, revision_id))
         })
     }
 }
