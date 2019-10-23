@@ -90,6 +90,7 @@ CREATE TABLE revisions (
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
     page_id BIGSERIAL NOT NULL REFERENCES pages(page_id),
     user_id BIGSERIAL NOT NULL REFERENCES users(user_id),
+    message TEXT NOT NULL,
     git_commit BIT(160) NOT NULL UNIQUE,
     change_type VARCHAR(8) NOT NULL CHECK (
         change_type IN (
