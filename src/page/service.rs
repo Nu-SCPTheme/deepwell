@@ -41,7 +41,37 @@ impl<'d> PageService<'d> {
         }
     }
 
-    pub fn create<S, B>(
+    fn commit_message(&self, wiki_id: WikiId, page_id: PageId, user_id: UserId) -> Result<String> {
+        #[derive(Debug, Serialize)]
+        struct CommitMessage {
+            wiki_id: WikiId,
+            page_id: PageId,
+            user_id: UserId,
+        }
+
+        let message = CommitMessage {
+            wiki_id,
+            page_id,
+            user_id,
+        };
+
+        json::to_string(&message).map_err(Error::from)
+    }
+
+    fn get_store(&self, wiki_id: WikiId) -> Result<&RevisionStore> {
+        trace!("Getting revision store for wiki ID {}", wiki_id);
+
+        match self.stores.get(&wiki_id) {
+            Some(store) => Ok(store),
+            None => {
+                error!("No revision store found for wiki ID {}", wiki_id);
+
+                return Err(Error::StaticMsg("missing revision store for wiki"));
+            }
+        }
+    }
+
+    pub fn create(
         &self,
         slug: &str,
         content: &[u8],
@@ -51,13 +81,6 @@ impl<'d> PageService<'d> {
         title: &str,
         alt_title: Option<&str>,
     ) -> Result<(PageId, RevisionId)> {
-        #[derive(Debug, Serialize)]
-        struct CommitMessage {
-            wiki_id: WikiId,
-            page_id: PageId,
-            user_id: UserId,
-        }
-
         info!("Starting transaction for page creation");
 
         self.conn.transaction::<_, Error, _>(|| {
@@ -75,24 +98,12 @@ impl<'d> PageService<'d> {
                 .get_result::<PageId>(self.conn)?;
 
             let user_id = user.id();
-            let message = CommitMessage {
-                wiki_id,
-                page_id,
-                user_id,
-            };
-            let message = json::to_string(&message)?;
+            let message = self.commit_message(wiki_id, page_id, user_id)?;
+            let store = self.get_store(wiki_id)?;
+
             let info = CommitInfo {
                 username: user.name(),
                 message: &message,
-            };
-
-            let store = match self.stores.get(&wiki_id) {
-                Some(store) => store,
-                None => {
-                    error!("No revision store found for wiki ID {}", wiki_id);
-
-                    return Err(Error::StaticMsg("missing revision store for wiki"));
-                }
             };
 
             trace!("Committing content to repository");
@@ -113,6 +124,48 @@ impl<'d> PageService<'d> {
                 .get_result::<RevisionId>(self.conn)?;
 
             Ok((page_id, revision_id))
+        })
+    }
+
+    pub fn commit(
+        &self,
+        slug: &str,
+        content: &[u8],
+        message: &str,
+        wiki_id: WikiId,
+        page_id: PageId,
+        user: &User,
+    ) -> Result<RevisionId> {
+        info!("Starting transaction for page commit");
+
+        self.conn.transaction::<_, Error, _>(|| {
+            let user_id = user.id();
+            let message = self.commit_message(wiki_id, page_id, user_id)?;
+            let store = self.get_store(wiki_id)?;
+
+            let info = CommitInfo {
+                username: user.name(),
+                message: &message,
+            };
+
+            trace!("Committing content to repository");
+            let hash = store.commit(slug, content, info)?;
+
+            let model = NewRevision {
+                page_id: page_id.into(),
+                user_id: user_id.into(),
+                message: &message,
+                git_commit: hash.as_ref(),
+                change_type: "create",
+            };
+
+            trace!("Inserting revision {:?} into revisions table", &model);
+            let revision_id = diesel::insert_into(revisions::table)
+                .values(&model)
+                .returning(revisions::dsl::revision_id)
+                .get_result::<RevisionId>(self.conn)?;
+
+            Ok(revision_id)
         })
     }
 }
