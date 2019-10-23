@@ -269,6 +269,17 @@ impl RevisionStore {
         self.get_commit().map(Some)
     }
 
+    /// Checks if a given page exists.
+    pub fn exists(&self, slug: &str) -> Result<bool> {
+        info!("Checking existence for slug '{}'", slug);
+
+        let _guard = self.lock.read();
+        check_normal(slug)?;
+
+        let path = self.get_path(slug, true);
+        Ok(path.exists())
+    }
+
     /// Gets the current version of a page.
     /// Returns `None` if the page does not exist.
     pub fn get_page(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
