@@ -74,7 +74,7 @@ table! {
         created_at -> Timestamp,
         page_id -> Int8,
         user_id -> Int8,
-        git_commit -> Text,
+        git_commit -> Bit,
         change_type -> Varchar,
     }
 }
