@@ -248,6 +248,57 @@ impl<'d> PageService<'d> {
             Ok(revision_id)
         })
     }
+
+    pub fn remove(
+        &self,
+        slug: &str,
+        message: &str,
+        wiki_id: WikiId,
+        page_id: PageId,
+        user: &User,
+    ) -> Result<RevisionId> {
+        info!("Starting transaction for page removal");
+
+        self.conn.transaction::<_, Error, _>(|| {
+            use diesel::dsl::now;
+
+            trace!("Marking page as deleted in table");
+            diesel::update(pages::table)
+                .set(pages::dsl::deleted_at.eq(now))
+                .execute(self.conn)?;
+
+            let user_id = user.id();
+            let commit = self.commit_data(wiki_id, page_id, user_id)?;
+            let store = self.get_store(wiki_id)?;
+
+            let info = CommitInfo {
+                username: user.name(),
+                message: &commit,
+            };
+
+            trace!("Committing removal to repository");
+            let hash = match store.remove(slug, info)? {
+                Some(hash) => hash,
+                None => return Err(Error::PageNotFound),
+            };
+
+            let model = NewRevision {
+                page_id: page_id.into(),
+                user_id: user_id.into(),
+                message,
+                git_commit: hash.as_ref(),
+                change_type: "delete",
+            };
+
+            trace!("Inserting revision {:?} into revisions table", &model);
+            let revision_id = diesel::insert_into(revisions::table)
+                .values(&model)
+                .returning(revisions::dsl::revision_id)
+                .get_result::<RevisionId>(self.conn)?;
+
+            Ok(revision_id)
+        })
+    }
 }
 
 impl Debug for PageService<'_> {
