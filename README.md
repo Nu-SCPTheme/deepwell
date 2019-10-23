@@ -16,4 +16,11 @@ $ cargo build --release
 
 See [diesel.rs](https://diesel.rs/guides/getting-started/) for how to use the diesel cli tool.
 
+### Testing
+```sh
+$ cargo test
+```
+
+Add `-- --nocapture` to the end if you want to see test output.
+
 Available under the terms of the GNU Affero General Public License. See [LICENSE.md](LICENSE).
