@@ -97,6 +97,7 @@ CREATE TABLE revisions (
             'create',
             'modify',
             'delete',
+            'rename',
             'metadata'
         )
     )
