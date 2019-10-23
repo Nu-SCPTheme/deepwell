@@ -147,12 +147,11 @@ impl<'d> PageService<'d> {
         info!("Starting transaction for page commit");
 
         // Empty string means use default
-        let alt_title: Option<Option<&str>> = alt_title.map(|alt_title| {
-            match alt_title {
-                "" => None,
-                _ => Some(alt_title),
-            }
-        });
+        let alt_title: Option<Option<&str>> = match alt_title {
+            Some("") => Some(None),
+            Some(_) => Some(alt_title),
+            None => None,
+        };
 
         self.conn.transaction::<_, Error, _>(|| {
             let model = UpdatePage {

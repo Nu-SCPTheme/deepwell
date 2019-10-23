@@ -263,25 +263,12 @@ impl RevisionStore {
 
         let old_path = self.get_path(old_slug, false);
         let new_path = self.get_path(new_slug, false);
-        let args = arguments![
-            "git",
-            "mv",
-            "--",
-            &old_path,
-            &new_path,
-        ];
+        let args = arguments!["git", "mv", "--", &old_path, &new_path];
         self.spawn(&args)?;
 
         let author = self.arg_author(info.username);
         let message = self.arg_message(info.message);
-        let args = arguments![
-            "git",
-            "commit",
-            &author,
-            &message,
-            "--",
-            &new_path,
-        ];
+        let args = arguments!["git", "commit", &author, &message, "--", &new_path];
         self.spawn(&args)?;
 
         self.get_commit()
