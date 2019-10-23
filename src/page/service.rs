@@ -183,7 +183,60 @@ impl<'d> PageService<'d> {
                 user_id: user_id.into(),
                 message,
                 git_commit: hash.as_ref(),
-                change_type: "create",
+                change_type: "modify",
+            };
+
+            trace!("Inserting revision {:?} into revisions table", &model);
+            let revision_id = diesel::insert_into(revisions::table)
+                .values(&model)
+                .returning(revisions::dsl::revision_id)
+                .get_result::<RevisionId>(self.conn)?;
+
+            Ok(revision_id)
+        })
+    }
+
+    pub fn rename(
+        &self,
+        old_slug: &str,
+        new_slug: &str,
+        message: &str,
+        wiki_id: WikiId,
+        page_id: PageId,
+        user: &User,
+    ) -> Result<RevisionId> {
+        info!("Starting transaction for page rename");
+
+        self.conn.transaction::<_, Error, _>(|| {
+            let model = UpdatePage {
+                slug: Some(new_slug),
+                title: None,
+                alt_title: None,
+            };
+
+            trace!("Updating {:?} in pages table", &model);
+            diesel::update(pages::table)
+                .set(&model)
+                .execute(self.conn)?;
+
+            let user_id = user.id();
+            let commit = self.commit_data(wiki_id, page_id, user_id)?;
+            let store = self.get_store(wiki_id)?;
+
+            let info = CommitInfo {
+                username: user.name(),
+                message: &commit,
+            };
+
+            trace!("Committing rename to repository");
+            let hash = store.rename(old_slug, new_slug, info)?;
+
+            let model = NewRevision {
+                page_id: page_id.into(),
+                user_id: user_id.into(),
+                message,
+                git_commit: hash.as_ref(),
+                change_type: "rename",
             };
 
             trace!("Inserting revision {:?} into revisions table", &model);
