@@ -25,7 +25,7 @@ use std::io::Read;
 use std::time::Duration;
 use subprocess::{ExitStatus, Popen, PopenConfig, Redirection};
 
-const TIMEOUT: Duration = Duration::from_millis(200);
+const TIMEOUT: Duration = Duration::from_millis(1800);
 
 macro_rules! mut_borrow {
     ($option:expr) => {
