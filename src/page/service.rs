@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::{NewPage, NewRevision, PageId, RevisionId, UpdatePage, UpdateRevision};
+use super::{NewPage, NewRevision, UpdatePage, UpdateRevision};
 use crate::revision::{CommitInfo, RevisionStore};
 use crate::schema::{pages, revisions};
 use crate::service_prelude::*;
@@ -26,6 +26,17 @@ use crate::user::{User, UserId};
 use crate::wiki::WikiId;
 use serde_json as json;
 use std::collections::HashMap;
+
+mod page_id {
+    make_id_type!(PageId);
+}
+
+mod revision_id {
+    make_id_type!(RevisionId);
+}
+
+pub use self::page_id::PageId;
+pub use self::revision_id::RevisionId;
 
 pub struct PageService<'d> {
     conn: &'d PgConnection,

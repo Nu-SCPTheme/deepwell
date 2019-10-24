@@ -19,10 +19,8 @@
  */
 
 mod models;
-mod object;
 mod service;
 
-pub use self::object::{PageId, RevisionId};
-pub use self::service::PageService;
+pub use self::service::{PageId, PageService, RevisionId};
 
 use self::models::*;

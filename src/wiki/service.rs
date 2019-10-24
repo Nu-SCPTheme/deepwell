@@ -19,9 +19,40 @@
  */
 
 use super::models::{NewWiki, UpdateWiki};
-use super::{Wiki, WikiId};
 use crate::schema::wikis;
 use crate::service_prelude::*;
+
+make_id_type!(WikiId);
+
+#[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
+pub struct Wiki {
+    id: WikiId,
+    name: String,
+    slug: String,
+    created_at: NaiveDateTime,
+}
+
+impl Wiki {
+    #[inline]
+    pub fn id(&self) -> WikiId {
+        self.id
+    }
+
+    #[inline]
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    #[inline]
+    pub fn slug(&self) -> &str {
+        &self.slug
+    }
+
+    #[inline]
+    pub fn created_at(&self) -> NaiveDateTime {
+        self.created_at
+    }
+}
 
 pub struct WikiService<'d> {
     conn: &'d PgConnection,

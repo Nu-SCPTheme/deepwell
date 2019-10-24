@@ -19,10 +19,8 @@
  */
 
 mod models;
-mod object;
 mod service;
 
-pub use self::object::{Wiki, WikiId};
-pub use self::service::WikiService;
+pub use self::service::{Wiki, WikiId, WikiService};
 
 use self::models::*;

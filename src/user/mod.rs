@@ -19,10 +19,8 @@
  */
 
 mod models;
-mod object;
 mod service;
 
-pub use self::object::{User, UserId};
-pub use self::service::UserService;
+pub use self::service::{User, UserId, UserService};
 
 use self::models::*;
