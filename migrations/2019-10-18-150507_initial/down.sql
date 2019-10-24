@@ -1,7 +1,8 @@
 DROP TABLE parents;
-DROP TABLE revisions;
-DROP TABLE ratings;
 DROP TABLE ratings_history;
+DROP TABLE ratings;
+DROP TABLE tag_history;
+DROP TABLE revisions;
 DROP TABLE authors;
 DROP TABLE files;
 DROP TABLE role_membership;

@@ -98,9 +98,16 @@ CREATE TABLE revisions (
             'modify',
             'delete',
             'rename',
-            'metadata'
+            'tags'
         )
     )
+);
+
+CREATE TABLE tag_history (
+    revision_id BIGSERIAL REFERENCES revisions(revision_id) PRIMARY KEY,
+    added_tags: TEXT[] NOT NULL,
+    removed_tags: TEXT[] NOT NULL,
+    CHECK (!(added_tags && removed_tags))
 );
 
 CREATE TABLE ratings (

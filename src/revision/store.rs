@@ -248,6 +248,19 @@ impl RevisionStore {
         self.get_commit()
     }
 
+    /// Creates an empty commit.
+    pub fn empty_commit(&self, info: CommitInfo) -> Result<GitHash> {
+        info!("Creating empty commit");
+
+        let _guard = self.lock.write();
+        let author = self.arg_author(info.username);
+        let message = self.arg_message(info.message);
+        let args = arguments!["git", "commit", "--allow-empty", &author, &message];
+        self.spawn(&args)?;
+
+        self.get_commit()
+    }
+
     /// Renames the given page in the repository.
     pub fn rename(&self, old_slug: &str, new_slug: &str, info: CommitInfo) -> Result<GitHash> {
         info!("Renaming file for slug '{}' -> '{}'", old_slug, new_slug);

@@ -18,14 +18,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::{NewPage, NewRevision, UpdatePage, UpdateRevision};
+use super::{NewPage, NewRevision, NewTagChange, UpdatePage, UpdateRevision};
 use crate::revision::{CommitInfo, RevisionStore};
-use crate::schema::{pages, revisions};
+use crate::schema::{pages, revisions, tag_history};
 use crate::service_prelude::*;
 use crate::user::{User, UserId};
 use crate::wiki::WikiId;
 use serde_json as json;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 mod page_id {
     make_id_type!(PageId);
@@ -324,6 +324,83 @@ impl<'d> PageService<'d> {
             Ok(revision_id)
         })
     }
+
+    pub fn tags(
+        &self,
+        slug: &str,
+        message: &str,
+        wiki_id: WikiId,
+        page_id: PageId,
+        user: &User,
+        tags: &[&str],
+    ) -> Result<RevisionId> {
+        info!("Starting transaction for page tags");
+
+        self.conn.transaction::<_, Error, _>(|| {
+            trace!("Getting tag difference");
+            let current_tags = {
+                let id: i64 = page_id.into();
+                pages::table
+                    .find(id)
+                    .select(pages::dsl::tags)
+                    .first::<Vec<String>>(self.conn)?
+            };
+
+            let (added_tags, removed_tags) = tag_diff(&current_tags, tags);
+
+            // Create commit
+            let user_id = user.id();
+            let commit = self.commit_data(wiki_id, page_id, user_id)?;
+            let store = self.get_store(wiki_id)?;
+
+            let info = CommitInfo {
+                username: user.name(),
+                message: &commit,
+            };
+
+            trace!("Committing tag changes to repository");
+            let hash = store.empty_commit(info)?;
+            let model = NewRevision {
+                page_id: page_id.into(),
+                user_id: user_id.into(),
+                message,
+                git_commit: hash.as_ref(),
+                change_type: "tags",
+            };
+
+            trace!("Inserting revision {:?} into revisions table", &model);
+            let revision_id = diesel::insert_into(revisions::table)
+                .values(&model)
+                .returning(revisions::dsl::revision_id)
+                .get_result::<RevisionId>(self.conn)?;
+
+            let model = NewTagChange {
+                revision_id: revision_id.into(),
+                added_tags: &added_tags,
+                removed_tags: &removed_tags,
+            };
+
+            trace!("Inserting tag change {:?} into tag history table", &model);
+            diesel::insert_into(tag_history)
+                .values(&model)
+                .execute(self.conn)?;
+
+            Ok(revision_id)
+        })
+    }
+
+    pub fn edit_revision(&self, revision_id: RevisionId, message: &str) -> Result<()> {
+        use self::revisions::dsl;
+
+        info!("Editing revision message for ID {}", revision_id);
+
+        let id: i64 = revision_id.into();
+        diesel::update(dsl::revisions.filter(dsl::revision_id.eq(id)))
+            .set(dsl::message.eq(message))
+            .execute(self.conn)?;
+
+        Ok(())
+    }
 }
 
 impl Debug for PageService<'_> {
@@ -333,4 +410,25 @@ impl Debug for PageService<'_> {
             .field("stores", &self.stores)
             .finish()
     }
+}
+
+fn tag_diff<'a>(
+    current_tags: &'a [String],
+    new_tags: &'_ [&'a str],
+) -> (Vec<&'a str>, Vec<&'a str>) {
+    macro_rules! difference {
+        ($first:expr, $second:expr) => {{
+            let mut diff: Vec<_> = $first.difference(&$second).copied().collect();
+            diff.sort();
+            diff
+        }};
+    }
+
+    let new_tags = new_tags.iter().copied().collect::<HashSet<_>>();
+    let old_tags = new_tags.iter().copied().collect::<HashSet<_>>();
+
+    let added_tags = difference!(new_tags, old_tags);
+    let removed_tags = difference!(old_tags, new_tags);
+
+    (added_tags, removed_tags)
 }

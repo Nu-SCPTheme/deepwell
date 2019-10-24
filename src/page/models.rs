@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::schema::{pages, revisions};
+use crate::schema::{pages, revisions, tag_history};
 
 #[derive(Debug, Insertable)]
 #[table_name = "pages"]
@@ -51,4 +51,12 @@ pub struct NewRevision<'a> {
 #[table_name = "revisions"]
 pub struct UpdateRevision<'a> {
     pub message: &'a str,
+}
+
+#[derive(Debug, Insertable)]
+#[table_name = "tag_history"]
+pub struct NewTagChange<'a> {
+    pub revision_id: i64,
+    pub added_tags: &'a [&'a str],
+    pub removed_tags: &'a [&'a str],
 }
