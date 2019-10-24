@@ -25,7 +25,7 @@ use crate::service_prelude::*;
 
 pub struct WikiService<'d> {
     conn: &'d PgConnection,
-    wikis: HashMap<WikiId, Wiki>,
+    wikis: Mutex<HashMap<WikiId, Wiki>>,
 }
 
 impl<'d> WikiService<'d> {
@@ -34,10 +34,14 @@ impl<'d> WikiService<'d> {
             .filter(wikis::wiki_id.ge(0))
             .load::<Wiki>(conn)?;
 
-        let mut wikis = HashMap::with_capacity(values.len());
-        for wiki in values {
-            wikis.insert(wiki.id(), wiki);
-        }
+        let wikis = {
+            let mut map = HashMap::with_capacity(values.len());
+            for wiki in values {
+                map.insert(wiki.id(), wiki);
+            }
+
+            Mutex::new(map)
+        };
 
         Ok(WikiService { conn, wikis })
     }
@@ -53,22 +57,41 @@ impl<'d> WikiService<'d> {
         Ok(())
     }
 
-    pub fn get_by_id(&self, id: WikiId) -> Option<&Wiki> {
-        self.wikis.get(&id)
+    pub fn get_by_id<F, T>(&self, id: WikiId, f: F) -> Result<T>
+    where
+        F: FnOnce(Option<&Wiki>) -> Result<T>,
+    {
+        let guard = self.wikis.lock();
+        let wiki = guard.get(&id);
+        f(wiki)
     }
 
-    pub fn get_by_slug(&self, slug: &str) -> Option<&Wiki> {
-        for wiki in self.wikis.values() {
-            if wiki.slug() == slug {
-                return Some(wiki);
+    pub fn get_by_slug<F, T>(&self, slug: &str, f: F) -> Result<T>
+    where
+        F: FnOnce(Option<&Wiki>) -> Result<T>,
+    {
+        fn get<'a>(wikis: &'a HashMap<WikiId, Wiki>, slug: &'_ str) -> Option<&'a Wiki> {
+            for wiki in wikis.values() {
+                if wiki.slug() == slug {
+                    return Some(wiki);
+                }
             }
+
+            None
         }
 
-        None
+        let guard = self.wikis.lock();
+        let wiki = get(&*guard, slug);
+        f(wiki)
     }
 
     pub fn edit(&self, id: WikiId, name: Option<&str>, slug: Option<&str>) -> Result<()> {
         use self::wikis::dsl;
+
+        if name.is_none() && slug.is_none() {
+            warn!("Empty wiki metadata update");
+            return Ok(());
+        }
 
         info!("Editing wiki id {}, name: {:?}, slug: {:?}", id, name, slug);
 
