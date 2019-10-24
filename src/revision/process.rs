@@ -58,10 +58,17 @@ fn spawn_inner(repo: OsString, arguments: &[&OsStr], output: bool) -> Result<Opt
         ..PopenConfig::default()
     };
 
-    let mut popen = Popen::create(arguments, config)?;
+    let mut popen = match Popen::create(arguments, config) {
+        Ok(popen) => popen,
+        Err(error) => {
+            warn!("Failed to created subprocess: {}", error);
+
+            return Err(Error::Subprocess(error));
+        }
+    };
 
     trace!(
-        "Created {:?}, waiting {}ms for completion",
+        "Created {:?}, waiting {} ms for completion",
         popen,
         TIMEOUT.as_millis(),
     );
@@ -74,6 +81,7 @@ fn spawn_inner(repo: OsString, arguments: &[&OsStr], output: bool) -> Result<Opt
                 let stdout = mut_borrow!(popen.stdout);
                 let mut buffer = Vec::new();
                 stdout.read_to_end(&mut buffer)?;
+                trace!("Gathered {} bytes of stdout", buffer.len());
                 let bytes = buffer.into_boxed_slice();
 
                 Ok(Some(bytes))
@@ -95,31 +103,49 @@ fn spawn_inner(repo: OsString, arguments: &[&OsStr], output: bool) -> Result<Opt
             stderr.read_to_string(&mut buffer)?;
 
             match status {
-                ExitStatus::Exited(code) => write!(&mut buffer, "(exit status {})", code).unwrap(),
-                ExitStatus::Signaled(code) => {
-                    write!(&mut buffer, "(killed by signal {})", code).unwrap()
+                ExitStatus::Exited(code) => {
+                    warn!("Process exited with non-zero status code {}", code);
+                    write!(&mut buffer, "(exit status {})", code).unwrap();
                 }
-                _ => (),
+                ExitStatus::Signaled(code) => {
+                    warn!("Process was killed by signal {}", code);
+                    write!(&mut buffer, "(killed by signal {})", code).unwrap();
+                }
+                _ => {
+                    warn!("Process was killed by unknown source ({:?})", status);
+                    write!(&mut buffer, "(unknown cause)").unwrap();
+                }
             }
 
             Err(Error::CommandFailed(buffer))
         }
         None => {
-            trace!("Command timed out, killing");
+            warn!(
+                "Process timed out after {} ms, terminating",
+                TIMEOUT.as_millis(),
+            );
 
             const KILL_TIMEOUT: Duration = Duration::from_millis(2000);
 
-            popen.terminate()?;
-            let timeout = KILL_TIMEOUT;
-            let result = popen.wait_timeout(timeout)?;
-            if result.is_none() {
-                popen.kill()?;
+            if let Err(error) = popen.terminate() {
+                warn!("Failed to terminate process: {}", error);
+                return Err(Error::Io(error));
             }
 
-            Err(Error::CommandFailed(format!(
-                "command timed out ({} ms)",
-                TIMEOUT.as_millis()
-            )))
+            match popen.wait_timeout(KILL_TIMEOUT) {
+                Ok(Some(_)) => (),
+                Ok(None) => {
+                    warn!("Process did not exit after termination, killing");
+                    popen.kill()?;
+                }
+                Err(error) => {
+                    warn!("Failed to wait on terminating process: {}", error);
+                    return Err(Error::Subprocess(error));
+                }
+            }
+
+            let message = format!("command timed out ({} ms)", TIMEOUT.as_millis());
+            Err(Error::CommandFailed(message))
         }
     }
 }
