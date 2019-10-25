@@ -19,7 +19,7 @@
  */
 
 use super::{NewPage, NewRevision, NewTagChange, UpdatePage, UpdateRevision};
-use crate::revision::{CommitInfo, RevisionStore};
+use crate::revision::{CommitInfo, GitHash, RevisionStore};
 use crate::schema::{pages, revisions, tag_history};
 use crate::service_prelude::*;
 use crate::user::{User, UserId};
@@ -40,7 +40,7 @@ pub use self::revision_id::RevisionId;
 
 pub struct PageService {
     conn: Arc<PgConnection>,
-    stores: HashMap<WikiId, RevisionStore>,
+    stores: RwLock<HashMap<WikiId, RevisionStore>>,
 }
 
 impl PageService {
@@ -49,7 +49,7 @@ impl PageService {
         let conn = Arc::clone(conn);
         PageService {
             conn,
-            stores: HashMap::new(),
+            stores: RwLock::new(HashMap::new()),
         }
     }
 
@@ -70,17 +70,31 @@ impl PageService {
         json::to_string(&message).map_err(Error::from)
     }
 
-    fn get_store(&self, wiki_id: WikiId) -> Result<&RevisionStore> {
+    fn get_store<F, T>(&self, wiki_id: WikiId, f: F) -> Result<T>
+    where
+        F: FnOnce(&RevisionStore) -> Result<T>,
+    {
         trace!("Getting revision store for wiki ID {}", wiki_id);
 
-        match self.stores.get(&wiki_id) {
-            Some(store) => Ok(store),
+        let guard = self.stores.read();
+        let store = match guard.get(&wiki_id) {
+            Some(store) => store,
             None => {
                 error!("No revision store found for wiki ID {}", wiki_id);
 
                 return Err(Error::StaticMsg("missing revision store for wiki"));
             }
-        }
+        };
+
+        f(store)
+    }
+
+    fn raw_commit(&self, wiki_id: WikiId, slug: &str, content: &[u8], info: CommitInfo) -> Result<GitHash> {
+        self.get_store::<_, GitHash>(wiki_id, |store| {
+
+            trace!("Committing content to repository");
+            store.commit(slug, content, info)
+        })
     }
 
     pub fn create(
@@ -117,16 +131,12 @@ impl PageService {
 
             let user_id = user.id();
             let commit = self.commit_data(wiki_id, page_id, user_id)?;
-            let store = self.get_store(wiki_id)?;
-
             let info = CommitInfo {
                 username: user.name(),
                 message: &commit,
             };
 
-            trace!("Committing content to repository");
-            let hash = store.commit(slug, content, info)?;
-
+            let hash = self.raw_commit(wiki_id, slug, content, info)?;
             let model = NewRevision {
                 page_id: page_id.into(),
                 user_id: user_id.into(),
@@ -184,16 +194,12 @@ impl PageService {
 
             let user_id = user.id();
             let commit = self.commit_data(wiki_id, page_id, user_id)?;
-            let store = self.get_store(wiki_id)?;
-
             let info = CommitInfo {
                 username: user.name(),
                 message: &commit,
             };
 
-            trace!("Committing content to repository");
-            let hash = store.commit(slug, content, info)?;
-
+            let hash = self.raw_commit(wiki_id, slug, content, info)?;
             let model = NewRevision {
                 page_id: page_id.into(),
                 user_id: user_id.into(),
@@ -242,15 +248,15 @@ impl PageService {
 
             let user_id = user.id();
             let commit = self.commit_data(wiki_id, page_id, user_id)?;
-            let store = self.get_store(wiki_id)?;
-
             let info = CommitInfo {
                 username: user.name(),
                 message: &commit,
             };
 
-            trace!("Committing rename to repository");
-            let hash = store.rename(old_slug, new_slug, info)?;
+            let hash = self.get_store::<_, GitHash>(wiki_id, |store| {
+                trace!("Committing rename to repository");
+                store.rename(old_slug, new_slug, info)
+            })?;
 
             let model = NewRevision {
                 page_id: page_id.into(),
@@ -295,18 +301,18 @@ impl PageService {
 
             let user_id = user.id();
             let commit = self.commit_data(wiki_id, page_id, user_id)?;
-            let store = self.get_store(wiki_id)?;
-
             let info = CommitInfo {
                 username: user.name(),
                 message: &commit,
             };
 
-            trace!("Committing removal to repository");
-            let hash = match store.remove(slug, info)? {
-                Some(hash) => hash,
-                None => return Err(Error::PageNotFound),
-            };
+            let hash = self.get_store::<_, GitHash>(wiki_id, |store| {
+                trace!("Committing removal to repository");
+                match store.remove(slug, info)? {
+                    Some(hash) => Ok(hash),
+                    None => Err(Error::PageNotFound),
+                }
+            })?;
 
             let model = NewRevision {
                 page_id: page_id.into(),
@@ -352,15 +358,16 @@ impl PageService {
             // Create commit
             let user_id = user.id();
             let commit = self.commit_data(wiki_id, page_id, user_id)?;
-            let store = self.get_store(wiki_id)?;
-
             let info = CommitInfo {
                 username: user.name(),
                 message: &commit,
             };
 
-            trace!("Committing tag changes to repository");
-            let hash = store.empty_commit(info)?;
+            let hash = self.get_store::<_, GitHash>(wiki_id, |store| {
+                trace!("Committing tag changes to repository");
+                store.empty_commit(info)
+            })?;
+
             let model = NewRevision {
                 page_id: page_id.into(),
                 user_id: user_id.into(),
