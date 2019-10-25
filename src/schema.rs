@@ -99,6 +99,14 @@ table! {
 }
 
 table! {
+    tag_history (revision_id) {
+        revision_id -> Int8,
+        added_tags -> Array<Text>,
+        removed_tags -> Array<Text>,
+    }
+}
+
+table! {
     users (user_id) {
         user_id -> Int8,
         name -> Text,
@@ -146,6 +154,7 @@ joinable!(role_membership -> roles (role_id));
 joinable!(role_membership -> users (user_id));
 joinable!(role_membership -> wikis (wiki_id));
 joinable!(roles -> wikis (wiki_id));
+joinable!(tag_history -> revisions (revision_id));
 joinable!(wiki_membership -> users (user_id));
 joinable!(wiki_membership -> wikis (wiki_id));
 
@@ -160,6 +169,7 @@ allow_tables_to_appear_in_same_query!(
     revisions,
     role_membership,
     roles,
+    tag_history,
     users,
     wiki_membership,
     wikis,
