@@ -66,7 +66,7 @@ mod service_prelude {
     pub use crate::schema::*;
     pub use chrono::prelude::*;
     pub use diesel::prelude::*;
-    pub use parking_lot::{Mutex, RwLock};
+    pub use parking_lot::RwLock;
     pub use std::collections::HashMap;
 }
 
