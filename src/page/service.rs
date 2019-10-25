@@ -381,7 +381,7 @@ impl<'d> PageService<'d> {
             };
 
             trace!("Inserting tag change {:?} into tag history table", &model);
-            diesel::insert_into(tag_history)
+            diesel::insert_into(tag_history::table)
                 .values(&model)
                 .execute(self.conn)?;
 
