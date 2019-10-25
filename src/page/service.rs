@@ -57,18 +57,26 @@ impl PageService {
         }
     }
 
-    fn commit_data(&self, wiki_id: WikiId, page_id: PageId, user_id: UserId) -> Result<String> {
+    fn commit_data(
+        &self,
+        wiki_id: WikiId,
+        page_id: PageId,
+        user_id: UserId,
+        change_type: &'static str,
+    ) -> Result<String> {
         #[derive(Debug, Serialize)]
         struct CommitMessage {
             wiki_id: WikiId,
             page_id: PageId,
             user_id: UserId,
+            change_type: &'static str,
         }
 
         let message = CommitMessage {
             wiki_id,
             page_id,
             user_id,
+            change_type,
         };
 
         json::to_string(&message).map_err(Error::from)
@@ -103,9 +111,14 @@ impl PageService {
         f(store)
     }
 
-    fn raw_commit(&self, wiki_id: WikiId, slug: &str, content: &[u8], info: CommitInfo) -> Result<GitHash> {
+    fn raw_commit(
+        &self,
+        wiki_id: WikiId,
+        slug: &str,
+        content: &[u8],
+        info: CommitInfo,
+    ) -> Result<GitHash> {
         self.get_store::<_, GitHash>(wiki_id, |store| {
-
             trace!("Committing content to repository");
             store.commit(slug, content, info)
         })
@@ -144,7 +157,9 @@ impl PageService {
                 .get_result::<PageId>(&*self.conn)?;
 
             let user_id = user.id();
-            let commit = self.commit_data(wiki_id, page_id, user_id)?;
+            let change_type = "create";
+
+            let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
             let info = CommitInfo {
                 username: user.name(),
                 message: &commit,
@@ -156,7 +171,7 @@ impl PageService {
                 user_id: user_id.into(),
                 message,
                 git_commit: hash.as_ref(),
-                change_type: "create",
+                change_type,
             };
 
             trace!("Inserting revision {:?} into revisions table", &model);
@@ -207,7 +222,9 @@ impl PageService {
             }
 
             let user_id = user.id();
-            let commit = self.commit_data(wiki_id, page_id, user_id)?;
+            let change_type = "modify";
+
+            let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
             let info = CommitInfo {
                 username: user.name(),
                 message: &commit,
@@ -219,7 +236,7 @@ impl PageService {
                 user_id: user_id.into(),
                 message,
                 git_commit: hash.as_ref(),
-                change_type: "modify",
+                change_type,
             };
 
             trace!("Inserting revision {:?} into revisions table", &model);
@@ -261,7 +278,9 @@ impl PageService {
             }
 
             let user_id = user.id();
-            let commit = self.commit_data(wiki_id, page_id, user_id)?;
+            let change_type = "rename";
+
+            let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
             let info = CommitInfo {
                 username: user.name(),
                 message: &commit,
@@ -277,7 +296,7 @@ impl PageService {
                 user_id: user_id.into(),
                 message,
                 git_commit: hash.as_ref(),
-                change_type: "rename",
+                change_type,
             };
 
             trace!("Inserting revision {:?} into revisions table", &model);
@@ -314,7 +333,9 @@ impl PageService {
             }
 
             let user_id = user.id();
-            let commit = self.commit_data(wiki_id, page_id, user_id)?;
+            let change_type = "delete";
+
+            let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
             let info = CommitInfo {
                 username: user.name(),
                 message: &commit,
@@ -333,7 +354,7 @@ impl PageService {
                 user_id: user_id.into(),
                 message,
                 git_commit: hash.as_ref(),
-                change_type: "delete",
+                change_type,
             };
 
             trace!("Inserting revision {:?} into revisions table", &model);
@@ -371,7 +392,9 @@ impl PageService {
 
             // Create commit
             let user_id = user.id();
-            let commit = self.commit_data(wiki_id, page_id, user_id)?;
+            let change_type = "tags";
+
+            let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
             let info = CommitInfo {
                 username: user.name(),
                 message: &commit,
@@ -387,7 +410,7 @@ impl PageService {
                 user_id: user_id.into(),
                 message,
                 git_commit: hash.as_ref(),
-                change_type: "tags",
+                change_type,
             };
 
             trace!("Inserting revision {:?} into revisions table", &model);
