@@ -44,7 +44,10 @@ impl Handle {
             }
         };
 
-        let page = PageService::new(&conn);
+        // TODO load repository directory from config
+        use std::path::PathBuf;
+
+        let page = PageService::new(&conn, PathBuf::from("/tmp/_deepwell"));
         let user = UserService::new(&conn);
         let wiki = WikiService::new(&conn)?;
 
@@ -56,6 +59,8 @@ impl Handle {
         })
     }
 }
+
+// TODO in wiki create add to page service too
 
 impl Debug for Handle {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

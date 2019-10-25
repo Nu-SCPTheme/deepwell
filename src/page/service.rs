@@ -23,9 +23,10 @@ use crate::revision::{CommitInfo, GitHash, RevisionStore};
 use crate::schema::{pages, revisions, tag_history};
 use crate::service_prelude::*;
 use crate::user::{User, UserId};
-use crate::wiki::WikiId;
+use crate::wiki::{Wiki, WikiId};
 use serde_json as json;
 use std::collections::{HashMap, HashSet};
+use std::path::PathBuf;
 
 mod page_id {
     make_id_type!(PageId);
@@ -40,15 +41,18 @@ pub use self::revision_id::RevisionId;
 
 pub struct PageService {
     conn: Arc<PgConnection>,
+    directory: PathBuf,
     stores: RwLock<HashMap<WikiId, RevisionStore>>,
 }
 
 impl PageService {
     #[inline]
-    pub fn new(conn: &Arc<PgConnection>) -> Self {
+    pub fn new(conn: &Arc<PgConnection>, directory: PathBuf) -> Self {
         let conn = Arc::clone(conn);
+
         PageService {
             conn,
+            directory,
             stores: RwLock::new(HashMap::new()),
         }
     }
@@ -68,6 +72,16 @@ impl PageService {
         };
 
         json::to_string(&message).map_err(Error::from)
+    }
+
+    pub fn add_store(&self, wiki: &Wiki, domain: &str) {
+        // TODO: fold domain into Wiki?
+
+        let repo = self.directory.join(wiki.slug());
+        let store = RevisionStore::new(repo, domain);
+
+        let mut guard = self.stores.write();
+        guard.insert(wiki.id(), store);
     }
 
     fn get_store<F, T>(&self, wiki_id: WikiId, f: F) -> Result<T>
