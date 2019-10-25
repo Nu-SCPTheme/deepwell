@@ -54,16 +54,17 @@ impl Wiki {
     }
 }
 
-pub struct WikiService<'d> {
-    conn: &'d PgConnection,
+pub struct WikiService {
+    conn: Arc<PgConnection>,
     wikis: Mutex<HashMap<WikiId, Wiki>>,
 }
 
-impl<'d> WikiService<'d> {
-    pub fn new(conn: &'d PgConnection) -> Result<Self> {
+impl WikiService {
+    pub fn new(conn: &Arc<PgConnection>) -> Result<Self> {
+        let conn = Arc::clone(conn);
         let values = wikis::table
             .filter(wikis::wiki_id.ge(0))
-            .load::<Wiki>(conn)?;
+            .load::<Wiki>(&*conn)?;
 
         let wikis = {
             let mut map = HashMap::with_capacity(values.len());
@@ -83,7 +84,7 @@ impl<'d> WikiService<'d> {
         let model = NewWiki { name, slug };
         diesel::insert_into(wikis::table)
             .values(&model)
-            .execute(self.conn)?;
+            .execute(&*self.conn)?;
 
         Ok(())
     }
@@ -130,13 +131,13 @@ impl<'d> WikiService<'d> {
         let model = UpdateWiki { name, slug };
         diesel::update(dsl::wikis.filter(dsl::wiki_id.eq(id)))
             .set(&model)
-            .execute(self.conn)?;
+            .execute(&*self.conn)?;
 
         Ok(())
     }
 }
 
-impl Debug for WikiService<'_> {
+impl Debug for WikiService {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("WikiService")
             .field("conn", &"PgConnection { .. }")

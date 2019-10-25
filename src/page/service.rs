@@ -38,14 +38,15 @@ mod revision_id {
 pub use self::page_id::PageId;
 pub use self::revision_id::RevisionId;
 
-pub struct PageService<'d> {
-    conn: &'d PgConnection,
+pub struct PageService {
+    conn: Arc<PgConnection>,
     stores: HashMap<WikiId, RevisionStore>,
 }
 
-impl<'d> PageService<'d> {
+impl PageService {
     #[inline]
-    pub fn new(conn: &'d PgConnection) -> Self {
+    pub fn new(conn: &Arc<PgConnection>) -> Self {
+        let conn = Arc::clone(conn);
         PageService {
             conn,
             stores: HashMap::new(),
@@ -112,7 +113,7 @@ impl<'d> PageService<'d> {
             let page_id = diesel::insert_into(pages::table)
                 .values(&model)
                 .returning(pages::dsl::page_id)
-                .get_result::<PageId>(self.conn)?;
+                .get_result::<PageId>(&*self.conn)?;
 
             let user_id = user.id();
             let commit = self.commit_data(wiki_id, page_id, user_id)?;
@@ -138,7 +139,7 @@ impl<'d> PageService<'d> {
             let revision_id = diesel::insert_into(revisions::table)
                 .values(&model)
                 .returning(revisions::dsl::revision_id)
-                .get_result::<RevisionId>(self.conn)?;
+                .get_result::<RevisionId>(&*self.conn)?;
 
             Ok((page_id, revision_id))
         })
@@ -178,7 +179,7 @@ impl<'d> PageService<'d> {
                 let id: i64 = page_id.into();
                 diesel::update(dsl::pages.filter(dsl::page_id.eq(id)))
                     .set(&model)
-                    .execute(self.conn)?;
+                    .execute(&*self.conn)?;
             }
 
             let user_id = user.id();
@@ -205,7 +206,7 @@ impl<'d> PageService<'d> {
             let revision_id = diesel::insert_into(revisions::table)
                 .values(&model)
                 .returning(revisions::dsl::revision_id)
-                .get_result::<RevisionId>(self.conn)?;
+                .get_result::<RevisionId>(&*self.conn)?;
 
             Ok(revision_id)
         })
@@ -236,7 +237,7 @@ impl<'d> PageService<'d> {
                 let id: i64 = page_id.into();
                 diesel::update(dsl::pages.filter(dsl::page_id.eq(id)))
                     .set(&model)
-                    .execute(self.conn)?;
+                    .execute(&*self.conn)?;
             }
 
             let user_id = user.id();
@@ -263,7 +264,7 @@ impl<'d> PageService<'d> {
             let revision_id = diesel::insert_into(revisions::table)
                 .values(&model)
                 .returning(revisions::dsl::revision_id)
-                .get_result::<RevisionId>(self.conn)?;
+                .get_result::<RevisionId>(&*self.conn)?;
 
             Ok(revision_id)
         })
@@ -289,7 +290,7 @@ impl<'d> PageService<'d> {
                 let id: i64 = page_id.into();
                 diesel::update(dsl::pages.filter(dsl::page_id.eq(id)))
                     .set(pages::dsl::deleted_at.eq(now))
-                    .execute(self.conn)?;
+                    .execute(&*self.conn)?;
             }
 
             let user_id = user.id();
@@ -319,7 +320,7 @@ impl<'d> PageService<'d> {
             let revision_id = diesel::insert_into(revisions::table)
                 .values(&model)
                 .returning(revisions::dsl::revision_id)
-                .get_result::<RevisionId>(self.conn)?;
+                .get_result::<RevisionId>(&*self.conn)?;
 
             Ok(revision_id)
         })
@@ -343,7 +344,7 @@ impl<'d> PageService<'d> {
                 pages::table
                     .find(id)
                     .select(pages::dsl::tags)
-                    .first::<Vec<String>>(self.conn)?
+                    .first::<Vec<String>>(&*self.conn)?
             };
 
             let (added_tags, removed_tags) = tag_diff(&current_tags, tags);
@@ -372,7 +373,7 @@ impl<'d> PageService<'d> {
             let revision_id = diesel::insert_into(revisions::table)
                 .values(&model)
                 .returning(revisions::dsl::revision_id)
-                .get_result::<RevisionId>(self.conn)?;
+                .get_result::<RevisionId>(&*self.conn)?;
 
             let model = NewTagChange {
                 revision_id: revision_id.into(),
@@ -383,7 +384,7 @@ impl<'d> PageService<'d> {
             trace!("Inserting tag change {:?} into tag history table", &model);
             diesel::insert_into(tag_history::table)
                 .values(&model)
-                .execute(self.conn)?;
+                .execute(&*self.conn)?;
 
             Ok(revision_id)
         })
@@ -397,13 +398,13 @@ impl<'d> PageService<'d> {
         let id: i64 = revision_id.into();
         diesel::update(dsl::revisions.filter(dsl::revision_id.eq(id)))
             .set(dsl::message.eq(message))
-            .execute(self.conn)?;
+            .execute(&*self.conn)?;
 
         Ok(())
     }
 }
 
-impl Debug for PageService<'_> {
+impl Debug for PageService {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("PageService")
             .field("conn", &"PgConnection { .. }")

@@ -101,26 +101,27 @@ impl User {
     }
 }
 
-pub struct UserService<'d> {
-    conn: &'d PgConnection,
+pub struct UserService {
+    conn: Arc<PgConnection>,
 }
 
-impl<'d> UserService<'d> {
+impl UserService {
     #[inline]
-    pub fn new(conn: &'d PgConnection) -> Self {
+    pub fn new(conn: &Arc<PgConnection>) -> Self {
+        let conn = Arc::clone(conn);
         UserService { conn }
     }
 
     pub fn create(&self, name: &str, email: &str) -> Result<()> {
         info!(
             "Creating new user with name '{}' with email '{}'",
-            name, email
+            name, email,
         );
 
         let model = NewUser { name, email };
         diesel::insert_into(users::table)
             .values(&model)
-            .execute(self.conn)?;
+            .execute(&*self.conn)?;
 
         Ok(())
     }
@@ -129,7 +130,10 @@ impl<'d> UserService<'d> {
         info!("Getting user for id {}", id);
 
         let id: i64 = id.into();
-        let result = users::table.find(id).first::<User>(self.conn).optional()?;
+        let result = users::table
+            .find(id)
+            .first::<User>(&*self.conn)
+            .optional()?;
         Ok(result)
     }
 
@@ -141,7 +145,7 @@ impl<'d> UserService<'d> {
         let id: i64 = id.into();
         diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
             .set(model)
-            .execute(self.conn)?;
+            .execute(&*self.conn)?;
 
         Ok(())
     }
@@ -155,13 +159,13 @@ impl<'d> UserService<'d> {
         let id: i64 = id.into();
         diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
             .set(dsl::deleted_at.eq(now))
-            .execute(self.conn)?;
+            .execute(&*self.conn)?;
 
         Ok(())
     }
 }
 
-impl Debug for UserService<'_> {
+impl Debug for UserService {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("UserService")
             .field("conn", &"PgConnection { .. }")

@@ -48,6 +48,7 @@ extern crate wikidot_normalize;
 mod macros;
 
 mod error;
+mod handle;
 mod page;
 mod revision;
 mod schema;
@@ -62,9 +63,11 @@ mod service_prelude {
     pub use parking_lot::Mutex;
     pub use std::collections::HashMap;
     pub use std::fmt::{self, Debug};
+    pub use std::sync::Arc;
 }
 
 pub type StdResult<T, E> = std::result::Result<T, E>;
 pub type Result<T> = StdResult<T, Error>;
 
 pub use self::error::Error;
+pub use self::handle::Handle;
