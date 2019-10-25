@@ -55,15 +55,19 @@ mod schema;
 mod user;
 mod wiki;
 
-mod service_prelude {
-    pub use crate::schema::*;
+mod prelude {
     pub use crate::{Error, Result};
+    pub use std::fmt::{self, Debug};
+    pub use std::sync::Arc;
+}
+
+mod service_prelude {
+    pub use crate::prelude::*;
+    pub use crate::schema::*;
     pub use chrono::prelude::*;
     pub use diesel::prelude::*;
     pub use parking_lot::Mutex;
     pub use std::collections::HashMap;
-    pub use std::fmt::{self, Debug};
-    pub use std::sync::Arc;
 }
 
 pub type StdResult<T, E> = std::result::Result<T, E>;

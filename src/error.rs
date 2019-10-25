@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use diesel::result::Error as DieselError;
+use diesel::result::{ConnectionError, Error as DieselError};
 use serde_json as json;
 use std::io;
 use subprocess::PopenError;
@@ -34,6 +34,9 @@ pub enum Error {
 
     #[error("database error: {0}")]
     Database(#[from] DieselError),
+
+    #[error("error connecting to database: {0}")]
+    DatabaseConnection(#[from] ConnectionError),
 
     #[error("error running subprocess: {0}")]
     Subprocess(#[from] PopenError),

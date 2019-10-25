@@ -19,16 +19,11 @@
  */
 
 use crate::page::PageService;
+use crate::prelude::*;
 use crate::user::UserService;
 use crate::wiki::WikiService;
-use diesel::PgConnection;
-use std::fmt::{self, Debug};
-use std::sync::Arc;
+use diesel::{Connection, PgConnection};
 
-#[derive(Debug)]
-pub struct Handle;
-
-/*
 pub struct Handle {
     conn: Arc<PgConnection>,
     page: PageService,
@@ -37,13 +32,28 @@ pub struct Handle {
 }
 
 impl Handle {
-    pub fn create() -> Self {
-        Handle {
+    pub fn create(database_url: &str) -> Result<Self> {
+        info!("Creating diesel::Handle, establishing connection to Postgres");
+
+        let conn = match PgConnection::establish(database_url) {
+            Ok(conn) => Arc::new(conn),
+            Err(error) => {
+                error!("Error establishing Postgres connection: {}", error);
+
+                return Err(Error::DatabaseConnection(error));
+            }
+        };
+
+        let page = PageService::new(&conn);
+        let user = UserService::new(&conn);
+        let wiki = WikiService::new(&conn)?;
+
+        Ok(Handle {
             conn,
             page,
             user,
             wiki,
-        }
+        })
     }
 }
 
@@ -57,4 +67,3 @@ impl Debug for Handle {
             .finish()
     }
 }
-*/
