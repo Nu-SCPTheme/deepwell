@@ -56,7 +56,7 @@ impl Wiki {
 
 pub struct WikiService {
     conn: Arc<PgConnection>,
-    wikis: Mutex<HashMap<WikiId, Wiki>>,
+    wikis: RwLock<HashMap<WikiId, Wiki>>,
 }
 
 impl WikiService {
@@ -72,7 +72,7 @@ impl WikiService {
                 map.insert(wiki.id(), wiki);
             }
 
-            Mutex::new(map)
+            RwLock::new(map)
         };
 
         Ok(WikiService { conn, wikis })
@@ -93,7 +93,7 @@ impl WikiService {
     where
         F: FnOnce(Option<&Wiki>) -> Result<T>,
     {
-        let guard = self.wikis.lock();
+        let guard = self.wikis.read();
         let wiki = guard.get(&id);
         f(wiki)
     }
@@ -112,7 +112,7 @@ impl WikiService {
             None
         }
 
-        let guard = self.wikis.lock();
+        let guard = self.wikis.read();
         let wiki = get(&*guard, slug);
         f(wiki)
     }
