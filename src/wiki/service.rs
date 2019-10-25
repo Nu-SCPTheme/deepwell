@@ -82,10 +82,11 @@ impl WikiService {
         info!("Creating new wiki with name '{}' ('{}')", name, slug);
 
         let model = NewWiki { name, slug };
-        diesel::insert_into(wikis::table)
+        let wiki = diesel::insert_into(wikis::table)
             .values(&model)
-            .execute(&*self.conn)?;
+            .get_result::<Wiki>(&*self.conn)?;
 
+        self.wikis.write().insert(wiki.id(), wiki);
         Ok(())
     }
 
