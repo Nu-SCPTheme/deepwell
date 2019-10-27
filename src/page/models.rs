@@ -47,12 +47,6 @@ pub struct NewRevision<'a> {
     pub change_type: &'a str,
 }
 
-#[derive(Debug, AsChangeset)]
-#[table_name = "revisions"]
-pub struct UpdateRevision<'a> {
-    pub message: &'a str,
-}
-
 #[derive(Debug, Insertable)]
 #[table_name = "tag_history"]
 pub struct NewTagChange<'a> {

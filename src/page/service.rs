@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::{NewPage, NewRevision, NewTagChange, UpdatePage, UpdateRevision};
+use super::{NewPage, NewRevision, NewTagChange, UpdatePage};
 use crate::revision::{CommitInfo, GitHash, RevisionStore};
 use crate::schema::{pages, revisions, tag_history};
 use crate::service_prelude::*;
@@ -369,7 +369,6 @@ impl PageService {
 
     pub fn tags(
         &self,
-        slug: &str,
         message: &str,
         wiki_id: WikiId,
         page_id: PageId,
