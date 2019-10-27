@@ -21,6 +21,5 @@
 mod models;
 mod service;
 
+pub use self::models::*;
 pub use self::service::{User, UserId, UserService};
-
-use self::models::*;

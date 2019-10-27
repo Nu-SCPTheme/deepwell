@@ -21,6 +21,5 @@
 mod models;
 mod service;
 
+pub use self::models::*;
 pub use self::service::{Wiki, WikiId, WikiService};
-
-use self::models::*;
