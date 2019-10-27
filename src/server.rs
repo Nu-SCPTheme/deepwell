@@ -271,6 +271,21 @@ impl Server {
 
         self.page.remove(slug, message, wiki_id, page_id, user)
     }
+
+    /// Sets all the tags for a given page.
+    pub fn set_page_tags(
+        &self,
+        message: &str,
+        wiki_id: WikiId,
+        page_id: PageId,
+        user: Either<UserId, &User>,
+        tags: &[&str],
+    ) -> Result<RevisionId> {
+        let mut user_obj = None;
+        let user = self.get_user(user, &mut user_obj)?;
+
+        self.page.tags(message, wiki_id, page_id, user, tags)
+    }
 }
 
 impl Debug for Server {
