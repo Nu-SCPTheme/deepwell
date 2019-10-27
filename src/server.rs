@@ -21,7 +21,7 @@
 use crate::page::PageService;
 use crate::prelude::*;
 use crate::user::UserService;
-use crate::wiki::WikiService;
+use crate::wiki::{WikiId, WikiService};
 use diesel::{Connection, PgConnection};
 use std::path::PathBuf;
 
@@ -68,13 +68,14 @@ impl Server {
         })
     }
 
-    pub fn create_wiki(&self, name: &str, slug: &str, domain: &str) -> Result<()> {
+    /// Creates a new Wiki with the given parameters. Returns the ID of the created instance.
+    pub fn create_wiki(&self, name: &str, slug: &str, domain: &str) -> Result<WikiId> {
         let id = self.wiki.create(name, slug, domain)?;
         self.wiki.get_by_id(id, |wiki| {
             let wiki = wiki.expect("Can't find wiki object after inserting");
 
             self.page.add_store(&wiki);
-            Ok(())
+            Ok(id)
         })
     }
 }
