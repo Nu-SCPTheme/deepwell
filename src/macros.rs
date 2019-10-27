@@ -31,6 +31,15 @@ macro_rules! make_id_type {
         )]
         pub struct $name(i64);
 
+        impl $name {
+            #[inline]
+            pub fn from_raw(value: i64) -> Self {
+                debug!("Creating raw {} with value {}", stringify!($name), value);
+
+                $name(value)
+            }
+        }
+
         impl Into<i64> for $name {
             #[inline]
             fn into(self) -> i64 {
