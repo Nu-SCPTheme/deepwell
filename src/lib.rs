@@ -48,10 +48,10 @@ extern crate wikidot_normalize;
 mod macros;
 
 mod error;
-mod handle;
 mod page;
 mod revision;
 mod schema;
+mod server;
 mod user;
 mod wiki;
 
@@ -74,4 +74,4 @@ pub type StdResult<T, E> = std::result::Result<T, E>;
 pub type Result<T> = StdResult<T, Error>;
 
 pub use self::error::Error;
-pub use self::handle::Handle;
+pub use self::server::{Server, ServerConfig};

@@ -1,5 +1,5 @@
 /*
- * handle.rs
+ * server.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -24,14 +24,17 @@ use crate::user::UserService;
 use crate::wiki::WikiService;
 use diesel::{Connection, PgConnection};
 
-pub struct Handle {
+#[derive(Debug, Clone)]
+pub struct ServerConfig;
+
+pub struct Server {
     conn: Arc<PgConnection>,
     page: PageService,
     user: UserService,
     wiki: WikiService,
 }
 
-impl Handle {
+impl Server {
     pub fn create(database_url: &str) -> Result<Self> {
         info!("Creating diesel::Handle, establishing connection to Postgres");
 
@@ -51,7 +54,7 @@ impl Handle {
         let user = UserService::new(&conn);
         let wiki = WikiService::new(&conn)?;
 
-        Ok(Handle {
+        Ok(Server {
             conn,
             page,
             user,
@@ -62,7 +65,7 @@ impl Handle {
 
 // TODO in wiki create add to page service too
 
-impl Debug for Handle {
+impl Debug for Server {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("diesel::Handle")
             .field("conn", &"PgConnection { .. }")
