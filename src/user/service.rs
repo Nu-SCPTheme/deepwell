@@ -51,6 +51,51 @@ impl User {
     }
 
     #[inline]
+    pub fn email(&self) -> &str {
+        &self.email
+    }
+
+    #[inline]
+    pub fn is_verified(&self) -> bool {
+        self.is_verified
+    }
+
+    #[inline]
+    pub fn author_page(&self) -> &str {
+        &self.author_page
+    }
+
+    #[inline]
+    pub fn website(&self) -> &str {
+        &self.website
+    }
+
+    #[inline]
+    pub fn about(&self) -> &str {
+        &self.about
+    }
+
+    #[inline]
+    pub fn gender(&self) -> &str {
+        &self.gender
+    }
+
+    #[inline]
+    pub fn location(&self) -> &str {
+        &self.location
+    }
+
+    #[inline]
+    pub fn created_at(&self) -> NaiveDateTime {
+        self.created_at
+    }
+
+    #[inline]
+    pub fn deleted_at(&self) -> Option<NaiveDateTime> {
+        self.deleted_at
+    }
+
+    #[inline]
     pub fn is_active(&self) -> bool {
         self.deleted_at.is_none()
     }
