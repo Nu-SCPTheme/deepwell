@@ -469,7 +469,10 @@ fn tag_diff<'a>(
     }
 
     let new_tags = new_tags.iter().copied().collect::<HashSet<_>>();
-    let old_tags = current_tags.iter().map(|s| s.as_str()).collect::<HashSet<_>>();
+    let old_tags = current_tags
+        .iter()
+        .map(|s| s.as_str())
+        .collect::<HashSet<_>>();
 
     let added_tags = difference!(new_tags, old_tags);
     let removed_tags = difference!(old_tags, new_tags);

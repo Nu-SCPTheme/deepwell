@@ -68,18 +68,48 @@ impl UserService {
     }
 
     pub fn create(&self, name: &str, email: &str) -> Result<UserId> {
+        use self::users::dsl;
+
         info!(
-            "Creating new user with name '{}' with email '{}'",
+            "Starting transaction to create new user with name '{}' with email '{}'",
             name, email,
         );
 
-        let model = NewUser { name, email };
-        let id = diesel::insert_into(users::table)
-            .values(&model)
-            .returning(users::dsl::user_id)
-            .get_result::<UserId>(&*self.conn)?;
+        let email = email.to_ascii_lowercase();
 
-        Ok(id)
+        self.conn.transaction::<_, Error, _>(|| {
+            let result = users::table
+                .filter(users::name.eq(name))
+                .or_filter(users::email.eq(&email))
+                .get_result::<User>(&*self.conn)
+                .optional()?;
+
+            if let Some(user) = result {
+                if name == &user.name {
+                    warn!("Cannot create user, name conflicts");
+                    return Err(Error::UserNameExists);
+                }
+
+                if email == user.email {
+                    warn!("Cannot create user, email conflicts");
+                    return Err(Error::UserEmailExists);
+                }
+
+                unreachable!()
+            }
+
+            let model = NewUser {
+                name,
+                email: &email,
+            };
+
+            let id = diesel::insert_into(users::table)
+                .values(&model)
+                .returning(users::dsl::user_id)
+                .get_result::<UserId>(&*self.conn)?;
+
+            Ok(id)
+        })
     }
 
     pub fn get(&self, id: UserId) -> Result<Option<User>> {
@@ -173,9 +203,7 @@ impl UserService {
                 deleted_at: Some(None),
             };
 
-            diesel::update(condition)
-                .set(&model)
-                .execute(&*self.conn)?;
+            diesel::update(condition).set(&model).execute(&*self.conn)?;
         }
 
         Ok(())
