@@ -55,10 +55,15 @@ mod server;
 mod user;
 mod wiki;
 
-mod prelude {
+pub mod prelude {
+    pub use crate::id::*;
     pub use crate::{Error, Result};
-    pub use std::fmt::{self, Debug};
-    pub use std::sync::Arc;
+}
+
+pub mod id {
+    pub use crate::page::{PageId, RevisionId};
+    pub use crate::user::UserId;
+    pub use crate::wiki::WikiId;
 }
 
 mod service_prelude {
@@ -68,6 +73,8 @@ mod service_prelude {
     pub use diesel::prelude::*;
     pub use parking_lot::RwLock;
     pub use std::collections::HashMap;
+    pub use std::fmt::{self, Debug};
+    pub use std::sync::Arc;
 }
 
 pub type StdResult<T, E> = std::result::Result<T, E>;

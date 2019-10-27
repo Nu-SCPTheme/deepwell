@@ -21,9 +21,11 @@
 use crate::page::PageService;
 use crate::prelude::*;
 use crate::user::UserService;
-use crate::wiki::{WikiId, WikiService};
+use crate::wiki::WikiService;
 use diesel::{Connection, PgConnection};
+use std::fmt::{self, Debug};
 use std::path::PathBuf;
+use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub struct ServerConfig<'a> {
