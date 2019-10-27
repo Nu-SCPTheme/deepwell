@@ -124,6 +124,12 @@ impl Server {
         )
     }
 
+    /// Gets the model for a user from its ID.
+    #[inline]
+    pub fn get_user_from_id(&self, id: UserId) -> Result<Option<User>> {
+        self.user.get_from_id(id)
+    }
+
     /// Marks a user as verified.
     #[inline]
     pub fn verify_user(&self, id: UserId) -> Result<()> {

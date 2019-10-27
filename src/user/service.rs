@@ -157,7 +157,7 @@ impl UserService {
         })
     }
 
-    pub fn get(&self, id: UserId) -> Result<Option<User>> {
+    pub fn get_from_id(&self, id: UserId) -> Result<Option<User>> {
         info!("Getting user for id {}", id);
 
         let id: i64 = id.into();
