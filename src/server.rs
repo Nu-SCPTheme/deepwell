@@ -286,6 +286,14 @@ impl Server {
 
         self.page.tags(message, wiki_id, page_id, user, tags)
     }
+
+    /* Revision methods */
+
+    /// Overwrite the revision message for a given change.
+    #[inline]
+    pub fn edit_revision(&self, revision_id: RevisionId, message: &str) -> Result<()> {
+        self.page.edit_revision(revision_id, message)
+    }
 }
 
 impl Debug for Server {
