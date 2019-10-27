@@ -9,6 +9,7 @@ edition = "2018" # this refers to the Cargo.toml
 arrayvec = "0.5"
 chrono = { version = "0.4", features = ["serde"] }
 diesel = { version = "1", features = ["chrono", "postgres"] }
+either = "1"
 hex = "0.4"
 lazy_static = "1"
 log = "0.4"

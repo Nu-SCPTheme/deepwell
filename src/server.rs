@@ -23,6 +23,7 @@ use crate::prelude::*;
 use crate::user::UserService;
 use crate::wiki::{UpdateWiki, WikiService};
 use diesel::{Connection, PgConnection};
+use either::*;
 use std::fmt::{self, Debug};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -170,6 +171,35 @@ impl Server {
     #[inline]
     pub fn make_user_active(&self, id: UserId) -> Result<()> {
         self.user.mark_inactive(id, false)
+    }
+
+    /* Page methods */
+
+    pub fn create_page(
+        &self,
+        slug: &str,
+        content: &[u8],
+        message: &str,
+        wiki_id: WikiId,
+        user: Either<UserId, &User>,
+        title: &str,
+        alt_title: &str,
+    ) -> Result<(PageId, RevisionId)> {
+        let user_obj;
+        let user = match user {
+            Right(user) => user,
+            Left(id) => match self.user.get_from_id(id) {
+                Ok(Some(user)) => {
+                    user_obj = user;
+                    &user_obj
+                }
+                Ok(None) => return Err(Error::UserNotFound),
+                Err(error) => return Err(error),
+            },
+        };
+
+        self.page
+            .create(slug, content, message, wiki_id, &user, title, alt_title)
     }
 }
 

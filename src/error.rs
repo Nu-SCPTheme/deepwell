@@ -53,6 +53,9 @@ pub enum Error {
     #[error("the given page already exists")]
     PageExists,
 
+    #[error("the given user was not found")]
+    UserNotFound,
+
     #[error("a user with the given name already exists")]
     UserNameExists,
 
