@@ -98,6 +98,18 @@ impl Server {
     pub fn create_user(&self, name: &str, email: &str) -> Result<UserId> {
         self.user.create(name, email)
     }
+
+    /// Marks the user as "inactive", effectively deleting them.
+    #[inline]
+    pub fn make_user_inactive(&self, id: UserId) -> Result<()> {
+        self.user.mark_inactive(id, true)
+    }
+
+    /// Marks the user as "active" again, effectively un-deleting them.
+    #[inline]
+    pub fn make_user_active(&self, id: UserId) -> Result<()> {
+        self.user.mark_inactive(id, false)
+    }
 }
 
 impl Debug for Server {

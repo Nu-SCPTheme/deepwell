@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::models::{NewUser, UpdateUser};
+use super::models::{NewUser, UpdateUser, UpdateUserActivity};
 use crate::schema::users;
 use crate::service_prelude::*;
 
@@ -151,16 +151,23 @@ impl UserService {
         Ok(())
     }
 
-    pub fn mark_inactive(&self, id: UserId) -> Result<()> {
+    pub fn mark_inactive(&self, id: UserId, value: bool) -> Result<()> {
         use self::users::dsl;
         use diesel::dsl::now;
 
         info!("Marking user id {} as inactive", id);
 
-        let id: i64 = id.into();
-        diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
-            .set(dsl::deleted_at.eq(now))
-            .execute(&*self.conn)?;
+        // Set to NOW() or NULL
+        if value {
+            let id: i64 = id.into();
+            diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
+                .set(dsl::deleted_at.eq(now))
+                .execute(&*self.conn)?;
+        } else {
+            let model = UpdateUserActivity {
+                deleted_at: Some(None),
+            };
+        }
 
         Ok(())
     }

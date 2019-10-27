@@ -39,5 +39,10 @@ pub struct UpdateUser<'a> {
     pub about: Option<&'a str>,
     pub gender: Option<&'a str>,
     pub location: Option<&'a str>,
+}
+
+#[derive(Debug, Default, AsChangeset)]
+#[table_name = "users"]
+pub struct UpdateUserActivity {
     pub deleted_at: Option<Option<NaiveDateTime>>,
 }
