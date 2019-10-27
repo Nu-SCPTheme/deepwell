@@ -82,8 +82,6 @@ impl Server {
     }
 }
 
-// TODO in wiki create add to page service too
-
 impl Debug for Server {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("diesel::Handle")
