@@ -47,6 +47,9 @@ pub enum Error {
     #[error("command failed: {0}")]
     CommandFailed(String),
 
+    #[error("the given wiki was not found")]
+    WikiNotFound,
+
     #[error("the given page was not found")]
     PageNotFound,
 

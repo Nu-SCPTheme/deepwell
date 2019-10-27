@@ -102,7 +102,7 @@ impl PageService {
             None => {
                 error!("No revision store found for wiki id {}", wiki_id);
 
-                return Err(Error::StaticMsg("missing revision store for wiki"));
+                return Err(Error::WikiNotFound);
             }
         };
 
@@ -422,6 +422,33 @@ impl PageService {
 
             Ok(revision_id)
         })
+    }
+
+    pub fn get_page_contents(
+        &self,
+        wiki_id: WikiId,
+        slug: &str,
+    ) -> Result<Option<(Box<[u8]>, PageId)>> {
+        let result = pages::table
+            .filter(pages::slug.eq(slug))
+            .select(pages::page_id)
+            .first::<PageId>(&*self.conn)
+            .optional()?;
+
+        info!("Getting page for wiki id {}, slug {}", wiki_id, slug);
+
+        let page_id = match result {
+            Some(page_id) => page_id,
+            None => return Ok(None),
+        };
+
+        let contents = self.get_store(wiki_id, |store| match store.get_page(slug) {
+            Ok(Some(contents)) => Ok(contents),
+            Ok(None) => Err(Error::StaticMsg("No content for page in database")),
+            Err(error) => Err(error),
+        })?;
+
+        Ok(Some((contents, page_id)))
     }
 
     pub fn edit_revision(&self, revision_id: RevisionId, message: &str) -> Result<()> {

@@ -272,6 +272,15 @@ impl Server {
         self.page.remove(slug, message, wiki_id, page_id, user)
     }
 
+    /// Gets the contents for a given page, as well as its page ID.
+    pub fn get_page_contents(
+        &self,
+        wiki_id: WikiId,
+        slug: &str,
+    ) -> Result<Option<(Box<[u8]>, PageId)>> {
+        self.page.get_page_contents(wiki_id, slug)
+    }
+
     /// Sets all the tags for a given page.
     pub fn set_page_tags(
         &self,
