@@ -32,13 +32,12 @@ pub struct NewWiki<'a> {
 #[table_name = "wikis"]
 pub struct UpdateWiki<'a> {
     pub name: Option<&'a str>,
-    pub slug: Option<&'a str>,
     pub domain: Option<&'a str>,
 }
 
 impl UpdateWiki<'_> {
     pub fn check(&self) {
-        let all_none = self.name.is_none() || self.slug.is_none() || self.domain.is_none();
+        let all_none = self.name.is_none() || self.domain.is_none();
         if all_none {
             warn!("Empty wiki metadata update");
         }

@@ -21,7 +21,7 @@
 use crate::page::PageService;
 use crate::prelude::*;
 use crate::user::UserService;
-use crate::wiki::WikiService;
+use crate::wiki::{UpdateWiki, WikiService};
 use diesel::{Connection, PgConnection};
 use std::fmt::{self, Debug};
 use std::path::PathBuf;
@@ -70,7 +70,7 @@ impl Server {
         })
     }
 
-    /// Creates a new Wiki with the given parameters. Returns the ID of the created instance.
+    /// Creates a new wiki with the given parameters. Returns its ID.
     pub fn create_wiki(&self, name: &str, slug: &str, domain: &str) -> Result<WikiId> {
         let id = self.wiki.create(name, slug, domain)?;
         self.wiki.get_by_id(id, |wiki| {
@@ -79,6 +79,18 @@ impl Server {
             self.page.add_store(&wiki);
             Ok(id)
         })
+    }
+
+    /// Renames the wiki with the given ID.
+    /// Changing a wiki's slug is not supported.
+    pub fn rename_wiki(&self, id: WikiId, new_name: &str) -> Result<()> {
+        let model = UpdateWiki {
+            name: Some(new_name),
+            domain: None,
+        };
+
+        self.wiki.edit(id, model)?;
+        Ok(())
     }
 }
 
