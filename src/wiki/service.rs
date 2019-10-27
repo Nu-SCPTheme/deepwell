@@ -29,6 +29,7 @@ pub struct Wiki {
     id: WikiId,
     name: String,
     slug: String,
+    domain: String,
     created_at: NaiveDateTime,
 }
 
@@ -46,6 +47,11 @@ impl Wiki {
     #[inline]
     pub fn slug(&self) -> &str {
         &self.slug
+    }
+
+    #[inline]
+    pub fn domain(&self) -> &str {
+        &self.domain
     }
 
     #[inline]
@@ -78,10 +84,10 @@ impl WikiService {
         Ok(WikiService { conn, wikis })
     }
 
-    pub fn create(&self, name: &str, slug: &str) -> Result<WikiId> {
+    pub fn create(&self, name: &str, slug: &str, domain: &str) -> Result<WikiId> {
         info!("Creating new wiki with name '{}' ('{}')", name, slug);
 
-        let model = NewWiki { name, slug };
+        let model = NewWiki { name, slug, domain };
         let wiki = diesel::insert_into(wikis::table)
             .values(&model)
             .get_result::<Wiki>(&*self.conn)?;
@@ -119,18 +125,13 @@ impl WikiService {
         f(wiki)
     }
 
-    pub fn edit(&self, id: WikiId, name: Option<&str>, slug: Option<&str>) -> Result<()> {
+    pub fn edit(&self, id: WikiId, model: UpdateWiki) -> Result<()> {
         use self::wikis::dsl;
 
-        if name.is_none() && slug.is_none() {
-            warn!("Empty wiki metadata update");
-            return Ok(());
-        }
-
-        info!("Editing wiki id {}, name: {:?}, slug: {:?}", id, name, slug);
+        info!("Editing wiki id {}: {:?}", id, model);
+        model.check();
 
         let id: i64 = id.into();
-        let model = UpdateWiki { name, slug };
         diesel::update(dsl::wikis.filter(dsl::wiki_id.eq(id)))
             .set(&model)
             .execute(&*self.conn)?;

@@ -82,11 +82,11 @@ impl PageService {
         json::to_string(&message).map_err(Error::from)
     }
 
-    pub fn add_store(&self, wiki: &Wiki, domain: &str) {
+    pub fn add_store(&self, wiki: &Wiki) {
         // TODO: fold domain into Wiki?
 
         let repo = self.directory.join(wiki.slug());
-        let store = RevisionStore::new(repo, domain);
+        let store = RevisionStore::new(repo, wiki.domain());
 
         let mut guard = self.stores.write();
         guard.insert(wiki.id(), store);
