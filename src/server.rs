@@ -99,6 +99,31 @@ impl Server {
         self.user.create(name, email)
     }
 
+    /// Edits data attached to a user with the given ID.
+    #[inline]
+    pub fn edit_user(
+        &self,
+        id: UserId,
+        name: Option<&str>,
+        email: Option<&str>,
+        author_page: Option<&str>,
+        website: Option<&str>,
+        about: Option<&str>,
+        gender: Option<&str>,
+        location: Option<&str>,
+    ) -> Result<()> {
+        self.user.edit(
+            id,
+            name,
+            email,
+            author_page,
+            website,
+            about,
+            gender,
+            location,
+        )
+    }
+
     /// Marks a user as verified.
     #[inline]
     pub fn verify_user(&self, id: UserId) -> Result<()> {

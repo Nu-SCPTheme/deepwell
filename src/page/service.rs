@@ -96,13 +96,13 @@ impl PageService {
     where
         F: FnOnce(&RevisionStore) -> Result<T>,
     {
-        trace!("Getting revision store for wiki ID {}", wiki_id);
+        trace!("Getting revision store for wiki id {}", wiki_id);
 
         let guard = self.stores.read();
         let store = match guard.get(&wiki_id) {
             Some(store) => store,
             None => {
-                error!("No revision store found for wiki ID {}", wiki_id);
+                error!("No revision store found for wiki id {}", wiki_id);
 
                 return Err(Error::StaticMsg("missing revision store for wiki"));
             }
@@ -436,7 +436,7 @@ impl PageService {
     pub fn edit_revision(&self, revision_id: RevisionId, message: &str) -> Result<()> {
         use self::revisions::dsl;
 
-        info!("Editing revision message for ID {}", revision_id);
+        info!("Editing revision message for id {}", revision_id);
 
         let id: i64 = revision_id.into();
         diesel::update(dsl::revisions.filter(dsl::revision_id.eq(id)))

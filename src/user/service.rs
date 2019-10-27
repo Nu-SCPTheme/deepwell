@@ -138,14 +138,37 @@ impl UserService {
         Ok(result)
     }
 
-    pub fn edit(&self, id: UserId, model: UpdateUser) -> Result<()> {
+    pub fn edit(
+        &self,
+        id: UserId,
+        name: Option<&str>,
+        email: Option<&str>,
+        author_page: Option<&str>,
+        website: Option<&str>,
+        about: Option<&str>,
+        gender: Option<&str>,
+        location: Option<&str>,
+    ) -> Result<()> {
         use self::users::dsl;
 
-        info!("Editing user id {}, changes: {:?}", id, model);
+        let is_verified = if email.is_some() { Some(false) } else { None };
+        let model = UpdateUser {
+            name,
+            email,
+            is_verified,
+            author_page,
+            website,
+            about,
+            gender,
+            location,
+            deleted_at: None,
+        };
+
+        info!("Editing user id {}, data: {:?}", id, &model);
 
         let id: i64 = id.into();
         diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
-            .set(model)
+            .set(&model)
             .execute(&*self.conn)?;
 
         Ok(())
@@ -168,7 +191,11 @@ impl UserService {
         use self::users::dsl;
         use diesel::dsl::now;
 
-        info!("Marking user id {} as {}", id, if value { "inactive" } else { "active" });
+        info!(
+            "Marking user id {} as {}",
+            id,
+            if value { "inactive" } else { "active" }
+        );
 
         // Set to NOW() or NULL
         if value {
