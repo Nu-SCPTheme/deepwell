@@ -70,6 +70,8 @@ impl Server {
         })
     }
 
+    /* Wiki methods */
+
     /// Creates a new wiki with the given parameters. Returns its ID.
     pub fn create_wiki(&self, name: &str, slug: &str, domain: &str) -> Result<WikiId> {
         let id = self.wiki.create(name, slug, domain)?;
@@ -92,6 +94,8 @@ impl Server {
         self.wiki.edit(id, model)?;
         Ok(())
     }
+
+    /* User methods */
 
     /// Creates a new user with the given name and email. Returns its ID.
     #[inline]
