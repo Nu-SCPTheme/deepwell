@@ -224,6 +224,13 @@ impl Server {
         let mut user_obj = None;
         let user = self.get_user(user, &mut user_obj)?;
 
+        // Empty string means use default
+        let alt_title: Option<Option<&str>> = match alt_title {
+            Some("") => Some(None),
+            Some(_) => Some(alt_title),
+            None => None,
+        };
+
         self.page.commit(
             slug, content, message, wiki_id, page_id, user, title, alt_title,
         )
