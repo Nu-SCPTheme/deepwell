@@ -23,9 +23,13 @@ use crate::prelude::*;
 use crate::user::UserService;
 use crate::wiki::WikiService;
 use diesel::{Connection, PgConnection};
+use std::path::PathBuf;
 
 #[derive(Debug, Clone)]
-pub struct ServerConfig;
+pub struct ServerConfig<'a> {
+    pub database_url: &'a str,
+    pub revisions_dir: PathBuf,
+}
 
 pub struct Server {
     conn: Arc<PgConnection>,
@@ -35,8 +39,13 @@ pub struct Server {
 }
 
 impl Server {
-    pub fn create(database_url: &str) -> Result<Self> {
+    pub fn create(config: ServerConfig) -> Result<Self> {
         info!("Creating diesel::Handle, establishing connection to Postgres");
+
+        let ServerConfig {
+            database_url,
+            revisions_dir,
+        } = config;
 
         let conn = match PgConnection::establish(database_url) {
             Ok(conn) => Arc::new(conn),
@@ -47,10 +56,7 @@ impl Server {
             }
         };
 
-        // TODO load repository directory from config
-        use std::path::PathBuf;
-
-        let page = PageService::new(&conn, PathBuf::from("/tmp/_deepwell"));
+        let page = PageService::new(&conn, revisions_dir);
         let user = UserService::new(&conn);
         let wiki = WikiService::new(&conn)?;
 
