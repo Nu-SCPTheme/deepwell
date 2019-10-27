@@ -83,8 +83,6 @@ impl PageService {
     }
 
     pub fn add_store(&self, wiki: &Wiki) {
-        // TODO: fold domain into Wiki?
-
         let repo = self.directory.join(wiki.slug());
         let store = RevisionStore::new(repo, wiki.domain());
 
