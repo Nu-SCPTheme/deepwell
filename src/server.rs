@@ -175,6 +175,24 @@ impl Server {
 
     /* Page methods */
 
+    fn get_user<'a>(
+        &self,
+        user: Either<UserId, &'a User>,
+        storage: &'a mut Option<User>,
+    ) -> Result<&'a User> {
+        match user {
+            Right(user) => Ok(user),
+            Left(id) => match self.user.get_from_id(id) {
+                Ok(Some(user)) => {
+                    *storage = Some(user);
+                    Ok(storage.as_ref().unwrap())
+                }
+                Ok(None) => Err(Error::UserNotFound),
+                Err(error) => Err(error),
+            },
+        }
+    }
+
     pub fn create_page(
         &self,
         slug: &str,
@@ -185,21 +203,30 @@ impl Server {
         title: &str,
         alt_title: &str,
     ) -> Result<(PageId, RevisionId)> {
-        let user_obj;
-        let user = match user {
-            Right(user) => user,
-            Left(id) => match self.user.get_from_id(id) {
-                Ok(Some(user)) => {
-                    user_obj = user;
-                    &user_obj
-                }
-                Ok(None) => return Err(Error::UserNotFound),
-                Err(error) => return Err(error),
-            },
-        };
+        let mut user_obj = None;
+        let user = self.get_user(user, &mut user_obj)?;
 
         self.page
             .create(slug, content, message, wiki_id, &user, title, alt_title)
+    }
+
+    pub fn edit_page(
+        &self,
+        slug: &str,
+        content: &[u8],
+        message: &str,
+        wiki_id: WikiId,
+        page_id: PageId,
+        user: Either<UserId, &User>,
+        title: Option<&str>,
+        alt_title: Option<&str>,
+    ) -> Result<RevisionId> {
+        let mut user_obj = None;
+        let user = self.get_user(user, &mut user_obj)?;
+
+        self.page.commit(
+            slug, content, message, wiki_id, page_id, user, title, alt_title,
+        )
     }
 }
 
