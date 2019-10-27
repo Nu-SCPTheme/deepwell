@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::models::{NewUser, UpdateUser, UpdateUserActivity};
+use super::models::{NewUser, UpdateUser};
 use crate::schema::users;
 use crate::service_prelude::*;
 
@@ -155,7 +155,7 @@ impl UserService {
         use self::users::dsl;
         use diesel::dsl::now;
 
-        info!("Marking user id {} as inactive", id);
+        info!("Marking user id {} as {}", id, if value { "inactive" } else { "active" });
 
         // Set to NOW() or NULL
         if value {
@@ -164,7 +164,15 @@ impl UserService {
                 .set(dsl::deleted_at.eq(now))
                 .execute(&*self.conn)?;
         } else {
-            let model = UpdateUserActivity {
+            let model = UpdateUser {
+                name: None,
+                email: None,
+                is_verified: None,
+                author_page: None,
+                website: None,
+                about: None,
+                gender: None,
+                location: None,
                 deleted_at: Some(None),
             };
         }
