@@ -130,6 +130,18 @@ impl Server {
         self.user.get_from_id(id)
     }
 
+    /// Gets the model for a user from its name.
+    #[inline]
+    pub fn get_user_from_name(&self, name: &str) -> Result<Option<User>> {
+        self.user.get_from_name(name)
+    }
+
+    /// Gets the model for a user from its email.
+    #[inline]
+    pub fn get_user_from_email(&self, email: &str) -> Result<Option<User>> {
+        self.user.get_from_email(email)
+    }
+
     /// Marks a user as verified.
     #[inline]
     pub fn verify_user(&self, id: UserId) -> Result<()> {
