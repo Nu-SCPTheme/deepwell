@@ -39,7 +39,7 @@ pub struct Server {
 }
 
 impl Server {
-    pub fn create(config: ServerConfig) -> Result<Self> {
+    pub fn new(config: ServerConfig) -> Result<Self> {
         info!("Creating diesel::Handle, establishing connection to Postgres");
 
         let ServerConfig {
