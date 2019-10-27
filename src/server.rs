@@ -235,6 +235,22 @@ impl Server {
             slug, content, message, wiki_id, page_id, user, title, alt_title,
         )
     }
+
+    pub fn rename_page(
+        &self,
+        old_slug: &str,
+        new_slug: &str,
+        message: &str,
+        wiki_id: WikiId,
+        page_id: PageId,
+        user: Either<UserId, &User>,
+    ) -> Result<RevisionId> {
+        let mut user_obj = None;
+        let user = self.get_user(user, &mut user_obj)?;
+
+        self.page
+            .rename(old_slug, new_slug, message, wiki_id, page_id, user)
+    }
 }
 
 impl Debug for Server {
