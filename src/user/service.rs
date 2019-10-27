@@ -197,10 +197,12 @@ impl UserService {
             if value { "inactive" } else { "active" }
         );
 
+        let id: i64 = id.into();
+        let condition = dsl::users.filter(dsl::user_id.eq(id));
+
         // Set to NOW() or NULL
         if value {
-            let id: i64 = id.into();
-            diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
+            diesel::update(condition)
                 .set(dsl::deleted_at.eq(now))
                 .execute(&*self.conn)?;
         } else {
@@ -215,6 +217,10 @@ impl UserService {
                 location: None,
                 deleted_at: Some(None),
             };
+
+            diesel::update(condition)
+                .set(&model)
+                .execute(&*self.conn)?;
         }
 
         Ok(())
