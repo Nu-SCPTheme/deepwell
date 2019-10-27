@@ -193,6 +193,7 @@ impl Server {
         }
     }
 
+    /// Creates a new page with the given contents and metadata.
     pub fn create_page(
         &self,
         slug: &str,
@@ -210,6 +211,9 @@ impl Server {
             .create(slug, content, message, wiki_id, &user, title, alt_title)
     }
 
+    /// Edits an existing page to have the given content.
+    /// Optionally permits modifying the title or alternate title.
+    /// (An empty alternate title signifies that none is used)
     pub fn edit_page(
         &self,
         slug: &str,
@@ -236,6 +240,7 @@ impl Server {
         )
     }
 
+    /// Renames a page to use a different slug.
     pub fn rename_page(
         &self,
         old_slug: &str,
