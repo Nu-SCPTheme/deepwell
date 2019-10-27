@@ -78,7 +78,7 @@ impl WikiService {
         Ok(WikiService { conn, wikis })
     }
 
-    pub fn create(&self, name: &str, slug: &str) -> Result<()> {
+    pub fn create(&self, name: &str, slug: &str) -> Result<WikiId> {
         info!("Creating new wiki with name '{}' ('{}')", name, slug);
 
         let model = NewWiki { name, slug };
@@ -86,8 +86,9 @@ impl WikiService {
             .values(&model)
             .get_result::<Wiki>(&*self.conn)?;
 
-        self.wikis.write().insert(wiki.id(), wiki);
-        Ok(())
+        let id = wiki.id();
+        self.wikis.write().insert(id, wiki);
+        Ok(id)
     }
 
     pub fn get_by_id<F, T>(&self, id: WikiId, f: F) -> Result<T>

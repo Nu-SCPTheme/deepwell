@@ -67,6 +67,16 @@ impl Server {
             wiki,
         })
     }
+
+    pub fn create_wiki(&self, name: &str, slug: &str, domain: &str) -> Result<()> {
+        let id = self.wiki.create(name, slug)?;
+        self.wiki.get_by_id(id, |wiki| {
+            let wiki = wiki.expect("Can't find wiki object after inserting");
+
+            self.page.add_store(&wiki, domain);
+            Ok(())
+        })
+    }
 }
 
 // TODO in wiki create add to page service too
