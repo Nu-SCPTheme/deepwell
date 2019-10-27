@@ -134,8 +134,9 @@ table! {
 table! {
     wikis (wiki_id) {
         wiki_id -> Int8,
-        slug -> Text,
         name -> Text,
+        slug -> Text,
+        domain -> Text,
         created_at -> Timestamp,
     }
 }

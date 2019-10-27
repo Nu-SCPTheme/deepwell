@@ -34,8 +34,9 @@ CREATE TABLE passwords (
 
 CREATE TABLE wikis (
     wiki_id BIGSERIAL PRIMARY KEY,
-    slug TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,
+    slug TEXT NOT NULL UNIQUE,
+    domain TEXT NOT NULL UNIQUE CHECK(domain = LOWER(domain)),
     created_at TIMESTAMP NOT NULL
 );
 
