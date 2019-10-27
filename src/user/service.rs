@@ -120,6 +120,7 @@ impl UserService {
             .find(id)
             .first::<User>(&*self.conn)
             .optional()?;
+
         Ok(result)
     }
 
