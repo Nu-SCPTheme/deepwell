@@ -112,18 +112,19 @@ impl UserService {
         UserService { conn }
     }
 
-    pub fn create(&self, name: &str, email: &str) -> Result<()> {
+    pub fn create(&self, name: &str, email: &str) -> Result<UserId> {
         info!(
             "Creating new user with name '{}' with email '{}'",
             name, email,
         );
 
         let model = NewUser { name, email };
-        diesel::insert_into(users::table)
+        let id = diesel::insert_into(users::table)
             .values(&model)
-            .execute(&*self.conn)?;
+            .returning(users::dsl::user_id)
+            .get_result::<UserId>(&*self.conn)?;
 
-        Ok(())
+        Ok(id)
     }
 
     pub fn get(&self, id: UserId) -> Result<Option<User>> {

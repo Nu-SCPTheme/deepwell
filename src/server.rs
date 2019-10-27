@@ -92,6 +92,12 @@ impl Server {
         self.wiki.edit(id, model)?;
         Ok(())
     }
+
+    /// Creates a new user with the given name and email. Returns its ID.
+    #[inline]
+    pub fn create_user(&self, name: &str, email: &str) -> Result<UserId> {
+        self.user.create(name, email)
+    }
 }
 
 impl Debug for Server {
