@@ -113,6 +113,8 @@ impl UserService {
     }
 
     pub fn create(&self, name: &str, email: &str) -> Result<UserId> {
+        use self::users::dsl;
+
         info!(
             "Starting transaction to create new user with name '{}' with email '{}'",
             name, email,
@@ -124,17 +126,18 @@ impl UserService {
             let result = users::table
                 .filter(users::name.eq(name))
                 .or_filter(users::email.eq(&email))
-                .get_result::<User>(&*self.conn)
+                .select((dsl::user_id, dsl::name, dsl::email))
+                .get_result::<(UserId, String, String)>(&*self.conn)
                 .optional()?;
 
-            if let Some(user) = result {
-                if name == &user.name {
-                    warn!("Cannot create user, name conflicts");
+            if let Some((user_id, conflict_name, conflict_email)) = result {
+                if name == &conflict_name {
+                    warn!("Cannot create user, name conflicts with id {}", user_id);
                     return Err(Error::UserNameExists);
                 }
 
-                if email == user.email {
-                    warn!("Cannot create user, email conflicts");
+                if email == conflict_email {
+                    warn!("Cannot create user, email conflicts with id {}", user_id);
                     return Err(Error::UserEmailExists);
                 }
 
