@@ -151,6 +151,19 @@ impl UserService {
         Ok(())
     }
 
+    pub fn verify(&self, id: UserId) -> Result<()> {
+        use self::users::dsl;
+
+        info!("Marking user id {} as verified", id);
+
+        let id: i64 = id.into();
+        diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
+            .set(dsl::is_verified.eq(true))
+            .execute(&*self.conn)?;
+
+        Ok(())
+    }
+
     pub fn mark_inactive(&self, id: UserId, value: bool) -> Result<()> {
         use self::users::dsl;
         use diesel::dsl::now;

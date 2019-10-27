@@ -99,6 +99,12 @@ impl Server {
         self.user.create(name, email)
     }
 
+    /// Marks a user as verified.
+    #[inline]
+    pub fn verify_user(&self, id: UserId) -> Result<()> {
+        self.user.verify(id)
+    }
+
     /// Marks the user as "inactive", effectively deleting them.
     #[inline]
     pub fn make_user_inactive(&self, id: UserId) -> Result<()> {
