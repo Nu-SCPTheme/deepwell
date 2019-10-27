@@ -21,6 +21,7 @@
 use super::models::{NewUser, UpdateUser};
 use crate::schema::users;
 use crate::service_prelude::*;
+use diesel::pg::expression::dsl::any;
 
 make_id_type!(UserId);
 
@@ -123,6 +124,7 @@ impl UserService {
         let email = email.to_ascii_lowercase();
 
         self.conn.transaction::<_, Error, _>(|| {
+            // Check if there any existing users
             let result = users::table
                 .filter(users::name.eq(name))
                 .or_filter(users::email.eq(&email))
@@ -144,6 +146,7 @@ impl UserService {
                 unreachable!()
             }
 
+            // If not, insert into database
             let model = NewUser {
                 name,
                 email: &email,
@@ -159,15 +162,46 @@ impl UserService {
     }
 
     pub fn get_from_id(&self, id: UserId) -> Result<Option<User>> {
-        info!("Getting user for id {}", id);
+        info!("Getting users for id: {}", id);
 
         let id: i64 = id.into();
         let result = users::table
-            .find(id)
+            .filter(users::user_id.eq(id))
             .first::<User>(&*self.conn)
             .optional()?;
 
         Ok(result)
+    }
+
+    pub fn get_from_ids(&self, ids: &[UserId]) -> Result<Vec<Option<User>>> {
+        info!("Getting users for ids: {:?}", ids);
+
+        // Load
+        let mut result = {
+            let ids: Vec<_> = ids.iter().map(|id| id.to_i64()).collect();
+            users::table
+                .filter(users::user_id.eq(any(ids)))
+                .order_by(users::user_id.asc())
+                .load::<User>(&*self.conn)?
+        };
+
+        // Add in nones where needed
+        let mut users = Vec::new();
+        for id in ids.iter().copied() {
+            // Use Vec.remove() to get an owned version for the final Vec
+            let user = result
+                .iter()
+                .enumerate()
+                .map(|(idx, user)| (idx, user.id()))
+                .find(|(_, user_id)| *user_id == id)
+                .map(|(idx, _)| result.remove(idx));
+
+            users.push(user);
+        }
+
+        debug_assert!(result.is_empty());
+
+        Ok(users)
     }
 
     pub fn get_from_name(&self, name: &str) -> Result<Option<User>> {

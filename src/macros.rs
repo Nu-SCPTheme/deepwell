@@ -33,6 +33,11 @@ macro_rules! make_id_type {
 
         impl $name {
             #[inline]
+            pub fn to_i64(self) -> i64 {
+                self.0
+            }
+
+            #[inline]
             pub fn from_raw(value: i64) -> Self {
                 debug!("Creating raw {} with value {}", stringify!($name), value);
 

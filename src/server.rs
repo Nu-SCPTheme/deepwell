@@ -128,15 +128,23 @@ impl Server {
         )
     }
 
-    /// Gets the model for a user from its ID.
+    /// Get the model for a user from its ID.
     #[inline]
     pub fn get_user_from_id(&self, id: UserId) -> Result<Option<User>> {
         self.user.get_from_id(id)
     }
 
+    /// Gets the models for users from their IDs.
+    /// Results are returned in the same order as the IDs, and any missing
+    /// users give `None` instead.
+    #[inline]
+    pub fn get_users_from_ids(&self, ids: &[UserId]) -> Result<Vec<Option<User>>> {
+        self.user.get_from_ids(ids)
+    }
+
     /// Gets the model for a user from its name.
     #[inline]
-    pub fn get_user_from_name(&self, name: &str) -> Result<Option<User>> {
+    pub fn get_users_from_name(&self, name: &str) -> Result<Option<User>> {
         self.user.get_from_name(name)
     }
 
