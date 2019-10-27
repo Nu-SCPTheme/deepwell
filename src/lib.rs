@@ -57,6 +57,7 @@ mod wiki;
 
 pub mod prelude {
     pub use crate::id::*;
+    pub use crate::model::*;
     pub use crate::{Error, Result};
 }
 
@@ -64,6 +65,12 @@ pub mod id {
     pub use crate::page::{PageId, RevisionId};
     pub use crate::user::UserId;
     pub use crate::wiki::WikiId;
+}
+
+pub mod model {
+    pub use crate::revision::GitHash;
+    pub use crate::user::User;
+    pub use crate::wiki::Wiki;
 }
 
 mod service_prelude {
