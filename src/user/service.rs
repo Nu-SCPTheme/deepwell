@@ -113,8 +113,6 @@ impl UserService {
     }
 
     pub fn create(&self, name: &str, email: &str) -> Result<UserId> {
-        use self::users::dsl;
-
         info!(
             "Starting transaction to create new user with name '{}' with email '{}'",
             name, email,
