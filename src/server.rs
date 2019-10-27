@@ -256,6 +256,21 @@ impl Server {
         self.page
             .rename(old_slug, new_slug, message, wiki_id, page_id, user)
     }
+
+    /// Removes the given page.
+    pub fn remove_page(
+        &self,
+        slug: &str,
+        message: &str,
+        wiki_id: WikiId,
+        page_id: PageId,
+        user: Either<UserId, &User>,
+    ) -> Result<RevisionId> {
+        let mut user_obj = None;
+        let user = self.get_user(user, &mut user_obj)?;
+
+        self.page.remove(slug, message, wiki_id, page_id, user)
+    }
 }
 
 impl Debug for Server {
