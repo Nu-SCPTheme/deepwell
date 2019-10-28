@@ -20,7 +20,7 @@
 
 use super::{NewPage, NewRevision, NewTagChange, UpdatePage};
 use crate::revision::{CommitInfo, GitHash, RevisionStore};
-use crate::schema::{pages, revisions, tag_history};
+use crate::schema::{pages, ratings, revisions, tag_history};
 use crate::service_prelude::*;
 use crate::user::{User, UserId};
 use crate::wiki::{Wiki, WikiId};
@@ -38,6 +38,86 @@ mod revision_id {
 
 pub use self::page_id::PageId;
 pub use self::revision_id::RevisionId;
+
+#[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
+pub struct Page {
+    page_id: PageId,
+    wiki_id: WikiId,
+    slug: String,
+    title: String,
+    alt_title: Option<String>,
+    tags: Vec<String>,
+    created_at: NaiveDateTime,
+    deleted_at: Option<NaiveDateTime>,
+}
+
+impl Page {
+    #[inline]
+    pub fn id(&self) -> PageId {
+        self.page_id
+    }
+
+    #[inline]
+    pub fn wiki_id(&self) -> WikiId {
+        self.wiki_id
+    }
+
+    #[inline]
+    pub fn slug(&self) -> &str {
+        &self.slug
+    }
+
+    #[inline]
+    pub fn title(&self) -> &str {
+        &self.title
+    }
+
+    #[inline]
+    pub fn alt_title(&self) -> Option<&str> {
+        match self.alt_title {
+            Some(ref s) => Some(s),
+            None => None,
+        }
+    }
+
+    #[inline]
+    pub fn tags(&self) -> &[String] {
+        &self.tags
+    }
+
+    #[inline]
+    pub fn created_at(&self) -> NaiveDateTime {
+        self.created_at
+    }
+
+    #[inline]
+    pub fn deleted_at(&self) -> Option<NaiveDateTime> {
+        self.deleted_at
+    }
+
+    #[inline]
+    pub fn exists(&self) -> bool {
+        self.deleted_at.is_none()
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct Rating {
+    score: i64,
+    votes: u32,
+}
+
+impl Rating {
+    #[inline]
+    pub fn score(&self) -> i64 {
+        self.score
+    }
+
+    #[inline]
+    pub fn votes(&self) -> u32 {
+        self.votes
+    }
+}
 
 pub struct PageService {
     conn: Arc<PgConnection>,
@@ -421,6 +501,50 @@ impl PageService {
                 .execute(&*self.conn)?;
 
             Ok(revision_id)
+        })
+    }
+
+    pub fn get_page(&self, wiki_id: WikiId, slug: &str) -> Result<Option<(Page, Rating)>> {
+        use diesel::dsl::{count, sum};
+        use std::convert::TryInto;
+
+        info!(
+            "Starting transaction for wiki id {}, slug {}",
+            wiki_id, slug
+        );
+
+        self.conn.transaction::<_, Error, _>(|| {
+            let result = pages::table
+                .filter(pages::slug.eq(slug))
+                .first::<Page>(&*self.conn)
+                .optional()?;
+
+            let page = match result {
+                Some(page) => page,
+                None => return Ok(None),
+            };
+
+            // Right now we use SUM() as a simple scoring system, for compatibility with Wikidot.
+            // However it's not the best scoring metric and may be adjusted later.
+            //
+            // Similarly, it might make sense to turn this into a raw query.
+
+            let id: i64 = page.id().into();
+            let score = ratings::table
+                .filter(ratings::page_id.eq(id))
+                .select(sum(ratings::rating))
+                .first::<Option<i64>>(&*self.conn)?
+                .ok_or_else(|| Error::StaticMsg("inconsistency between pages and ratings table"))?;
+
+            let votes = ratings::table
+                .filter(ratings::page_id.eq(id))
+                .select(count(ratings::user_id))
+                .first::<i64>(&*self.conn)?
+                .try_into()
+                .map_err(|_| Error::StaticMsg("number of votes doesn't fit into u32"))?;
+
+            let rating = Rating { score, votes };
+            Ok(Some((page, rating)))
         })
     }
 

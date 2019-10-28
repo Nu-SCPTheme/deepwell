@@ -69,6 +69,7 @@ pub mod id {
 }
 
 pub mod model {
+    pub use crate::page::{Page, Rating};
     pub use crate::revision::GitHash;
     pub use crate::user::User;
     pub use crate::wiki::Wiki;

@@ -22,4 +22,4 @@ mod models;
 mod service;
 
 pub use self::models::*;
-pub use self::service::{PageId, PageService, RevisionId};
+pub use self::service::{Page, PageId, PageService, Rating, RevisionId};

@@ -272,6 +272,13 @@ impl Server {
         self.page.remove(slug, message, wiki_id, page_id, user)
     }
 
+    /// Gets the metadata for a given page, as well as its rating information.
+    /// Uses Wikidot's `ups - downs` formula for scoring.
+    #[inline]
+    pub fn get_page(&self, wiki_id: WikiId, slug: &str) -> Result<Option<(Page, Rating)>> {
+        self.page.get_page(wiki_id, slug)
+    }
+
     /// Gets the contents for a given page, as well as its page ID.
     pub fn get_page_contents(
         &self,
