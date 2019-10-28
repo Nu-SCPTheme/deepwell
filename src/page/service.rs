@@ -529,6 +529,12 @@ impl PageService {
         Ok(Some((page_id, contents)))
     }
 
+    pub fn get_blame(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Blame>> {
+        info!("Getting blame for wiki id {}, slug {}", wiki_id, slug);
+
+        self.get_store(wiki_id, |store| store.get_blame(slug))
+    }
+
     pub fn edit_revision(&self, revision_id: RevisionId, message: &str) -> Result<()> {
         use self::revisions::dsl;
 

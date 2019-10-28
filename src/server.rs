@@ -354,6 +354,12 @@ impl Server {
 
     /* Revision methods */
 
+    /// Get the blame for a given page, if it exists.
+    #[inline]
+    pub fn get_page_blame(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Blame>> {
+        self.page.get_blame(wiki_id, slug)
+    }
+
     /// Overwrite the revision message for a given change.
     #[inline]
     pub fn edit_revision(&self, revision_id: RevisionId, message: &str) -> Result<()> {
