@@ -21,6 +21,6 @@
 mod models;
 mod service;
 
-pub use self::service::{Rating, RatingId, RatingService};
+pub use self::service::{Rating, RatingHistory, RatingId, RatingService};
 
 use self::models::*;

@@ -20,7 +20,7 @@
 
 use crate::page::PageService;
 use crate::prelude::*;
-use crate::rating::{RatingId, RatingService};
+use crate::rating::{RatingHistory, RatingId, RatingService};
 use crate::user::UserService;
 use crate::wiki::{UpdateWiki, WikiService};
 use diesel::{Connection, PgConnection};
@@ -319,6 +319,17 @@ impl Server {
     #[inline]
     pub fn set_rating(&self, page_id: PageId, user_id: UserId, rating: i16) -> Result<RatingId> {
         self.rating.add(page_id, user_id, rating)
+    }
+
+    /// Gets all changes in the rating for a given page and user.
+    /// Earliest entries appear near the beginning.
+    #[inline]
+    pub fn get_rating_history(
+        &self,
+        page_id: PageId,
+        user_id: UserId,
+    ) -> Result<Vec<RatingHistory>> {
+        self.rating.get_history(page_id, user_id)
     }
 
     /* Revision methods */

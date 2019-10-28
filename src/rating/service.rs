@@ -41,6 +41,42 @@ impl Rating {
     }
 }
 
+#[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
+pub struct RatingHistory {
+    rating_id: RatingId,
+    page_id: PageId,
+    user_id: UserId,
+    created_at: NaiveDateTime,
+    rating: i16,
+}
+
+impl RatingHistory {
+    #[inline]
+    pub fn id(&self) -> RatingId {
+        self.rating_id
+    }
+
+    #[inline]
+    pub fn page_id(&self) -> PageId {
+        self.page_id
+    }
+
+    #[inline]
+    pub fn user_id(&self) -> UserId {
+        self.user_id
+    }
+
+    #[inline]
+    pub fn created_at(&self) -> NaiveDateTime {
+        self.created_at
+    }
+
+    #[inline]
+    pub fn rating(&self) -> i16 {
+        self.rating
+    }
+}
+
 pub struct RatingService {
     conn: Arc<PgConnection>,
 }
@@ -111,5 +147,22 @@ impl RatingService {
 
             Ok(rating_id)
         })
+    }
+
+    pub fn get_history(&self, page_id: PageId, user_id: UserId) -> Result<Vec<RatingHistory>> {
+        info!(
+            "Getting rating history for page ID {} / user ID {}",
+            page_id, user_id
+        );
+
+        let page_id: i64 = page_id.into();
+        let user_id: i64 = user_id.into();
+
+        let result = ratings_history::table
+            .filter(ratings_history::page_id.eq(page_id))
+            .filter(ratings_history::user_id.eq(user_id))
+            .load::<RatingHistory>(&*self.conn)?;
+
+        Ok(result)
     }
 }
