@@ -166,4 +166,16 @@ impl RatingService {
 
         Ok(result)
     }
+
+    pub fn get_history_entry(&self, rating_id: RatingId) -> Result<Option<RatingHistory>> {
+        info!("Getting rating history entry for ID {}", rating_id);
+
+        let id: i64 = rating_id.into();
+        let result = ratings_history::table
+            .find(id)
+            .first::<RatingHistory>(&*self.conn)
+            .optional()?;
+
+        Ok(result)
+    }
 }

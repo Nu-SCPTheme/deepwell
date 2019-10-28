@@ -332,6 +332,12 @@ impl Server {
         self.rating.get_history(page_id, user_id)
     }
 
+    /// Gets the rating history entry with the given ID, if it exists.
+    #[inline]
+    pub fn get_rating_history_entry_from_id(&self, rating_id: RatingId) -> Result<Option<RatingHistory>> {
+        self.rating.get_history_entry(rating_id)
+    }
+
     /* Revision methods */
 
     /// Overwrite the revision message for a given change.
