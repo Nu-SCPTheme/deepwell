@@ -52,7 +52,7 @@ struct RevisionBlock;
 pub struct RevisionStore {
     lock: RwLock<RevisionBlock>,
     repo: PathBuf,
-    domain: String,
+    domain: RwLock<String>,
 }
 
 impl RevisionStore {
@@ -75,6 +75,8 @@ impl RevisionStore {
             repo.display(),
             domain,
         );
+
+        let domain = RwLock::new(domain);
 
         RevisionStore { lock, repo, domain }
     }
@@ -165,7 +167,9 @@ impl RevisionStore {
 
     // Argument helpers
     fn arg_author(&self, name: &str) -> String {
-        format!("--author={} <noreply@{}>", name, self.domain)
+        let domain = self.domain.read();
+
+        format!("--author={} <noreply@{}>", name, domain)
     }
 
     fn arg_message(&self, message: &str) -> String {
@@ -389,9 +393,12 @@ impl RevisionStore {
     }
 
     /// Sets the domain to a different value.
-    pub fn set_domain(&mut self, new_domain: &str) {
-        self.domain.clear();
-        self.domain.push_str(new_domain);
+    pub fn set_domain(&self, new_domain: &str) {
+        trace!("Acquiring domain write lock to change: {}", new_domain);
+
+        let mut guard = self.domain.write();
+        guard.clear();
+        guard.push_str(new_domain);
     }
 }
 
