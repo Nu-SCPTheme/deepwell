@@ -19,9 +19,8 @@
  */
 
 use super::{NewPage, NewRevision, NewTagChange, UpdatePage};
-use crate::rating::Rating;
 use crate::revision::{CommitInfo, GitHash, RevisionStore};
-use crate::schema::{pages, ratings, revisions, tag_history};
+use crate::schema::{pages, revisions, tag_history};
 use crate::service_prelude::*;
 use crate::user::{User, UserId};
 use crate::wiki::{Wiki, WikiId};
