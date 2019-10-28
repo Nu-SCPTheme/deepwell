@@ -569,6 +569,22 @@ impl PageService {
         }
     }
 
+    pub fn get_page_version(
+        &self,
+        wiki_id: WikiId,
+        slug: &str,
+        revision: Either<RevisionId, GitHash>,
+    ) -> Result<Option<Box<[u8]>>> {
+        info!(
+            "Getting specific page version for wiki id {}, slug {}",
+            wiki_id, slug
+        );
+
+        let hash = self.commit_hash(revision)?;
+
+        self.get_store(wiki_id, |store| store.get_page_version(slug, hash))
+    }
+
     pub fn get_diff(
         &self,
         wiki_id: WikiId,

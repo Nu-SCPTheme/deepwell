@@ -362,6 +362,17 @@ impl Server {
 
     /* Revision methods */
 
+    /// Get the version of a page at the specified revision.
+    #[inline]
+    pub fn get_page_version(
+        &self,
+        wiki_id: WikiId,
+        slug: &str,
+        revision: Either<RevisionId, GitHash>,
+    ) -> Result<Option<Box<[u8]>>> {
+        self.page.get_page_version(wiki_id, slug, revision)
+    }
+
     /// Get the blame for a given page, if it exists.
     #[inline]
     pub fn get_page_blame(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Blame>> {
