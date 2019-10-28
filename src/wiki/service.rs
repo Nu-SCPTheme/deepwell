@@ -68,9 +68,7 @@ pub struct WikiService {
 impl WikiService {
     pub fn new(conn: &Rc<PgConnection>) -> Result<Self> {
         let conn = Rc::clone(conn);
-        let values = wikis::table
-            .filter(wikis::wiki_id.ge(0))
-            .load::<Wiki>(&*conn)?;
+        let values = wikis::table.load::<Wiki>(&*conn)?;
 
         let wikis = {
             let mut map = HashMap::with_capacity(values.len());
