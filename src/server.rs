@@ -315,6 +315,7 @@ impl Server {
     }
 
     /* Rating methods */
+
     /// Sets the rating for a given page and user.
     #[inline]
     pub fn set_rating(&self, page_id: PageId, user_id: UserId, rating: i16) -> Result<RatingId> {
