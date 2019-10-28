@@ -490,10 +490,22 @@ impl PageService {
         })
     }
 
+    pub fn check_page(&self, wiki_id: WikiId, slug: &str) -> Result<bool> {
+        info!("Checking if slug {} exists in wiki id {}", slug, wiki_id);
+
+        let result = pages::table
+            .filter(pages::slug.eq(slug))
+            .select(pages::page_id)
+            .first::<PageId>(&*self.conn)
+            .optional()?;
+
+        Ok(result.is_some())
+    }
+
     pub fn get_page(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Page>> {
         info!(
             "Starting transaction for wiki id {}, slug {}",
-            wiki_id, slug
+            wiki_id, slug,
         );
 
         self.conn.transaction::<_, Error, _>(|| {

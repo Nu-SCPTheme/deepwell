@@ -276,6 +276,12 @@ impl Server {
         self.page.remove(slug, message, wiki_id, page_id, user)
     }
 
+    /// Determines if a page with the given slug exists.
+    #[inline]
+    pub fn check_page(&self, wiki_id: WikiId, slug: &str) -> Result<bool> {
+        self.page.check_page(wiki_id, slug)
+    }
+
     /// Gets the metadata for a given page, as well as its rating information.
     /// Uses Wikidot's `ups - downs` formula for scoring.
     pub fn get_page(&self, wiki_id: WikiId, slug: &str) -> Result<Option<(Page, Rating)>> {
