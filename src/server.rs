@@ -100,6 +100,15 @@ impl Server {
         Ok(())
     }
 
+    /// Gets the wiki ID with the given slug.
+    /// Returns an error if the wiki doesn't exist.
+    pub fn get_wiki_id(&self, slug: &str) -> Result<WikiId> {
+        self.wiki.get_by_slug(slug, |wiki| match wiki {
+            Some(wiki) => Ok(wiki.id()),
+            None => Err(Error::WikiNotFound),
+        })
+    }
+
     /* User methods */
 
     /// Creates a new user with the given name and email. Returns its ID.
