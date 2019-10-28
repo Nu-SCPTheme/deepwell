@@ -285,6 +285,8 @@ impl Server {
     /// Gets the metadata for a given page, as well as its rating information.
     /// Uses Wikidot's `ups - downs` formula for scoring.
     pub fn get_page(&self, wiki_id: WikiId, slug: &str) -> Result<Option<(Page, Rating)>> {
+        debug!("Creating transaction for page and rating");
+
         self.conn.transaction::<_, Error, _>(|| {
             let page = match self.page.get_page(wiki_id, slug)? {
                 Some(page) => page,

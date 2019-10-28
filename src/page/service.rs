@@ -491,7 +491,10 @@ impl PageService {
     }
 
     pub fn check_page(&self, wiki_id: WikiId, slug: &str) -> Result<bool> {
-        info!("Checking if slug {} exists in wiki id {}", slug, wiki_id);
+        info!(
+            "Checking if page for exists in wiki id {}, slug {} exists",
+            wiki_id, slug,
+        );
 
         let result = pages::table
             .filter(pages::slug.eq(slug))
@@ -503,19 +506,14 @@ impl PageService {
     }
 
     pub fn get_page(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Page>> {
-        info!(
-            "Starting transaction for wiki id {}, slug {}",
-            wiki_id, slug,
-        );
+        info!("Getting page for wiki id {}, slug {}", wiki_id, slug,);
 
-        self.conn.transaction::<_, Error, _>(|| {
-            let page = pages::table
-                .filter(pages::slug.eq(slug))
-                .first::<Page>(&*self.conn)
-                .optional()?;
+        let page = pages::table
+            .filter(pages::slug.eq(slug))
+            .first::<Page>(&*self.conn)
+            .optional()?;
 
-            Ok(page)
-        })
+        Ok(page)
     }
 
     pub fn get_page_contents(
