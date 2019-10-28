@@ -284,7 +284,7 @@ impl Server {
         &self,
         wiki_id: WikiId,
         slug: &str,
-    ) -> Result<Option<(Box<[u8]>, PageId)>> {
+    ) -> Result<Option<(PageId, Box<[u8]>)>> {
         self.page.get_page_contents(wiki_id, slug)
     }
 

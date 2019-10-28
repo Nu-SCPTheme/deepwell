@@ -552,7 +552,7 @@ impl PageService {
         &self,
         wiki_id: WikiId,
         slug: &str,
-    ) -> Result<Option<(Box<[u8]>, PageId)>> {
+    ) -> Result<Option<(PageId, Box<[u8]>)>> {
         let result = pages::table
             .filter(pages::slug.eq(slug))
             .select(pages::page_id)
@@ -572,7 +572,7 @@ impl PageService {
             Err(error) => Err(error),
         })?;
 
-        Ok(Some((contents, page_id)))
+        Ok(Some((page_id, contents)))
     }
 
     pub fn edit_revision(&self, revision_id: RevisionId, message: &str) -> Result<()> {
