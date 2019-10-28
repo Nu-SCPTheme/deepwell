@@ -88,7 +88,7 @@ impl Server {
         })
     }
 
-    /// Renames the wiki with the given ID.
+    /// Renames the given wiki.
     /// Changing a wiki's slug is not supported.
     pub fn rename_wiki(&self, id: WikiId, new_name: &str) -> Result<()> {
         let model = UpdateWiki {
@@ -96,8 +96,27 @@ impl Server {
             domain: None,
         };
 
+        info!("Renaming wiki id {} to '{}'", id, new_name);
+
         self.wiki.edit(id, model)?;
         Ok(())
+    }
+
+    /// Changes the associated domain for the given wiki.
+    pub fn set_wiki_domain(&self, id: WikiId, new_domain: &str) -> Result<()> {
+        let model = UpdateWiki {
+            name: None,
+            domain: Some(new_domain),
+        };
+
+        info!("Changing domain for wiki id {} to '{}'", id, new_domain);
+
+        self.conn.transaction::<_, Error, _>(|| {
+            self.wiki.edit(id, model)?;
+            self.page.set_domain(id, new_domain)?;
+
+            Ok(())
+        })
     }
 
     /// Gets the wiki ID with the given slug.

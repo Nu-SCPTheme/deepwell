@@ -387,6 +387,12 @@ impl RevisionStore {
         let blame = Blame::from_porcelain(&raw_blame)?;
         Ok(Some(blame))
     }
+
+    /// Sets the domain to a different value.
+    pub fn set_domain(&mut self, new_domain: &str) {
+        self.domain.clear();
+        self.domain.push_str(new_domain);
+    }
 }
 
 fn check_normal(slug: &str) -> Result<()> {

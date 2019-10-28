@@ -612,6 +612,13 @@ impl PageService {
 
         Ok(())
     }
+
+    pub fn set_domain(&self, wiki_id: WikiId, new_domain: &str) -> Result<()> {
+        self.get_store(wiki_id, |store| {
+            store.set_domain(new_domain);
+            Ok(())
+        })
+    }
 }
 
 impl Debug for PageService {
