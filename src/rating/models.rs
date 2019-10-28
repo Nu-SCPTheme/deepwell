@@ -1,5 +1,5 @@
 /*
- * page/mod.rs
+ * rating/models.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,8 +18,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-mod models;
-mod service;
+use crate::schema::{ratings, ratings_history};
 
-pub use self::models::*;
-pub use self::service::{Page, PageId, PageService, RevisionId};
+#[derive(Debug, Insertable)]
+#[table_name = "ratings"]
+pub struct NewRating {
+    pub page_id: i64,
+    pub user_id: i64,
+    pub rating: i16,
+}
+
+#[derive(Debug, Insertable)]
+#[table_name = "ratings_history"]
+pub struct NewRatingHistory {
+    pub rating_id: i64,
+    pub page_id: i64,
+    pub user_id: i64,
+    pub rating: i16,
+}

@@ -19,6 +19,7 @@
  */
 
 use super::{NewPage, NewRevision, NewTagChange, UpdatePage};
+use crate::rating::Rating;
 use crate::revision::{CommitInfo, GitHash, RevisionStore};
 use crate::schema::{pages, ratings, revisions, tag_history};
 use crate::service_prelude::*;
@@ -98,24 +99,6 @@ impl Page {
     #[inline]
     pub fn exists(&self) -> bool {
         self.deleted_at.is_none()
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
-pub struct Rating {
-    score: i64,
-    votes: u32,
-}
-
-impl Rating {
-    #[inline]
-    pub fn score(&self) -> i64 {
-        self.score
-    }
-
-    #[inline]
-    pub fn votes(&self) -> u32 {
-        self.votes
     }
 }
 
@@ -504,47 +487,19 @@ impl PageService {
         })
     }
 
-    pub fn get_page(&self, wiki_id: WikiId, slug: &str) -> Result<Option<(Page, Rating)>> {
-        use diesel::dsl::{count, sum};
-        use std::convert::TryInto;
-
+    pub fn get_page(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Page>> {
         info!(
             "Starting transaction for wiki id {}, slug {}",
             wiki_id, slug
         );
 
         self.conn.transaction::<_, Error, _>(|| {
-            let result = pages::table
+            let page = pages::table
                 .filter(pages::slug.eq(slug))
                 .first::<Page>(&*self.conn)
                 .optional()?;
 
-            let page = match result {
-                Some(page) => page,
-                None => return Ok(None),
-            };
-
-            // Right now we use SUM() as a simple scoring system, for compatibility with Wikidot.
-            // However it's not the best scoring metric and may be adjusted later.
-            //
-            // Similarly, it might make sense to turn this into a raw query.
-
-            let id: i64 = page.id().into();
-            let score = ratings::table
-                .filter(ratings::page_id.eq(id))
-                .select(sum(ratings::rating))
-                .first::<Option<i64>>(&*self.conn)?
-                .ok_or_else(|| Error::StaticMsg("inconsistency between pages and ratings table"))?;
-
-            let votes = ratings::table
-                .filter(ratings::page_id.eq(id))
-                .select(count(ratings::user_id))
-                .first::<i64>(&*self.conn)?
-                .try_into()
-                .map_err(|_| Error::StaticMsg("number of votes doesn't fit into u32"))?;
-
-            let rating = Rating { score, votes };
-            Ok(Some((page, rating)))
+            Ok(page)
         })
     }
 

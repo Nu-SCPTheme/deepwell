@@ -21,6 +21,7 @@
 use crate::page::PageService;
 use crate::prelude::*;
 use crate::user::UserService;
+use crate::rating::RatingService;
 use crate::wiki::{UpdateWiki, WikiService};
 use diesel::{Connection, PgConnection};
 use either::*;
@@ -37,6 +38,7 @@ pub struct ServerConfig<'a> {
 pub struct Server {
     conn: Arc<PgConnection>,
     page: PageService,
+    rating: RatingService,
     user: UserService,
     wiki: WikiService,
 }
@@ -60,12 +62,14 @@ impl Server {
         };
 
         let page = PageService::new(&conn, revisions_dir);
+        let rating = RatingService::new(&conn);
         let user = UserService::new(&conn);
         let wiki = WikiService::new(&conn)?;
 
         Ok(Server {
             conn,
             page,
+            rating,
             user,
             wiki,
         })
@@ -274,9 +278,16 @@ impl Server {
 
     /// Gets the metadata for a given page, as well as its rating information.
     /// Uses Wikidot's `ups - downs` formula for scoring.
-    #[inline]
     pub fn get_page(&self, wiki_id: WikiId, slug: &str) -> Result<Option<(Page, Rating)>> {
-        self.page.get_page(wiki_id, slug)
+        self.conn.transaction::<_, Error, _>(|| {
+            let page = match self.page.get_page(wiki_id, slug)? {
+                Some(page) => page,
+                None => return Ok(None),
+            };
+            let rating = self.rating.get_rating(page.id())?;
+
+            Ok(Some((page, rating)))
+        })
     }
 
     /// Gets the contents for a given page, as well as its page ID.
@@ -302,6 +313,8 @@ impl Server {
 
         self.page.tags(message, wiki_id, page_id, user, tags)
     }
+
+    /* Rating methods */
 
     /* Revision methods */
 

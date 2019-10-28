@@ -50,6 +50,7 @@ mod macros;
 
 mod error;
 mod page;
+mod rating;
 mod revision;
 mod schema;
 mod server;
@@ -69,7 +70,8 @@ pub mod id {
 }
 
 pub mod model {
-    pub use crate::page::{Page, Rating};
+    pub use crate::page::Page;
+    pub use crate::rating::Rating;
     pub use crate::revision::GitHash;
     pub use crate::user::User;
     pub use crate::wiki::Wiki;

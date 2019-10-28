@@ -1,5 +1,5 @@
 /*
- * page/mod.rs
+ * rating/mod.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -21,5 +21,6 @@
 mod models;
 mod service;
 
-pub use self::models::*;
-pub use self::service::{Page, PageId, PageService, RevisionId};
+pub use self::service::{Rating, RatingService};
+
+use self::models::*;
