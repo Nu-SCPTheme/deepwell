@@ -161,6 +161,7 @@ impl RatingService {
         let result = ratings_history::table
             .filter(ratings_history::page_id.eq(page_id))
             .filter(ratings_history::user_id.eq(user_id))
+            .order_by(ratings_history::created_at.asc())
             .load::<RatingHistory>(&*self.conn)?;
 
         Ok(result)
