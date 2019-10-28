@@ -103,15 +103,15 @@ impl Page {
 }
 
 pub struct PageService {
-    conn: Arc<PgConnection>,
+    conn: Rc<PgConnection>,
     directory: PathBuf,
     stores: RwLock<HashMap<WikiId, RevisionStore>>,
 }
 
 impl PageService {
     #[inline]
-    pub fn new(conn: &Arc<PgConnection>, directory: PathBuf) -> Self {
-        let conn = Arc::clone(conn);
+    pub fn new(conn: &Rc<PgConnection>, directory: PathBuf) -> Self {
+        let conn = Rc::clone(conn);
 
         PageService {
             conn,

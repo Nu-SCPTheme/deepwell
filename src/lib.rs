@@ -85,7 +85,7 @@ mod service_prelude {
     pub use parking_lot::RwLock;
     pub use std::collections::HashMap;
     pub use std::fmt::{self, Debug};
-    pub use std::sync::Arc;
+    pub use std::rc::Rc;
 }
 
 pub type StdResult<T, E> = std::result::Result<T, E>;
