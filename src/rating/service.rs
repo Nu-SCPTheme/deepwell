@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use super::{NewRating, NewRatingHistory};
 use crate::service_prelude::*;
 
 make_id_type!(RatingId);
@@ -56,7 +57,7 @@ impl RatingService {
         use diesel::dsl::{count, sum};
         use std::convert::TryInto;
 
-        info!("Starting transaction to get rating for page ID {}", page_id);
+        info!("Getting rating information for page ID {}", page_id);
 
         // Right now we use SUM() as a simple scoring system, for compatibility with Wikidot.
         // However it's not the best scoring metric and may be adjusted later.
@@ -79,6 +80,36 @@ impl RatingService {
                 .map_err(|_| Error::StaticMsg("number of votes doesn't fit into u32"))?;
 
             Ok(Rating { score, votes })
+        })
+    }
+
+    pub fn add(&self, page_id: PageId, user_id: UserId, rating: i16) -> Result<RatingId> {
+        info!(
+            "Starting transaction to add new rating for page ID {} / user ID {}",
+            page_id, user_id,
+        );
+
+        self.conn.transaction::<_, Error, _>(|| {
+            let model = NewRating {
+                page_id: page_id.into(),
+                user_id: user_id.into(),
+                rating,
+            };
+
+            diesel::insert_into(ratings::table)
+                .values(&model)
+                .on_conflict((ratings::dsl::page_id, ratings::dsl::user_id))
+                .do_update()
+                .set(ratings::dsl::rating.eq(rating))
+                .execute(&*self.conn)?;
+
+            let model = NewRatingHistory::from(model);
+            let rating_id = diesel::insert_into(ratings_history::table)
+                .values(&model)
+                .returning(ratings_history::dsl::rating_id)
+                .get_result::<RatingId>(&*self.conn)?;
+
+            Ok(rating_id)
         })
     }
 }

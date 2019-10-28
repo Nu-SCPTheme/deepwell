@@ -31,8 +31,23 @@ pub struct NewRating {
 #[derive(Debug, Insertable)]
 #[table_name = "ratings_history"]
 pub struct NewRatingHistory {
-    pub rating_id: i64,
     pub page_id: i64,
     pub user_id: i64,
     pub rating: i16,
+}
+
+impl From<NewRating> for NewRatingHistory {
+    fn from(model: NewRating) -> NewRatingHistory {
+        let NewRating {
+            page_id,
+            user_id,
+            rating,
+        } = model;
+
+        NewRatingHistory {
+            page_id,
+            user_id,
+            rating,
+        }
+    }
 }
