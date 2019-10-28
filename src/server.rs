@@ -332,9 +332,22 @@ impl Server {
         self.rating.get_history(page_id, user_id)
     }
 
+    /// Gets the latest rating history entry for the given page and user.
+    #[inline]
+    pub fn get_rating_history_entry_last(
+        &self,
+        page_id: PageId,
+        user_id: UserId,
+    ) -> Result<Option<RatingHistory>> {
+        self.rating.get_history_latest(page_id, user_id)
+    }
+
     /// Gets the rating history entry with the given ID, if it exists.
     #[inline]
-    pub fn get_rating_history_entry_from_id(&self, rating_id: RatingId) -> Result<Option<RatingHistory>> {
+    pub fn get_rating_history_entry_from_id(
+        &self,
+        rating_id: RatingId,
+    ) -> Result<Option<RatingHistory>> {
         self.rating.get_history_entry(rating_id)
     }
 

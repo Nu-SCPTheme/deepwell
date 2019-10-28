@@ -167,6 +167,29 @@ impl RatingService {
         Ok(result)
     }
 
+    pub fn get_history_latest(
+        &self,
+        page_id: PageId,
+        user_id: UserId,
+    ) -> Result<Option<RatingHistory>> {
+        info!(
+            "Getting last rating history entry for page ID {} / user ID {}",
+            page_id, user_id,
+        );
+
+        let page_id: i64 = page_id.into();
+        let user_id: i64 = user_id.into();
+
+        let result = ratings_history::table
+            .filter(ratings_history::page_id.eq(page_id))
+            .filter(ratings_history::user_id.eq(user_id))
+            .order_by(ratings_history::created_at.asc())
+            .first::<RatingHistory>(&*self.conn)
+            .optional()?;
+
+        Ok(result)
+    }
+
     pub fn get_history_entry(&self, rating_id: RatingId) -> Result<Option<RatingHistory>> {
         info!("Getting rating history entry for ID {}", rating_id);
 
