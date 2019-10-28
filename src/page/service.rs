@@ -24,6 +24,7 @@ use crate::schema::{pages, revisions, tag_history};
 use crate::service_prelude::*;
 use crate::user::{User, UserId};
 use crate::wiki::{Wiki, WikiId};
+use either::*;
 use serde_json as json;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
@@ -535,10 +536,14 @@ impl PageService {
         self.get_store(wiki_id, |store| store.get_blame(slug))
     }
 
-    fn commit_hash(&self, id: RevisionId) -> Result<GitHash> {
+    fn commit_hash(&self, spec: Either<RevisionId, GitHash>) -> Result<GitHash> {
+        let id: i64 = match spec {
+            Left(id) => id.into(),
+            Right(hash) => return Ok(hash),
+        };
+
         debug!("Getting commit hash for revision {}", id);
 
-        let id: i64 = id.into();
         let result = revisions::table
             .find(id)
             .select(revisions::dsl::git_commit)
@@ -555,8 +560,8 @@ impl PageService {
         &self,
         wiki_id: WikiId,
         slug: &str,
-        first: RevisionId,
-        second: RevisionId,
+        first: Either<RevisionId, GitHash>,
+        second: Either<RevisionId, GitHash>,
     ) -> Result<Box<[u8]>> {
         info!("Getting diff for wiki id {}, slug {}", wiki_id, slug);
 

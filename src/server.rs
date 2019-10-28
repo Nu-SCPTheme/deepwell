@@ -366,8 +366,8 @@ impl Server {
         &self,
         wiki_id: WikiId,
         slug: &str,
-        first: RevisionId,
-        second: RevisionId,
+        first: Either<RevisionId, GitHash>,
+        second: Either<RevisionId, GitHash>,
     ) -> Result<Box<[u8]>> {
         self.page.get_diff(wiki_id, slug, first, second)
     }
