@@ -360,6 +360,18 @@ impl Server {
         self.page.get_blame(wiki_id, slug)
     }
 
+    /// Get a diff for a given page between the two specified revisions.
+    #[inline]
+    pub fn get_page_diff(
+        &self,
+        wiki_id: WikiId,
+        slug: &str,
+        first: RevisionId,
+        second: RevisionId,
+    ) -> Result<Box<[u8]>> {
+        self.page.get_diff(wiki_id, slug, first, second)
+    }
+
     /// Overwrite the revision message for a given change.
     #[inline]
     pub fn edit_revision(&self, revision_id: RevisionId, message: &str) -> Result<()> {

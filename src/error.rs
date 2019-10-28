@@ -64,4 +64,7 @@ pub enum Error {
 
     #[error("a user with the given email already exists")]
     UserEmailExists,
+
+    #[error("the given revision was not found")]
+    RevisionNotFound,
 }

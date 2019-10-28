@@ -535,6 +535,37 @@ impl PageService {
         self.get_store(wiki_id, |store| store.get_blame(slug))
     }
 
+    fn commit_hash(&self, id: RevisionId) -> Result<GitHash> {
+        debug!("Getting commit hash for revision {}", id);
+
+        let id: i64 = id.into();
+        let result = revisions::table
+            .find(id)
+            .select(revisions::dsl::git_commit)
+            .first::<Vec<u8>>(&*self.conn)
+            .optional()?;
+
+        match result {
+            Some(hash) => Ok(GitHash::from(hash.as_slice())),
+            None => Err(Error::RevisionNotFound),
+        }
+    }
+
+    pub fn get_diff(
+        &self,
+        wiki_id: WikiId,
+        slug: &str,
+        first: RevisionId,
+        second: RevisionId,
+    ) -> Result<Box<[u8]>> {
+        info!("Getting diff for wiki id {}, slug {}", wiki_id, slug);
+
+        let first = self.commit_hash(first)?;
+        let second = self.commit_hash(second)?;
+
+        self.get_store(wiki_id, |store| store.get_diff(slug, first, second))
+    }
+
     pub fn edit_revision(&self, revision_id: RevisionId, message: &str) -> Result<()> {
         use self::revisions::dsl;
 
