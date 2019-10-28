@@ -145,12 +145,15 @@ impl PageService {
         json::to_string(&message).map_err(Error::from)
     }
 
-    pub fn add_store(&self, wiki: &Wiki) {
+    pub fn add_store(&self, wiki: &Wiki) -> Result<()> {
         let repo = self.directory.join(wiki.slug());
         let store = RevisionStore::new(repo, wiki.domain());
+        store.initial_commit()?;
 
         let mut guard = self.stores.write();
         guard.insert(wiki.id(), store);
+
+        Ok(())
     }
 
     fn get_store<F, T>(&self, wiki_id: WikiId, f: F) -> Result<T>

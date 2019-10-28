@@ -83,7 +83,7 @@ impl Server {
         self.wiki.get_by_id(id, |wiki| {
             let wiki = wiki.expect("Can't find wiki object after inserting");
 
-            self.page.add_store(&wiki);
+            self.page.add_store(&wiki)?;
             Ok(id)
         })
     }
