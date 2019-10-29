@@ -38,6 +38,8 @@ CREATE TABLE wiki_membership (
     user_id BIGSERIAL NOT NULL REFERENCES users(user_id),
     applied_at TIMESTAMP NOT NULL,
     joined_at TIMESTAMP NOT NULL,
+    banned_at TIMESTAMP, -- null = not banned
+    banned_until TIMESTAMP, -- null = indefinite ban
     PRIMARY KEY (wiki_id, user_id)
 );
 
