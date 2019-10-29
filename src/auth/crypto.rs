@@ -64,11 +64,14 @@ pub fn new_password<F>(user_id: UserId, password: &[u8], f: F) -> Result<()>
 where
     F: FnOnce(NewPassword<'_>) -> Result<()>,
 {
+    debug!("Creating new password for user id {}", user_id);
+
     let salt = random_salt();
     let mut hash = new_hash();
 
     scrypt(password, &salt, &*PARAMS, &mut hash);
 
+    trace!("Handing password model to consumer");
     let model = make_model(user_id, &hash, &salt);
     f(model)
 }
@@ -84,6 +87,7 @@ pub fn check_password(record: &Password, password: &[u8]) -> bool {
         "Hash length mismatch (stored vs runtime)",
     );
 
+    debug!("Checking password validity");
     scrypt(password, record.salt(), &params, &mut calculated);
     fixed_time_eq(record.hash(), &calculated)
 }

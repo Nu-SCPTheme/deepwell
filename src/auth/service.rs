@@ -32,6 +32,26 @@ pub struct Password {
 }
 
 impl Password {
+    #[cfg(test)]
+    #[inline]
+    pub fn new(
+        user_id: UserId,
+        hash: Vec<u8>,
+        salt: Vec<u8>,
+        logn: i16,
+        param_r: i32,
+        param_p: i32,
+    ) -> Self {
+        Password {
+            user_id,
+            hash,
+            salt,
+            logn,
+            param_r,
+            param_p,
+        }
+    }
+
     #[inline]
     pub fn user_id(&self) -> UserId {
         self.user_id

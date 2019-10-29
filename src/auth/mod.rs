@@ -22,6 +22,9 @@ mod crypto;
 mod models;
 mod service;
 
+#[cfg(test)]
+mod test;
+
 pub use self::service::AuthService;
 
 use self::crypto::*;
