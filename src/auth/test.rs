@@ -48,12 +48,13 @@ fn test_password() {
 
     macro_rules! check {
         ($password:expr, $expected:expr) => {{
-            let actual = check_password(&record, $password);
+            println!("Checking password: '{}'", $password);
+            let actual = check_password(&record, $password.as_bytes());
             assert_eq!(actual, $expected, "Password result mismatch");
         }};
     }
 
-    check!(b"", false);
-    check!(b"apples and bananas", true);
-    check!(b"apples and banana", false);
+    check!("", false);
+    check!("apples and bananas", true);
+    check!("apples and banana", false);
 }
