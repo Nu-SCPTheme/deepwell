@@ -26,3 +26,4 @@ pub use self::service::AuthService;
 
 use self::crypto::*;
 use self::models::*;
+use self::service::Password;

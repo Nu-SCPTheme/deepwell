@@ -19,6 +19,7 @@
  */
 
 use super::models::*;
+use super::Password;
 use crate::user::UserId;
 use crate::Result;
 use crypto::scrypt::{scrypt, ScryptParams};
@@ -70,4 +71,19 @@ where
 
     let model = make_model(user_id, &hash, &salt);
     f(model)
+}
+
+pub fn check_password(record: &Password, password: &[u8]) -> bool {
+    let params = ScryptParams::new(record.logn(), record.param_r(), record.param_p());
+    let mut calculated = new_hash();
+
+    // If the hash length ever changes we'll need to use a dynamically-allocated Vec instead.
+    assert_eq!(
+        record.hash().len(),
+        calculated.as_ref().len(),
+        "Hash length mismatch (stored vs runtime)",
+    );
+
+    scrypt(password, record.salt(), &params, &mut calculated);
+    fixed_time_eq(record.hash(), &calculated)
 }

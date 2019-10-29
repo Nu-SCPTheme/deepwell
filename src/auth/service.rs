@@ -19,6 +19,55 @@
  */
 
 use crate::service_prelude::*;
+use std::convert::TryInto;
+
+#[derive(Debug, Queryable)]
+pub struct Password {
+    user_id: UserId,
+    hash: Vec<u8>,
+    salt: Vec<u8>,
+    logn: i16,
+    param_r: i32,
+    param_p: i32,
+}
+
+impl Password {
+    #[inline]
+    pub fn user_id(&self) -> UserId {
+        self.user_id
+    }
+
+    #[inline]
+    pub fn hash(&self) -> &[u8] {
+        &self.hash
+    }
+
+    #[inline]
+    pub fn salt(&self) -> &[u8] {
+        &self.salt
+    }
+
+    #[inline]
+    pub fn logn(&self) -> u8 {
+        self.logn
+            .try_into()
+            .expect("Stored log_n field is out of bounds")
+    }
+
+    #[inline]
+    pub fn param_r(&self) -> u32 {
+        self.param_r
+            .try_into()
+            .expect("Stored param_r field is out of bounds")
+    }
+
+    #[inline]
+    pub fn param_p(&self) -> u32 {
+        self.param_p
+            .try_into()
+            .expect("Stored param_r field is out of bounds")
+    }
+}
 
 pub struct AuthService {
     conn: Rc<PgConnection>,
