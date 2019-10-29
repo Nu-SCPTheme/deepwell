@@ -154,6 +154,9 @@ impl Server {
         gender: Option<&str>,
         location: Option<&str>,
     ) -> Result<()> {
+        let gender = gender.map(|s| s.to_ascii_lowercase());
+        let gender = gender.as_ref().map(|s| s.as_str());
+
         self.user.edit(
             id,
             name,
