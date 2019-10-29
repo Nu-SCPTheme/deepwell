@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use super::new_password;
+use crate::schema::passwords;
 use crate::service_prelude::*;
 use std::convert::TryInto;
 
@@ -98,6 +100,19 @@ impl AuthService {
         let conn = Rc::clone(conn);
 
         AuthService { conn }
+    }
+
+    pub fn set_password(&self, user_id: UserId, password: &str) -> Result<()> {
+        new_password(user_id, password.as_bytes(), |model| {
+            diesel::insert_into(passwords::table)
+                .values(&model)
+                .on_conflict(passwords::dsl::user_id)
+                .do_update()
+                .set(&model)
+                .execute(&*self.conn)?;
+
+            Ok(())
+        })
     }
 }
 

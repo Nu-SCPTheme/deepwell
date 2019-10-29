@@ -209,6 +209,14 @@ impl Server {
         self.user.mark_inactive(id, false)
     }
 
+    /* Authentication methods */
+
+    /// Sets or overwrites the given user's password.
+    #[inline]
+    pub fn set_user_password(&self, user_id: UserId, password: &str) -> Result<()> {
+        self.auth.set_password(user_id, password)
+    }
+
     /* Page methods */
 
     fn get_user<'a>(
