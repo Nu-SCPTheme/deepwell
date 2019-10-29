@@ -215,6 +215,12 @@ impl Server {
 
     /* Authentication methods */
 
+    /// Checks if the given user has set a password.
+    #[inline]
+    pub fn has_password(&self, user_id: UserId) -> Result<bool> {
+        self.auth.has_password(user_id)
+    }
+
     /// Sets or overwrites the given user's password.
     #[inline]
     pub fn set_user_password(&self, user_id: UserId, password: &str) -> Result<()> {
