@@ -26,7 +26,7 @@ use crypto::scrypt::{scrypt, ScryptParams};
 use crypto::util::fixed_time_eq;
 use rand::{rngs::OsRng, RngCore};
 
-const PARAM_LOGN: u8 = 13;
+const PARAM_LOGN: u8 = 6;
 const PARAM_R: u32 = 8;
 const PARAM_P: u32 = 16;
 
