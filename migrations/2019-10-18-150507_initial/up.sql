@@ -16,18 +16,11 @@ CREATE TABLE users (
 
 CREATE TABLE passwords (
     user_id BIGSERIAL PRIMARY KEY REFERENCES users(user_id),
-    hash BYTEA NOT NULL,
-    salt BYTEA NOT NULL,
-    iterations INTEGER NOT NULL CHECK (iterations > 50000),
-    key_size SMALLINT NOT NULL CHECK (key_size % 16 = 0),
-    digest VARCHAR(8) NOT NULL CHECK (
-        digest IN (
-            'sha224',
-            'sha256',
-            'sha384',
-            'sha512'
-        )
-    )
+    hash BYTEA NOT NULL CHECK (LENGTH(hash) * 8 = 256),
+    salt BYTEA NOT NULL CHECK (LENGTH(salt) * 8 = 128),
+    logn SMALLINT NOT NULL CHECK (ABS(logn) < 128),
+    param_r INTEGER NOT NULL,
+    param_p INTEGER NOT NULL
 );
 
 -- Wikis and wiki settings
@@ -52,7 +45,7 @@ CREATE TABLE roles (
     role_id BIGSERIAL PRIMARY KEY,
     wiki_id BIGSERIAL NOT NULL REFERENCES wikis(wiki_id),
     name TEXT NOT NULL,
-    permset BIT(20) NOT NULL,
+    permset JSONB NOT NULL,
     UNIQUE (wiki_id, name)
 );
 

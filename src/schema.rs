@@ -44,9 +44,9 @@ table! {
         user_id -> Int8,
         hash -> Bytea,
         salt -> Bytea,
-        iterations -> Int4,
-        key_size -> Int2,
-        digest -> Varchar,
+        logn -> Int2,
+        param_r -> Int4,
+        param_p -> Int4,
     }
 }
 
@@ -94,7 +94,7 @@ table! {
         role_id -> Int8,
         wiki_id -> Int8,
         name -> Text,
-        permset -> Bit,
+        permset -> Jsonb,
     }
 }
 
