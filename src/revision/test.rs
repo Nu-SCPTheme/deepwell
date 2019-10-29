@@ -345,3 +345,41 @@ fn test_git() {
         }
     }
 }
+
+#[test]
+fn test_thread() {
+    use std::sync::Arc;
+    use std::thread;
+
+    color_backtrace::install();
+
+    // Create revision store
+    let directory = tempdir().expect("Unable to create temporary directory");
+    let repo = directory.path();
+    let store = Arc::new(RevisionStore::new(repo, "example.org"));
+    store
+        .initial_commit()
+        .expect("Unable to create initial commit");
+
+    let info = CommitInfo {
+        username: "username",
+        message: "message",
+    };
+
+    store.commit("test-0", b"000", info).unwrap();
+
+    let store2 = Arc::clone(&store);
+    thread::spawn(move || {
+        store2.commit("test-1", b"abc", info).unwrap();
+    });
+
+    let store2 = Arc::clone(&store);
+    thread::spawn(move || {
+        store2.commit("test-2", b"def", info).unwrap();
+    });
+
+    let store2 = Arc::clone(&store);
+    thread::spawn(move || {
+        store2.commit("test-3", b"ghi", info).unwrap();
+    });
+}
