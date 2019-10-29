@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use crate::auth::AuthService;
 use crate::page::PageService;
 use crate::prelude::*;
 use crate::rating::{RatingHistory, RatingId, RatingService};
@@ -37,6 +38,7 @@ pub struct ServerConfig<'a> {
 
 pub struct Server {
     conn: Rc<PgConnection>,
+    auth: AuthService,
     page: PageService,
     rating: RatingService,
     user: UserService,
@@ -61,12 +63,14 @@ impl Server {
             }
         };
 
+        let auth = AuthService::new(&conn);
         let page = PageService::new(&conn, revisions_dir);
         let rating = RatingService::new(&conn);
         let user = UserService::new(&conn);
         let wiki = WikiService::new(&conn)?;
 
         Ok(Server {
+            auth,
             conn,
             page,
             rating,

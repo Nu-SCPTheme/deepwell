@@ -27,7 +27,6 @@
 //! [`RevisionStore`]: ./struct.RevisionStore.html
 
 extern crate color_backtrace;
-extern crate rand;
 extern crate tempfile;
 
 use super::{CommitInfo, RevisionStore};

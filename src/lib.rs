@@ -22,6 +22,7 @@
 
 extern crate arrayvec;
 extern crate chrono;
+extern crate crypto;
 
 #[macro_use]
 extern crate diesel;
@@ -34,6 +35,7 @@ extern crate lazy_static;
 #[macro_use]
 extern crate log;
 extern crate parking_lot;
+extern crate rand;
 extern crate regex;
 
 #[macro_use]
@@ -48,6 +50,7 @@ extern crate wikidot_normalize;
 #[macro_use]
 mod macros;
 
+mod auth;
 mod error;
 mod page;
 mod rating;
