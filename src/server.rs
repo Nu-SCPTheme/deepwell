@@ -217,6 +217,14 @@ impl Server {
         self.auth.set_password(user_id, password)
     }
 
+    // TODO: return token instead of doing dummy validation
+    /// Validates the password for the given user.
+    /// Returns `()` on success, authentication error on failure.
+    #[inline]
+    pub fn validate_user_password(&self, user_id: UserId, password: &str) -> Result<()> {
+        self.auth.check_password(user_id, password)
+    }
+
     /* Page methods */
 
     fn get_user<'a>(

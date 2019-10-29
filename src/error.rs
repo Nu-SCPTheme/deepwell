@@ -47,6 +47,9 @@ pub enum Error {
     #[error("command failed: {0}")]
     CommandFailed(String),
 
+    #[error("invalid username or password")]
+    AuthenticationFailed,
+
     #[error("the given wiki was not found")]
     WikiNotFound,
 

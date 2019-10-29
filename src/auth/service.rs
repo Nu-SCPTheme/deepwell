@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::new_password;
+use super::{check_password, new_password};
 use crate::schema::passwords;
 use crate::service_prelude::*;
 use std::convert::TryInto;
@@ -52,11 +52,6 @@ impl Password {
             param_r,
             param_p,
         }
-    }
-
-    #[inline]
-    pub fn user_id(&self) -> UserId {
-        self.user_id
     }
 
     #[inline]
@@ -113,6 +108,21 @@ impl AuthService {
 
             Ok(())
         })
+    }
+
+    pub fn check_password(&self, user_id: UserId, password: &str) -> Result<()> {
+        let id: i64 = user_id.into();
+        let record = passwords::table
+            .find(id)
+            .first::<Password>(&*self.conn)
+            .optional()?;
+
+        let record = record.ok_or(Error::AuthenticationFailed)?;
+        if check_password(&record, password.as_bytes()) {
+            Ok(())
+        } else {
+            Err(Error::AuthenticationFailed)
+        }
     }
 }
 
