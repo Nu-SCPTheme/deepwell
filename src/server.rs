@@ -83,7 +83,8 @@ impl Server {
 
     /// Creates a new wiki with the given parameters. Returns its ID.
     pub fn create_wiki(&self, name: &str, slug: &str, domain: &str) -> Result<WikiId> {
-        let id = self.wiki.create(name, slug, domain)?;
+        let domain = domain.to_ascii_lowercase();
+        let id = self.wiki.create(name, slug, &domain)?;
         self.wiki.get_by_id(id, |wiki| {
             let wiki = wiki.expect("Can't find wiki object after inserting");
 
