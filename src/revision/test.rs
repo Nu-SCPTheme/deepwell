@@ -356,7 +356,7 @@ fn test_thread() {
     // Create revision store
     let directory = tempdir().expect("Unable to create temporary directory");
     let repo = directory.path();
-    let store = Arc::new(RevisionStore::new(repo, "example.org"));
+    let store = RevisionStore::new(repo, "example.org");
     store
         .initial_commit()
         .expect("Unable to create initial commit");
@@ -368,18 +368,23 @@ fn test_thread() {
 
     store.commit("test-0", b"000", info).unwrap();
 
-    let store2 = Arc::clone(&store);
+    let rc = Arc::new((directory, store));
+
+    let rc2 = Arc::clone(&rc);
     thread::spawn(move || {
-        store2.commit("test-1", b"abc", info).unwrap();
+        let (_, store) = &*rc2;
+        store.commit("test-1", b"abc", info).unwrap();
     });
 
-    let store2 = Arc::clone(&store);
+    let rc2 = Arc::clone(&rc);
     thread::spawn(move || {
-        store2.commit("test-2", b"def", info).unwrap();
+        let (_, store) = &*rc2;
+        store.commit("test-2", b"def", info).unwrap();
     });
 
-    let store2 = Arc::clone(&store);
+    let rc2 = Arc::clone(&rc);
     thread::spawn(move || {
-        store2.commit("test-3", b"ghi", info).unwrap();
+        let (_, store) = &*rc2;
+        store.commit("test-3", b"ghi", info).unwrap();
     });
 }
