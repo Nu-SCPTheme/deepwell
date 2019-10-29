@@ -5,6 +5,7 @@ CREATE TABLE users (
     name TEXT NOT NULL UNIQUE,
     email TEXT NOT NULL UNIQUE,
     is_verified BOOLEAN NOT NULL DEFAULT false,
+    is_bot BOOLEAN NOT NULL DEFAULT false,
     author_page TEXT NOT NULL DEFAULT '',
     website TEXT NOT NULL DEFAULT '',
     about TEXT NOT NULL DEFAULT '',
