@@ -63,7 +63,7 @@ impl Server {
             }
         };
 
-        let auth = AuthService::new(&conn);
+        let auth = AuthService::new(&conn, vec![]); // TODO add password blacklist from file
         let page = PageService::new(&conn, revisions_dir);
         let rating = RatingService::new(&conn);
         let user = UserService::new(&conn);

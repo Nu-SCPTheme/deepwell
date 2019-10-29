@@ -23,6 +23,8 @@ use crate::schema::passwords;
 use crate::service_prelude::*;
 use std::convert::TryInto;
 
+const MAX_PASSWORD_LEN: usize = 8192;
+
 #[derive(Debug, Queryable)]
 pub struct Password {
     user_id: UserId,
@@ -88,16 +90,43 @@ impl Password {
 
 pub struct AuthService {
     conn: Rc<PgConnection>,
+    password_blacklist: Vec<String>,
 }
 
 impl AuthService {
-    pub fn new(conn: &Rc<PgConnection>) -> Self {
+    pub fn new(conn: &Rc<PgConnection>, password_blacklist: Vec<String>) -> Self {
         let conn = Rc::clone(conn);
 
-        AuthService { conn }
+        AuthService {
+            conn,
+            password_blacklist,
+        }
+    }
+
+    fn verify_password(&self, password: &str) -> Result<()> {
+        // To avoid computation-based DOS attacks
+        if password.len() > MAX_PASSWORD_LEN {
+            return Err(Error::NewPasswordInvalid("password too long"));
+        }
+
+        if password.chars().count() < 8 {
+            return Err(Error::NewPasswordInvalid(
+                "password must be at least 8 characters",
+            ));
+        }
+
+        for blacklisted in &self.password_blacklist {
+            if blacklisted == password {
+                return Err(Error::NewPasswordInvalid("password is too common"));
+            }
+        }
+
+        Ok(())
     }
 
     pub fn set_password(&self, user_id: UserId, password: &str) -> Result<()> {
+        self.verify_password(password)?;
+
         new_password(user_id, password.as_bytes(), |model| {
             diesel::insert_into(passwords::table)
                 .values(&model)
@@ -111,6 +140,11 @@ impl AuthService {
     }
 
     pub fn check_password(&self, user_id: UserId, password: &str) -> Result<()> {
+        // To avoid computation-based DOS attacks
+        if password.len() > MAX_PASSWORD_LEN {
+            return Err(Error::AuthenticationFailed);
+        }
+
         let id: i64 = user_id.into();
         let record = passwords::table
             .find(id)

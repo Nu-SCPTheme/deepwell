@@ -50,6 +50,9 @@ pub enum Error {
     #[error("invalid username or password")]
     AuthenticationFailed,
 
+    #[error("invalid password: {0}")]
+    NewPasswordInvalid(&'static str),
+
     #[error("the given wiki was not found")]
     WikiNotFound,
 
