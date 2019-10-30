@@ -21,7 +21,6 @@ stages:
   - format
   - clippy
   - test
-  - bin
   - doc
 
 jobs:
