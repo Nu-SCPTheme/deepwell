@@ -1,5 +1,5 @@
 /*
- * auth/models.rs
+ * password/mod.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,15 +18,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::schema::passwords;
+mod blacklist;
+mod crypto;
+mod models;
+mod service;
 
-#[derive(Debug, Insertable, AsChangeset)]
-#[table_name = "passwords"]
-pub struct NewPassword<'a> {
-    pub user_id: i64,
-    pub hash: &'a [u8],
-    pub salt: &'a [u8],
-    pub logn: i16,
-    pub param_r: i32,
-    pub param_p: i32,
-}
+#[cfg(test)]
+mod test;
+
+pub use self::service::PasswordService;
+
+use self::blacklist::build_blacklist;
+use self::crypto::*;
+use self::service::Password;

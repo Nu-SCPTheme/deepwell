@@ -50,10 +50,10 @@ extern crate wikidot_normalize;
 #[macro_use]
 mod macros;
 
-mod auth;
 mod author;
 mod error;
 mod page;
+mod password;
 mod rating;
 mod revision;
 mod schema;

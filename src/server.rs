@@ -18,9 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::auth::AuthService;
 use crate::author::AuthorService;
 use crate::page::PageService;
+use crate::password::PasswordService;
 use crate::prelude::*;
 use crate::rating::{RatingHistory, RatingId, RatingService};
 use crate::user::UserService;
@@ -40,9 +40,9 @@ pub struct ServerConfig<'a> {
 
 pub struct Server {
     conn: Rc<PgConnection>,
-    auth: AuthService,
     author: AuthorService,
     page: PageService,
+    password: PasswordService,
     rating: RatingService,
     user: UserService,
     wiki: WikiService,
@@ -67,18 +67,18 @@ impl Server {
             }
         };
 
-        let auth = AuthService::new(&conn, password_blacklist)?;
         let author = AuthorService::new(&conn);
         let page = PageService::new(&conn, revisions_dir);
+        let password = PasswordService::new(&conn, password_blacklist)?;
         let rating = RatingService::new(&conn);
         let user = UserService::new(&conn);
         let wiki = WikiService::new(&conn)?;
 
         Ok(Server {
-            auth,
             author,
             conn,
             page,
+            password,
             rating,
             user,
             wiki,
@@ -224,13 +224,13 @@ impl Server {
     /// Checks if the given user has set a password.
     #[inline]
     pub fn has_password(&self, user_id: UserId) -> Result<bool> {
-        self.auth.has_password(user_id)
+        self.password.has(user_id)
     }
 
     /// Sets or overwrites the given user's password.
     #[inline]
     pub fn set_user_password(&self, user_id: UserId, password: &str) -> Result<()> {
-        self.auth.set_password(user_id, password)
+        self.password.set(user_id, password)
     }
 
     // TODO: return token instead of doing dummy validation
@@ -238,7 +238,7 @@ impl Server {
     /// Returns `()` on success, authentication error on failure.
     #[inline]
     pub fn validate_user_password(&self, user_id: UserId, password: &str) -> Result<()> {
-        self.auth.check_password(user_id, password)
+        self.password.check(user_id, password)
     }
 
     /* Page methods */

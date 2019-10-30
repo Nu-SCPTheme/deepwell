@@ -1,5 +1,5 @@
 /*
- * auth/service.rs
+ * password/service.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -90,24 +90,21 @@ impl Password {
     }
 }
 
-pub struct AuthService {
+pub struct PasswordService {
     conn: Rc<PgConnection>,
-    password_blacklist: HashSet<String>,
+    blacklist: HashSet<String>,
 }
 
-impl AuthService {
+impl PasswordService {
     pub fn new(conn: &Rc<PgConnection>, blacklist: Option<&Path>) -> Result<Self> {
         let conn = Rc::clone(conn);
 
-        let password_blacklist = match blacklist {
+        let blacklist = match blacklist {
             Some(path) => build_blacklist(path)?,
             None => HashSet::new(),
         };
 
-        Ok(AuthService {
-            conn,
-            password_blacklist,
-        })
+        Ok(PasswordService { conn, blacklist })
     }
 
     fn verify_password(&self, password: &str) -> Result<()> {
@@ -122,14 +119,14 @@ impl AuthService {
             ));
         }
 
-        if self.password_blacklist.contains(password) {
+        if self.blacklist.contains(password) {
             return Err(Error::NewPasswordInvalid("password is too common"));
         }
 
         Ok(())
     }
 
-    pub fn has_password(&self, user_id: UserId) -> Result<bool> {
+    pub fn has(&self, user_id: UserId) -> Result<bool> {
         let id: i64 = user_id.into();
         let record = passwords::table
             .find(id)
@@ -140,7 +137,7 @@ impl AuthService {
         Ok(record.is_some())
     }
 
-    pub fn set_password(&self, user_id: UserId, password: &str) -> Result<()> {
+    pub fn set(&self, user_id: UserId, password: &str) -> Result<()> {
         self.verify_password(password)?;
 
         new_password(user_id, password.as_bytes(), |model| {
@@ -155,7 +152,7 @@ impl AuthService {
         })
     }
 
-    pub fn check_password(&self, user_id: UserId, password: &str) -> Result<()> {
+    pub fn check(&self, user_id: UserId, password: &str) -> Result<()> {
         // To avoid computation-based DOS attacks
         if password.len() > MAX_PASSWORD_LEN {
             return Err(Error::AuthenticationFailed);
@@ -176,9 +173,9 @@ impl AuthService {
     }
 }
 
-impl Debug for AuthService {
+impl Debug for PasswordService {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("AuthService")
+        f.debug_struct("PasswordService")
             .field("conn", &"PgConnection { .. }")
             .finish()
     }
