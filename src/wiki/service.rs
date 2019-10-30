@@ -30,7 +30,7 @@ pub struct Wiki {
     name: String,
     slug: String,
     domain: String,
-    created_at: NaiveDateTime,
+    created_at: DateTime<Utc>,
 }
 
 impl Wiki {
@@ -55,7 +55,7 @@ impl Wiki {
     }
 
     #[inline]
-    pub fn created_at(&self) -> NaiveDateTime {
+    pub fn created_at(&self) -> DateTime<Utc> {
         self.created_at
     }
 }

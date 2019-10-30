@@ -11,8 +11,8 @@ CREATE TABLE users (
     about TEXT NOT NULL DEFAULT '',
     gender TEXT NOT NULL DEFAULT '' CHECK (gender = LOWER(gender)),
     location TEXT NOT NULL DEFAULT '',
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    deleted_at TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMP WITH TIME ZONE
 );
 
 CREATE TABLE passwords (
@@ -31,16 +31,16 @@ CREATE TABLE wikis (
     name TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
     domain TEXT NOT NULL UNIQUE CHECK(domain = LOWER(domain)),
-    created_at TIMESTAMP NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 CREATE TABLE wiki_membership (
     wiki_id BIGSERIAL NOT NULL REFERENCES wikis(wiki_id),
     user_id BIGSERIAL NOT NULL REFERENCES users(user_id),
-    applied_at TIMESTAMP NOT NULL,
-    joined_at TIMESTAMP NOT NULL,
-    banned_at TIMESTAMP, -- null = not banned
-    banned_until TIMESTAMP, -- null = indefinite ban
+    applied_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    joined_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    banned_at TIMESTAMP WITH TIME ZONE, -- null = not banned
+    banned_until TIMESTAMP WITH TIME ZONE, -- null = indefinite ban
     PRIMARY KEY (wiki_id, user_id)
 );
 
@@ -56,7 +56,7 @@ CREATE TABLE role_membership (
     wiki_id BIGSERIAL REFERENCES wikis(wiki_id),
     role_id BIGSERIAL REFERENCES roles(role_id),
     user_id BIGSERIAL REFERENCES users(user_id),
-    applied_at TIMESTAMP NOT NULL,
+    applied_at TIMESTAMP WITH TIME ZONE NOT NULL,
     PRIMARY KEY (wiki_id, role_Id, user_id)
 );
 
@@ -69,8 +69,8 @@ CREATE TABLE pages (
     title TEXT NOT NULL,
     alt_title TEXT,
     tags TEXT[] NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    deleted_at TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMP WITH TIME ZONE,
     UNIQUE (deleted_at, slug)
 );
 
@@ -78,13 +78,13 @@ CREATE TABLE parents (
     page_id BIGSERIAL NOT NULL REFERENCES pages(page_id),
     parent_page_id BIGSERIAL NOT NULL REFERENCES pages(page_id),
     parented_by BIGSERIAL NOT NULL REFERENCES users(user_id),
-    parented_at TIMESTAMP NOT NULL,
+    parented_at TIMESTAMP WITH TIME ZONE NOT NULL,
     PRIMARY KEY (page_id, parent_page_id)
 );
 
 CREATE TABLE revisions (
     revision_id BIGSERIAL PRIMARY KEY,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     page_id BIGSERIAL NOT NULL REFERENCES pages(page_id),
     user_id BIGSERIAL NOT NULL REFERENCES users(user_id),
     message TEXT NOT NULL,
@@ -118,7 +118,7 @@ CREATE TABLE ratings_history (
     rating_id BIGSERIAL PRIMARY KEY,
     page_id BIGSERIAL NOT NULL REFERENCES pages(page_id),
     user_id BIGSERIAL NOT NULL REFERENCES users(user_id),
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     rating SMALLINT NOT NULL
 );
 

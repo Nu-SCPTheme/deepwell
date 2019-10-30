@@ -19,7 +19,7 @@
  */
 
 use crate::schema::users;
-use chrono::NaiveDateTime;
+use chrono::prelude::*;
 
 #[derive(Debug, Insertable)]
 #[table_name = "users"]
@@ -39,5 +39,5 @@ pub struct UpdateUser<'a> {
     pub about: Option<&'a str>,
     pub gender: Option<&'a str>,
     pub location: Option<&'a str>,
-    pub deleted_at: Option<Option<NaiveDateTime>>,
+    pub deleted_at: Option<Option<DateTime<Utc>>>,
 }

@@ -25,8 +25,8 @@ table! {
         title -> Text,
         alt_title -> Nullable<Text>,
         tags -> Array<Text>,
-        created_at -> Timestamp,
-        deleted_at -> Nullable<Timestamp>,
+        created_at -> Timestamptz,
+        deleted_at -> Nullable<Timestamptz>,
     }
 }
 
@@ -35,7 +35,7 @@ table! {
         page_id -> Int8,
         parent_page_id -> Int8,
         parented_by -> Int8,
-        parented_at -> Timestamp,
+        parented_at -> Timestamptz,
     }
 }
 
@@ -63,7 +63,7 @@ table! {
         rating_id -> Int8,
         page_id -> Int8,
         user_id -> Int8,
-        created_at -> Timestamp,
+        created_at -> Timestamptz,
         rating -> Int2,
     }
 }
@@ -71,7 +71,7 @@ table! {
 table! {
     revisions (revision_id) {
         revision_id -> Int8,
-        created_at -> Timestamp,
+        created_at -> Timestamptz,
         page_id -> Int8,
         user_id -> Int8,
         message -> Text,
@@ -85,7 +85,7 @@ table! {
         wiki_id -> Int8,
         role_id -> Int8,
         user_id -> Int8,
-        applied_at -> Timestamp,
+        applied_at -> Timestamptz,
     }
 }
 
@@ -118,8 +118,8 @@ table! {
         about -> Text,
         gender -> Text,
         location -> Text,
-        created_at -> Timestamp,
-        deleted_at -> Nullable<Timestamp>,
+        created_at -> Timestamptz,
+        deleted_at -> Nullable<Timestamptz>,
     }
 }
 
@@ -127,10 +127,10 @@ table! {
     wiki_membership (wiki_id, user_id) {
         wiki_id -> Int8,
         user_id -> Int8,
-        applied_at -> Timestamp,
-        joined_at -> Timestamp,
-        banned_at -> Nullable<Timestamp>,
-        banned_until -> Nullable<Timestamp>,
+        applied_at -> Timestamptz,
+        joined_at -> Timestamptz,
+        banned_at -> Nullable<Timestamptz>,
+        banned_until -> Nullable<Timestamptz>,
     }
 }
 
@@ -140,7 +140,7 @@ table! {
         name -> Text,
         slug -> Text,
         domain -> Text,
-        created_at -> Timestamp,
+        created_at -> Timestamptz,
     }
 }
 

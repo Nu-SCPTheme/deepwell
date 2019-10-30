@@ -37,8 +37,8 @@ pub struct User {
     about: String,
     gender: String,
     location: String,
-    created_at: NaiveDateTime,
-    deleted_at: Option<NaiveDateTime>,
+    created_at: DateTime<Utc>,
+    deleted_at: Option<DateTime<Utc>>,
 }
 
 impl User {
@@ -93,12 +93,12 @@ impl User {
     }
 
     #[inline]
-    pub fn created_at(&self) -> NaiveDateTime {
+    pub fn created_at(&self) -> DateTime<Utc> {
         self.created_at
     }
 
     #[inline]
-    pub fn deleted_at(&self) -> Option<NaiveDateTime> {
+    pub fn deleted_at(&self) -> Option<DateTime<Utc>> {
         self.deleted_at
     }
 

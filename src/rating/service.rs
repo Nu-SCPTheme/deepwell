@@ -46,7 +46,7 @@ pub struct RatingHistory {
     rating_id: RatingId,
     page_id: PageId,
     user_id: UserId,
-    created_at: NaiveDateTime,
+    created_at: DateTime<Utc>,
     rating: i16,
 }
 
@@ -67,7 +67,7 @@ impl RatingHistory {
     }
 
     #[inline]
-    pub fn created_at(&self) -> NaiveDateTime {
+    pub fn created_at(&self) -> DateTime<Utc> {
         self.created_at
     }
 
