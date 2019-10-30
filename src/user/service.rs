@@ -27,10 +27,11 @@ make_id_type!(UserId);
 
 #[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
 pub struct User {
-    id: UserId,
+    user_id: UserId,
     name: String,
     email: String,
     is_verified: bool,
+    is_bot: bool,
     author_page: String,
     website: String,
     about: String,
@@ -43,7 +44,7 @@ pub struct User {
 impl User {
     #[inline]
     pub fn id(&self) -> UserId {
-        self.id
+        self.user_id
     }
 
     #[inline]
@@ -59,6 +60,11 @@ impl User {
     #[inline]
     pub fn is_verified(&self) -> bool {
         self.is_verified
+    }
+
+    #[inline]
+    pub fn is_bot(&self) -> bool {
+        self.is_bot
     }
 
     #[inline]
