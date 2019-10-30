@@ -19,8 +19,50 @@
  */
 
 use crate::schema::{pages, revisions, tag_history};
+use crate::StdResult;
+use std::convert::TryFrom;
 
 type Nullable<T> = Option<T>;
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum ChangeType {
+    Create,
+    Modify,
+    Delete,
+    Rename,
+    Tags,
+}
+
+impl Into<&'static str> for ChangeType {
+    fn into(self) -> &'static str {
+        use self::ChangeType::*;
+
+        match self {
+            Create => "create",
+            Modify => "modify",
+            Delete => "delete",
+            Rename => "rename",
+            Tags => "tags",
+        }
+    }
+}
+
+impl TryFrom<&'_ str> for ChangeType {
+    type Error = ();
+
+    fn try_from(value: &str) -> StdResult<Self, ()> {
+        let case = match value {
+            "create" => ChangeType::Create,
+            "modify" => ChangeType::Modify,
+            "delete" => ChangeType::Delete,
+            "rename" => ChangeType::Rename,
+            "tags" => ChangeType::Tags,
+            _ => return Err(()),
+        };
+
+        Ok(case)
+    }
+}
 
 #[derive(Debug, Insertable)]
 #[table_name = "pages"]
