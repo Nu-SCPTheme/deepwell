@@ -275,6 +275,12 @@ impl Server {
         let mut user_obj = None;
         let user = self.get_user(user, &mut user_obj)?;
 
+        // Empty string means use default
+        let alt_title: Option<&str> = match alt_title {
+            "" => None,
+            _ => Some(alt_title),
+        };
+
         self.page
             .create(slug, content, message, wiki_id, &user, title, alt_title)
     }

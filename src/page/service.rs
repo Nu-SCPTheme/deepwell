@@ -193,15 +193,9 @@ impl PageService {
         wiki_id: WikiId,
         user: &User,
         title: &str,
-        alt_title: &str,
+        alt_title: Option<&str>,
     ) -> Result<(PageId, RevisionId)> {
         info!("Starting transaction for page creation");
-
-        // Empty string means use default
-        let alt_title: Option<&str> = match alt_title {
-            "" => None,
-            _ => Some(alt_title),
-        };
 
         self.conn.transaction::<_, Error, _>(|| {
             let model = NewPage {
