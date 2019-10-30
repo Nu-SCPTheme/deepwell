@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::{NewPage, NewRevision, NewTagChange, UpdatePage};
+use super::{ChangeType, NewPage, NewRevision, NewTagChange, UpdatePage};
 use crate::revision::{CommitInfo, GitHash, RevisionStore};
 use crate::schema::{pages, revisions, tag_history};
 use crate::service_prelude::*;
@@ -122,7 +122,7 @@ impl PageService {
         wiki_id: WikiId,
         page_id: PageId,
         user_id: UserId,
-        change_type: &'static str,
+        change_type: ChangeType,
     ) -> Result<String> {
         #[derive(Debug, Serialize)]
         struct CommitMessage {
@@ -136,7 +136,7 @@ impl PageService {
             wiki_id,
             page_id,
             user_id,
-            change_type,
+            change_type: change_type.into(),
         };
 
         json::to_string(&message).map_err(Error::from)
@@ -212,7 +212,7 @@ impl PageService {
                 .get_result::<PageId>(&*self.conn)?;
 
             let user_id = user.id();
-            let change_type = "create";
+            let change_type = ChangeType::Create;
 
             let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
             let info = CommitInfo {
@@ -226,7 +226,7 @@ impl PageService {
                 user_id: user_id.into(),
                 message,
                 git_commit: hash.as_ref(),
-                change_type,
+                change_type: change_type.into(),
             };
 
             trace!("Inserting revision {:?} into revisions table", &model);
@@ -270,7 +270,7 @@ impl PageService {
             }
 
             let user_id = user.id();
-            let change_type = "modify";
+            let change_type = ChangeType::Modify;
 
             let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
             let info = CommitInfo {
@@ -284,7 +284,7 @@ impl PageService {
                 user_id: user_id.into(),
                 message,
                 git_commit: hash.as_ref(),
-                change_type,
+                change_type: change_type.into(),
             };
 
             trace!("Inserting revision {:?} into revisions table", &model);
@@ -326,7 +326,7 @@ impl PageService {
             }
 
             let user_id = user.id();
-            let change_type = "rename";
+            let change_type = ChangeType::Rename;
 
             let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
             let info = CommitInfo {
@@ -344,7 +344,7 @@ impl PageService {
                 user_id: user_id.into(),
                 message,
                 git_commit: hash.as_ref(),
-                change_type,
+                change_type: change_type.into(),
             };
 
             trace!("Inserting revision {:?} into revisions table", &model);
@@ -381,7 +381,7 @@ impl PageService {
             }
 
             let user_id = user.id();
-            let change_type = "delete";
+            let change_type = ChangeType::Delete;
 
             let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
             let info = CommitInfo {
@@ -402,7 +402,7 @@ impl PageService {
                 user_id: user_id.into(),
                 message,
                 git_commit: hash.as_ref(),
-                change_type,
+                change_type: change_type.into(),
             };
 
             trace!("Inserting revision {:?} into revisions table", &model);
@@ -439,7 +439,7 @@ impl PageService {
 
             // Create commit
             let user_id = user.id();
-            let change_type = "tags";
+            let change_type = ChangeType::Tags;
 
             let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
             let info = CommitInfo {
@@ -457,7 +457,7 @@ impl PageService {
                 user_id: user_id.into(),
                 message,
                 git_commit: hash.as_ref(),
-                change_type,
+                change_type: change_type.into(),
             };
 
             trace!("Inserting revision {:?} into revisions table", &model);
