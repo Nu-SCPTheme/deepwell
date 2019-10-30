@@ -75,10 +75,7 @@ impl Page {
 
     #[inline]
     pub fn alt_title(&self) -> Option<&str> {
-        match self.alt_title {
-            Some(ref s) => Some(s),
-            None => None,
-        }
+        self.alt_title.as_ref().map(|s| s as _)
     }
 
     #[inline]
@@ -257,7 +254,7 @@ impl PageService {
         page_id: PageId,
         user: &User,
         title: Option<&str>,
-        alt_title: Option<Option<&str>>,
+        alt_title: Option<Nullable<&str>>,
     ) -> Result<RevisionId> {
         info!("Starting transaction for page commit");
 

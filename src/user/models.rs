@@ -28,6 +28,8 @@ pub struct NewUser<'a> {
     pub email: &'a str,
 }
 
+type Nullable<T> = Option<T>;
+
 #[derive(Debug, Default, AsChangeset)]
 #[table_name = "users"]
 pub struct UpdateUser<'a> {
@@ -39,5 +41,5 @@ pub struct UpdateUser<'a> {
     pub about: Option<&'a str>,
     pub gender: Option<&'a str>,
     pub location: Option<&'a str>,
-    pub deleted_at: Option<Option<DateTime<Utc>>>,
+    pub deleted_at: Option<Nullable<DateTime<Utc>>>,
 }

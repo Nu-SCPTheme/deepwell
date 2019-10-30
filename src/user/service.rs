@@ -139,7 +139,7 @@ impl UserService {
                 .optional()?;
 
             if let Some((user_id, conflict_name, conflict_email)) = result {
-                if name == &conflict_name {
+                if name == conflict_name {
                     warn!("Cannot create user, name conflicts with id {}", user_id);
                     return Err(Error::UserNameExists);
                 }

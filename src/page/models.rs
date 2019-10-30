@@ -20,6 +20,8 @@
 
 use crate::schema::{pages, revisions, tag_history};
 
+type Nullable<T> = Option<T>;
+
 #[derive(Debug, Insertable)]
 #[table_name = "pages"]
 pub struct NewPage<'a> {
@@ -34,7 +36,7 @@ pub struct NewPage<'a> {
 pub struct UpdatePage<'a> {
     pub slug: Option<&'a str>,
     pub title: Option<&'a str>,
-    pub alt_title: Option<Option<&'a str>>,
+    pub alt_title: Option<Nullable<&'a str>>,
 }
 
 #[derive(Debug, Insertable)]

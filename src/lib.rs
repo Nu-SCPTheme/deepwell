@@ -90,6 +90,9 @@ mod service_prelude {
     pub use std::collections::HashMap;
     pub use std::fmt::{self, Debug};
     pub use std::sync::Arc;
+
+    // For Option<Option<T>>, updating nullable columns
+    pub type Nullable<T> = Option<T>;
 }
 
 pub type StdResult<T, E> = std::result::Result<T, E>;
