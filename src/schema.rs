@@ -3,7 +3,7 @@ table! {
         page_id -> Int8,
         user_id -> Int8,
         author_type -> Text,
-        created_at -> Date,
+        written_at -> Date,
     }
 }
 
@@ -112,6 +112,7 @@ table! {
         name -> Text,
         email -> Text,
         is_verified -> Bool,
+        is_bot -> Bool,
         author_page -> Text,
         website -> Text,
         about -> Text,
@@ -128,6 +129,8 @@ table! {
         user_id -> Int8,
         applied_at -> Timestamp,
         joined_at -> Timestamp,
+        banned_at -> Nullable<Timestamp>,
+        banned_until -> Nullable<Timestamp>,
     }
 }
 
