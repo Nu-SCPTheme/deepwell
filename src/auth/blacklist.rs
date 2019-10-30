@@ -1,5 +1,5 @@
 /*
- * auth/mod.rs
+ * auth/blacklist.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,16 +18,30 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-mod blacklist;
-mod crypto;
-mod models;
-mod service;
+use crate::Result;
+use std::collections::HashSet;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
+use std::path::Path;
 
-#[cfg(test)]
-mod test;
+pub fn build_blacklist(path: &Path) -> Result<HashSet<String>> {
+    let file = File::open(path)?;
+    let mut buffer = BufReader::new(file);
+    let mut blacklist = HashSet::new();
 
-pub use self::service::AuthService;
+    loop {
+        let mut line = String::new();
 
-use self::blacklist::build_blacklist;
-use self::crypto::*;
-use self::service::Password;
+        if buffer.read_line(&mut line)? == 0 {
+            break;
+        }
+
+        if line.ends_with('\n') {
+            line.pop();
+        }
+
+        blacklist.insert(line);
+    }
+
+    Ok(blacklist)
+}

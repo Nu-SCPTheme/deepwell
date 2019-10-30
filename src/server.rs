@@ -27,13 +27,14 @@ use crate::wiki::{UpdateWiki, WikiService};
 use diesel::{Connection, PgConnection};
 use either::*;
 use std::fmt::{self, Debug};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::rc::Rc;
 
 #[derive(Debug, Clone)]
 pub struct ServerConfig<'a> {
     pub database_url: &'a str,
     pub revisions_dir: PathBuf,
+    pub password_blacklist: Option<&'a Path>,
 }
 
 pub struct Server {
@@ -52,6 +53,7 @@ impl Server {
         let ServerConfig {
             database_url,
             revisions_dir,
+            password_blacklist,
         } = config;
 
         let conn = match PgConnection::establish(database_url) {
@@ -63,7 +65,7 @@ impl Server {
             }
         };
 
-        let auth = AuthService::new(&conn, vec![]); // TODO add password blacklist from file
+        let auth = AuthService::new(&conn, password_blacklist)?;
         let page = PageService::new(&conn, revisions_dir);
         let rating = RatingService::new(&conn);
         let user = UserService::new(&conn);

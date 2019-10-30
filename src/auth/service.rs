@@ -18,10 +18,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::{check_password, new_password};
+use super::{build_blacklist, check_password, new_password};
 use crate::schema::passwords;
 use crate::service_prelude::*;
+use std::collections::HashSet;
 use std::convert::TryInto;
+use std::path::Path;
 
 const MAX_PASSWORD_LEN: usize = 8192;
 
@@ -90,17 +92,22 @@ impl Password {
 
 pub struct AuthService {
     conn: Rc<PgConnection>,
-    password_blacklist: Vec<String>,
+    password_blacklist: HashSet<String>,
 }
 
 impl AuthService {
-    pub fn new(conn: &Rc<PgConnection>, password_blacklist: Vec<String>) -> Self {
+    pub fn new(conn: &Rc<PgConnection>, blacklist: Option<&Path>) -> Result<Self> {
         let conn = Rc::clone(conn);
 
-        AuthService {
+        let password_blacklist = match blacklist {
+            Some(path) => build_blacklist(path)?,
+            None => HashSet::new(),
+        };
+
+        Ok(AuthService {
             conn,
             password_blacklist,
-        }
+        })
     }
 
     fn verify_password(&self, password: &str) -> Result<()> {
@@ -115,10 +122,8 @@ impl AuthService {
             ));
         }
 
-        for blacklisted in &self.password_blacklist {
-            if blacklisted == password {
-                return Err(Error::NewPasswordInvalid("password is too common"));
-            }
+        if self.password_blacklist.contains(password) {
+            return Err(Error::NewPasswordInvalid("password is too common"));
         }
 
         Ok(())
