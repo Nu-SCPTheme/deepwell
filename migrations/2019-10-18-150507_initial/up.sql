@@ -133,7 +133,7 @@ CREATE TABLE authors (
             'maintainer'
         )
     ),
-    written_at TIMESTAMP NOT NULL,
+    written_at DATE NOT NULL,
     PRIMARY KEY (page_id, user_id, author_type)
 );
 

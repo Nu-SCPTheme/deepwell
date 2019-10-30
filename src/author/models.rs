@@ -20,7 +20,7 @@
 
 use crate::schema::authors;
 use crate::StdResult;
-use chrono::NaiveDateTime;
+use chrono::NaiveDate;
 use std::convert::TryFrom;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -66,5 +66,5 @@ pub struct NewAuthor {
     pub page_id: i64,
     pub user_id: i64,
     pub author_type: &'static str,
-    pub written_at: Option<NaiveDateTime>,
+    pub written_at: Option<NaiveDate>,
 }

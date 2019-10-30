@@ -28,7 +28,7 @@ pub struct Author {
     user_id: UserId,
     page_id: PageId,
     author_type: String,
-    written_at: NaiveDateTime,
+    written_at: NaiveDate,
 }
 
 impl Author {
@@ -50,7 +50,7 @@ impl Author {
     }
 
     #[inline]
-    pub fn written_at(&self) -> NaiveDateTime {
+    pub fn written_at(&self) -> NaiveDate {
         self.written_at
     }
 }
@@ -71,7 +71,7 @@ impl AuthorService {
         page_id: PageId,
         user_id: UserId,
         author_type: AuthorType,
-        written_at: Option<NaiveDateTime>,
+        written_at: Option<NaiveDate>,
     ) -> Result<()> {
         debug!(
             "Setting author for page id {} / user id {}",
