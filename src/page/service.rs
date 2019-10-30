@@ -185,6 +185,20 @@ impl PageService {
         })
     }
 
+    fn get_page_id(&self, wiki_id: WikiId, slug: &str) -> Result<Option<PageId>> {
+        debug!("Getting page id in wiki id {} for slug '{}'", wiki_id, slug);
+
+        let wiki_id: i64 = wiki_id.into();
+        let page_id = pages::table
+            .filter(pages::dsl::wiki_id.eq(wiki_id))
+            .filter(pages::dsl::slug.eq(slug))
+            .select(pages::dsl::page_id)
+            .first::<PageId>(&*self.conn)
+            .optional()?;
+
+        Ok(page_id)
+    }
+
     pub fn create(
         &self,
         wiki_id: WikiId,
@@ -204,6 +218,11 @@ impl PageService {
                 title,
                 alt_title,
             };
+
+            trace!("Checking for existing page");
+            if self.get_page_id(wiki_id, slug)?.is_some() {
+                return Err(Error::PageExists);
+            }
 
             trace!("Inserting {:?} into pages table", &model);
             let page_id = diesel::insert_into(pages::table)
@@ -257,6 +276,10 @@ impl PageService {
                 title,
                 alt_title,
             };
+
+            let page_id = self
+                .get_page_id(wiki_id, slug)?
+                .ok_or(Error::PageNotFound)?;
 
             trace!("Updating {:?} in pages table", &model);
             {
@@ -313,6 +336,10 @@ impl PageService {
                 alt_title: None,
             };
 
+            let page_id = self
+                .get_page_id(wiki_id, old_slug)?
+                .ok_or(Error::PageNotFound)?;
+
             trace!("Updating {:?} in pages table", &model);
             {
                 use self::pages::dsl;
@@ -366,6 +393,10 @@ impl PageService {
 
         self.conn.transaction::<_, Error, _>(|| {
             use diesel::dsl::now;
+
+            let page_id = self
+                .get_page_id(wiki_id, slug)?
+                .ok_or(Error::PageNotFound)?;
 
             trace!("Marking page as deleted in table");
             {
@@ -423,6 +454,10 @@ impl PageService {
         info!("Starting transaction for page tags");
 
         self.conn.transaction::<_, Error, _>(|| {
+            let page_id = self
+                .get_page_id(wiki_id, slug)?
+                .ok_or(Error::PageNotFound)?;
+
             trace!("Getting tag difference");
             let current_tags = {
                 let id: i64 = page_id.into();
@@ -496,7 +531,9 @@ impl PageService {
     pub fn get_page(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Page>> {
         info!("Getting page for wiki id {}, slug {}", wiki_id, slug,);
 
+        let wiki_id: i64 = wiki_id.into();
         let page = pages::table
+            .filter(pages::wiki_id.eq(wiki_id))
             .filter(pages::slug.eq(slug))
             .first::<Page>(&*self.conn)
             .optional()?;
@@ -504,11 +541,7 @@ impl PageService {
         Ok(page)
     }
 
-    pub fn get_page_contents(
-        &self,
-        wiki_id: WikiId,
-        slug: &str,
-    ) -> Result<Option<Box<[u8]>>> {
+    pub fn get_page_contents(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Box<[u8]>>> {
         info!("Getting page for wiki id {}, slug {}", wiki_id, slug);
 
         self.get_store(wiki_id, |store| store.get_page(slug))

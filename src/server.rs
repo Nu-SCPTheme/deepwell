@@ -281,7 +281,8 @@ impl Server {
             _ => Some(alt_title),
         };
 
-        self.page.create(wiki_id, slug, content, message, &user, title, alt_title)
+        self.page
+            .create(wiki_id, slug, content, message, &user, title, alt_title)
     }
 
     /// Edits an existing page to have the given content.
@@ -307,7 +308,8 @@ impl Server {
             None => None,
         };
 
-        self.page.commit(wiki_id, slug, content, message, user, title, alt_title)
+        self.page
+            .commit(wiki_id, slug, content, message, user, title, alt_title)
     }
 
     /// Renames a page to use a different slug.
@@ -362,11 +364,7 @@ impl Server {
     }
 
     /// Gets the contents for a given page.
-    pub fn get_page_contents(
-        &self,
-        wiki_id: WikiId,
-        slug: &str,
-    ) -> Result<Option<Box<[u8]>>> {
+    pub fn get_page_contents(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Box<[u8]>>> {
         self.page.get_page_contents(wiki_id, slug)
     }
 
