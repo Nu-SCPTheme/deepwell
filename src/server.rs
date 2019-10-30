@@ -19,6 +19,7 @@
  */
 
 use crate::auth::AuthService;
+use crate::author::AuthorService;
 use crate::page::PageService;
 use crate::prelude::*;
 use crate::rating::{RatingHistory, RatingId, RatingService};
@@ -40,6 +41,7 @@ pub struct ServerConfig<'a> {
 pub struct Server {
     conn: Rc<PgConnection>,
     auth: AuthService,
+    author: AuthorService,
     page: PageService,
     rating: RatingService,
     user: UserService,
@@ -66,6 +68,7 @@ impl Server {
         };
 
         let auth = AuthService::new(&conn, password_blacklist)?;
+        let author = AuthorService::new(&conn);
         let page = PageService::new(&conn, revisions_dir);
         let rating = RatingService::new(&conn);
         let user = UserService::new(&conn);
@@ -73,6 +76,7 @@ impl Server {
 
         Ok(Server {
             auth,
+            author,
             conn,
             page,
             rating,

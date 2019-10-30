@@ -51,6 +51,7 @@ extern crate wikidot_normalize;
 mod macros;
 
 mod auth;
+mod author;
 mod error;
 mod page;
 mod rating;
@@ -63,7 +64,7 @@ mod wiki;
 pub mod prelude {
     pub use crate::id::*;
     pub use crate::model::*;
-    pub use crate::{Error, Result};
+    pub use crate::{Error, Result, StdResult};
 }
 
 pub mod id {
