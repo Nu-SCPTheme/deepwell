@@ -3,7 +3,7 @@ table! {
         page_id -> Int8,
         user_id -> Int8,
         author_type -> Text,
-        written_at -> Date,
+        written_at -> Timestamp,
     }
 }
 
