@@ -78,13 +78,13 @@ impl RatingHistory {
 }
 
 pub struct RatingService {
-    conn: Rc<PgConnection>,
+    conn: Arc<PgConnection>,
 }
 
 impl RatingService {
     #[inline]
-    pub fn new(conn: &Rc<PgConnection>) -> Self {
-        let conn = Rc::clone(conn);
+    pub fn new(conn: &Arc<PgConnection>) -> Self {
+        let conn = Arc::clone(conn);
 
         RatingService { conn }
     }

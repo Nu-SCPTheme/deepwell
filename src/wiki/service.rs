@@ -61,13 +61,13 @@ impl Wiki {
 }
 
 pub struct WikiService {
-    conn: Rc<PgConnection>,
+    conn: Arc<PgConnection>,
     wikis: RwLock<HashMap<WikiId, Wiki>>,
 }
 
 impl WikiService {
-    pub fn new(conn: &Rc<PgConnection>) -> Result<Self> {
-        let conn = Rc::clone(conn);
+    pub fn new(conn: &Arc<PgConnection>) -> Result<Self> {
+        let conn = Arc::clone(conn);
         let values = wikis::table.load::<Wiki>(&*conn)?;
 
         let wikis = {

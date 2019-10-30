@@ -29,7 +29,7 @@ use diesel::{Connection, PgConnection};
 use either::*;
 use std::fmt::{self, Debug};
 use std::path::{Path, PathBuf};
-use std::rc::Rc;
+use std::sync::Arc;
 
 #[derive(Debug, Clone)]
 pub struct ServerConfig<'a> {
@@ -39,7 +39,7 @@ pub struct ServerConfig<'a> {
 }
 
 pub struct Server {
-    conn: Rc<PgConnection>,
+    conn: Arc<PgConnection>,
     author: AuthorService,
     page: PageService,
     password: PasswordService,
@@ -59,7 +59,7 @@ impl Server {
         } = config;
 
         let conn = match PgConnection::establish(database_url) {
-            Ok(conn) => Rc::new(conn),
+            Ok(conn) => Arc::new(conn),
             Err(error) => {
                 error!("Error establishing Postgres connection: {}", error);
 

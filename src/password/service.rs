@@ -91,13 +91,13 @@ impl Password {
 }
 
 pub struct PasswordService {
-    conn: Rc<PgConnection>,
+    conn: Arc<PgConnection>,
     blacklist: HashSet<String>,
 }
 
 impl PasswordService {
-    pub fn new(conn: &Rc<PgConnection>, blacklist: Option<&Path>) -> Result<Self> {
-        let conn = Rc::clone(conn);
+    pub fn new(conn: &Arc<PgConnection>, blacklist: Option<&Path>) -> Result<Self> {
+        let conn = Arc::clone(conn);
 
         let blacklist = match blacklist {
             Some(path) => build_blacklist(path)?,
