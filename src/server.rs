@@ -264,10 +264,10 @@ impl Server {
     /// Creates a new page with the given contents and metadata.
     pub fn create_page(
         &self,
+        wiki_id: WikiId,
         slug: &str,
         content: &[u8],
         message: &str,
-        wiki_id: WikiId,
         user: Either<UserId, &User>,
         title: &str,
         alt_title: &str,
@@ -281,8 +281,7 @@ impl Server {
             _ => Some(alt_title),
         };
 
-        self.page
-            .create(slug, content, message, wiki_id, &user, title, alt_title)
+        self.page.create(wiki_id, slug, content, message, &user, title, alt_title)
     }
 
     /// Edits an existing page to have the given content.
@@ -290,11 +289,10 @@ impl Server {
     /// (An empty alternate title signifies that none is used)
     pub fn edit_page(
         &self,
+        wiki_id: WikiId,
         slug: &str,
         content: &[u8],
         message: &str,
-        wiki_id: WikiId,
-        page_id: PageId,
         user: Either<UserId, &User>,
         title: Option<&str>,
         alt_title: Option<&str>,
@@ -309,41 +307,36 @@ impl Server {
             None => None,
         };
 
-        self.page.commit(
-            slug, content, message, wiki_id, page_id, user, title, alt_title,
-        )
+        self.page.commit(wiki_id, slug, content, message, user, title, alt_title)
     }
 
     /// Renames a page to use a different slug.
     pub fn rename_page(
         &self,
+        wiki_id: WikiId,
         old_slug: &str,
         new_slug: &str,
         message: &str,
-        wiki_id: WikiId,
-        page_id: PageId,
         user: Either<UserId, &User>,
     ) -> Result<RevisionId> {
         let mut user_obj = None;
         let user = self.get_user(user, &mut user_obj)?;
 
-        self.page
-            .rename(old_slug, new_slug, message, wiki_id, page_id, user)
+        self.page.rename(wiki_id, old_slug, new_slug, message, user)
     }
 
     /// Removes the given page.
     pub fn remove_page(
         &self,
+        wiki_id: WikiId,
         slug: &str,
         message: &str,
-        wiki_id: WikiId,
-        page_id: PageId,
         user: Either<UserId, &User>,
     ) -> Result<RevisionId> {
         let mut user_obj = None;
         let user = self.get_user(user, &mut user_obj)?;
 
-        self.page.remove(slug, message, wiki_id, page_id, user)
+        self.page.remove(wiki_id, slug, message, user)
     }
 
     /// Determines if a page with the given slug exists.
@@ -368,28 +361,28 @@ impl Server {
         })
     }
 
-    /// Gets the contents for a given page, as well as its page ID.
+    /// Gets the contents for a given page.
     pub fn get_page_contents(
         &self,
         wiki_id: WikiId,
         slug: &str,
-    ) -> Result<Option<(PageId, Box<[u8]>)>> {
+    ) -> Result<Option<Box<[u8]>>> {
         self.page.get_page_contents(wiki_id, slug)
     }
 
     /// Sets all the tags for a given page.
     pub fn set_page_tags(
         &self,
-        message: &str,
         wiki_id: WikiId,
-        page_id: PageId,
+        slug: &str,
+        message: &str,
         user: Either<UserId, &User>,
         tags: &[&str],
     ) -> Result<RevisionId> {
         let mut user_obj = None;
         let user = self.get_user(user, &mut user_obj)?;
 
-        self.page.tags(message, wiki_id, page_id, user, tags)
+        self.page.tags(wiki_id, slug, message, user, tags)
     }
 
     /* Rating methods */

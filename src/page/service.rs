@@ -187,10 +187,10 @@ impl PageService {
 
     pub fn create(
         &self,
+        wiki_id: WikiId,
         slug: &str,
         content: &[u8],
         message: &str,
-        wiki_id: WikiId,
         user: &User,
         title: &str,
         alt_title: Option<&str>,
@@ -241,11 +241,10 @@ impl PageService {
 
     pub fn commit(
         &self,
+        wiki_id: WikiId,
         slug: &str,
         content: &[u8],
         message: &str,
-        wiki_id: WikiId,
-        page_id: PageId,
         user: &User,
         title: Option<&str>,
         alt_title: Option<Nullable<&str>>,
@@ -299,11 +298,10 @@ impl PageService {
 
     pub fn rename(
         &self,
+        wiki_id: WikiId,
         old_slug: &str,
         new_slug: &str,
         message: &str,
-        wiki_id: WikiId,
-        page_id: PageId,
         user: &User,
     ) -> Result<RevisionId> {
         info!("Starting transaction for page rename");
@@ -359,10 +357,9 @@ impl PageService {
 
     pub fn remove(
         &self,
+        wiki_id: WikiId,
         slug: &str,
         message: &str,
-        wiki_id: WikiId,
-        page_id: PageId,
         user: &User,
     ) -> Result<RevisionId> {
         info!("Starting transaction for page removal");
@@ -417,9 +414,9 @@ impl PageService {
 
     pub fn tags(
         &self,
-        message: &str,
         wiki_id: WikiId,
-        page_id: PageId,
+        slug: &str,
+        message: &str,
         user: &User,
         tags: &[&str],
     ) -> Result<RevisionId> {
@@ -511,27 +508,10 @@ impl PageService {
         &self,
         wiki_id: WikiId,
         slug: &str,
-    ) -> Result<Option<(PageId, Box<[u8]>)>> {
-        let result = pages::table
-            .filter(pages::slug.eq(slug))
-            .select(pages::page_id)
-            .first::<PageId>(&*self.conn)
-            .optional()?;
-
+    ) -> Result<Option<Box<[u8]>>> {
         info!("Getting page for wiki id {}, slug {}", wiki_id, slug);
 
-        let page_id = match result {
-            Some(page_id) => page_id,
-            None => return Ok(None),
-        };
-
-        let contents = self.get_store(wiki_id, |store| match store.get_page(slug) {
-            Ok(Some(contents)) => Ok(contents),
-            Ok(None) => Err(Error::StaticMsg("No content for page in database")),
-            Err(error) => Err(error),
-        })?;
-
-        Ok(Some((page_id, contents)))
+        self.get_store(wiki_id, |store| store.get_page(slug))
     }
 
     pub fn get_blame(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Blame>> {
