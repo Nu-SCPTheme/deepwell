@@ -119,9 +119,9 @@ impl RatingService {
         })
     }
 
-    pub fn add(&self, page_id: PageId, user_id: UserId, rating: i16) -> Result<RatingId> {
+    pub fn set(&self, page_id: PageId, user_id: UserId, rating: i16) -> Result<RatingId> {
         info!(
-            "Starting transaction to add new rating for page ID {} / user ID {}",
+            "Starting transaction to set new rating for page ID {} / user ID {}",
             page_id, user_id,
         );
 
