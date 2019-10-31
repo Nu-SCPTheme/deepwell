@@ -119,7 +119,7 @@ CREATE TABLE ratings_history (
     page_id BIGSERIAL NOT NULL REFERENCES pages(page_id),
     user_id BIGSERIAL NOT NULL REFERENCES users(user_id),
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    rating SMALLINT NOT NULL
+    rating SMALLINT
 );
 
 CREATE TABLE authors (

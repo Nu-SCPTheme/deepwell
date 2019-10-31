@@ -64,7 +64,7 @@ table! {
         page_id -> Int8,
         user_id -> Int8,
         created_at -> Timestamptz,
-        rating -> Int2,
+        rating -> Nullable<Int2>,
     }
 }
 

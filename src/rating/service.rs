@@ -48,7 +48,7 @@ pub struct RatingHistory {
     page_id: PageId,
     user_id: UserId,
     created_at: DateTime<Utc>,
-    rating: i16,
+    rating: Option<i16>,
 }
 
 impl RatingHistory {
@@ -73,7 +73,7 @@ impl RatingHistory {
     }
 
     #[inline]
-    pub fn rating(&self) -> i16 {
+    pub fn rating(&self) -> Option<i16> {
         self.rating
     }
 }

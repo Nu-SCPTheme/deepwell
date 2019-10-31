@@ -33,7 +33,7 @@ pub struct NewRating {
 pub struct NewRatingHistory {
     pub page_id: i64,
     pub user_id: i64,
-    pub rating: i16,
+    pub rating: Option<i16>,
 }
 
 impl From<NewRating> for NewRatingHistory {
@@ -47,7 +47,7 @@ impl From<NewRating> for NewRatingHistory {
         NewRatingHistory {
             page_id,
             user_id,
-            rating,
+            rating: Some(rating),
         }
     }
 }
