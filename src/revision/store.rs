@@ -221,16 +221,19 @@ impl RevisionStore {
     }
 
     /// For the given slug, create or edit a page to have the specified contents.
-    pub fn commit(&self, slug: &str, content: &[u8], info: CommitInfo) -> Result<GitHash> {
+    pub fn commit(&self, slug: &str, content: Option<&[u8]>, info: CommitInfo) -> Result<GitHash> {
         info!(
             "Committing file changes for slug '{}' ({} bytes)",
             slug,
-            content.len(),
+            content.map(|b| b.len()).unwrap_or(0),
         );
 
         let _guard = self.lock.write();
         check_normal(slug)?;
-        self.write_file(slug, content)?;
+
+        if let Some(content) = content {
+            self.write_file(slug, content)?;
+        }
 
         let path = self.get_path(slug, false);
         let args = arguments!["git", "add", &path];

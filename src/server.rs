@@ -294,7 +294,7 @@ impl Server {
         &self,
         wiki_id: WikiId,
         slug: &str,
-        content: &[u8],
+        content: Option<&[u8]>,
         message: &str,
         user: &User,
         title: Option<&str>,

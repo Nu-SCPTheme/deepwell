@@ -179,7 +179,7 @@ impl PageService {
         &self,
         wiki_id: WikiId,
         slug: &str,
-        content: &[u8],
+        content: Option<&[u8]>,
         info: CommitInfo,
     ) -> Result<GitHash> {
         self.get_store::<_, GitHash>(wiki_id, |store| {
@@ -242,7 +242,7 @@ impl PageService {
                 message: &commit,
             };
 
-            let hash = self.raw_commit(wiki_id, slug, content, info)?;
+            let hash = self.raw_commit(wiki_id, slug, Some(content), info)?;
             let model = NewRevision {
                 page_id: page_id.into(),
                 user_id: user_id.into(),
@@ -265,7 +265,7 @@ impl PageService {
         &self,
         wiki_id: WikiId,
         slug: &str,
-        content: &[u8],
+        content: Option<&[u8]>,
         message: &str,
         user: &User,
         title: Option<&str>,
