@@ -66,6 +66,17 @@ impl AuthorService {
         AuthorService { conn }
     }
 
+    pub fn get_authors(&self, page_id: PageId) -> Result<Vec<Author>> {
+        info!("Getting authors for page id {}", page_id);
+
+        let id: i64 = page_id.into();
+        let result = authors::table
+            .filter(authors::dsl::page_id.eq(id))
+            .load::<Author>(&*self.conn)?;
+
+        Ok(result)
+    }
+
     pub fn set_author(
         &self,
         page_id: PageId,
@@ -93,17 +104,6 @@ impl AuthorService {
             .execute(&*self.conn)?;
 
         Ok(())
-    }
-
-    pub fn get_authors(&self, page_id: PageId) -> Result<Vec<Author>> {
-        info!("Getting authors for page id {}", page_id);
-
-        let id: i64 = page_id.into();
-        let result = authors::table
-            .filter(authors::dsl::page_id.eq(id))
-            .load::<Author>(&*self.conn)?;
-
-        Ok(result)
     }
 }
 
