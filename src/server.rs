@@ -144,8 +144,13 @@ impl Server {
 
     /// Creates a new user with the given name and email. Returns its ID.
     #[inline]
-    pub fn create_user(&self, name: &str, email: &str) -> Result<UserId> {
-        self.user.create(name, email)
+    pub fn create_user(&self, name: &str, email: &str, password: &str) -> Result<UserId> {
+        self.conn.transaction::<_, Error, _>(|| {
+            let user_id = self.user.create(name, email)?;
+            self.password.set(user_id, password)?;
+
+            Ok(user_id)
+        })
     }
 
     /// Edits data attached to a user with the given ID.
