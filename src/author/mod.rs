@@ -22,6 +22,6 @@ mod models;
 mod service;
 
 pub use self::models::AuthorType;
-pub use self::service::AuthorService;
+pub use self::service::{Author, AuthorService};
 
 use self::models::NewAuthor;

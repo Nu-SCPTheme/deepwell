@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::author::{AuthorService, AuthorType};
+use crate::author::{Author, AuthorService, AuthorType};
 use crate::page::PageService;
 use crate::password::PasswordService;
 use crate::prelude::*;
@@ -388,6 +388,15 @@ impl Server {
         }
     }
 
+    /// Gets all authors for a given page.
+    pub fn get_page_authors(&self, page: Either<PageId, (WikiId, &str)>) -> Result<Vec<Author>> {
+        self.conn.transaction::<_, Error, _>(|| {
+            let page_id = self.get_page_id(page)?;
+
+            self.author.get_all(page_id)
+        })
+    }
+
     /// Adds or sets a group of authors.
     pub fn add_page_authors(
         &self,
@@ -405,7 +414,7 @@ impl Server {
         })
     }
 
-    /// Removes a grou pof authors.
+    /// Removes a group of authors.
     pub fn remove_page_authors(
         &self,
         page: Either<PageId, (WikiId, &str)>,
