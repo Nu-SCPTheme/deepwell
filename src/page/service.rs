@@ -27,6 +27,7 @@ use crate::wiki::{Wiki, WikiId};
 use either::*;
 use serde_json as json;
 use std::collections::{HashMap, HashSet};
+use std::fs;
 use std::path::PathBuf;
 
 mod page_id {
@@ -144,6 +145,8 @@ impl PageService {
 
     pub fn add_store(&self, wiki: &Wiki) -> Result<()> {
         let repo = self.directory.join(wiki.slug());
+        fs::create_dir(&repo)?;
+
         let store = RevisionStore::new(repo, wiki.domain());
         store.initial_commit()?;
 
