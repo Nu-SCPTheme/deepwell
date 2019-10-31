@@ -88,7 +88,8 @@ CREATE TABLE revisions (
     page_id BIGSERIAL NOT NULL REFERENCES pages(page_id),
     user_id BIGSERIAL NOT NULL REFERENCES users(user_id),
     message TEXT NOT NULL,
-    git_commit BIT(160) NOT NULL UNIQUE,
+    -- diesel can't serialize to BIT
+    git_commit BYTEA NOT NULL UNIQUE CHECK(LENGTH(git_commit) * 8 = 160),
     change_type VARCHAR(8) NOT NULL CHECK (
         change_type IN (
             'create',
