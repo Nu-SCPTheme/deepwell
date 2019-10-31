@@ -3,8 +3,7 @@
 
 Wikidot-like storage and maintenance system. Tracks wikis, users, passwords, pages, revisions, files, and manages the database. Its schema and migrations are handled by [Diesel](https://diesel.rs/).
 
-You will need the `diesel_cli` crate installed. For all commands you will need to set the
-`DATABASE_URL` or `--database-url` corresponding to the database you wish to modify.
+You will need the `diesel_cli` crate installed. For all commands you will need to the `DATABASE_URL` environment variable set.
 
 ### Compilation
 This library targets the latest stable Rust. At time of writing, that is 1.38.0
