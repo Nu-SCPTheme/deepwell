@@ -422,7 +422,7 @@ impl Server {
     pub fn remove_page_authors(
         &self,
         page: Either<PageId, (WikiId, &str)>,
-        authors: &[UserId],
+        authors: &[(UserId, AuthorType)],
     ) -> Result<usize> {
         info!("Removing authors from page {:?}: {:?}", page, authors);
 
@@ -430,8 +430,8 @@ impl Server {
             let page_id = self.get_page_id(page)?;
             let mut count = 0;
 
-            for user_id in authors.iter().copied() {
-                if self.author.remove(page_id, user_id)? {
+            for (user_id, author_type) in authors.iter().copied() {
+                if self.author.remove(page_id, user_id, author_type)? {
                     count += 1;
                 }
             }

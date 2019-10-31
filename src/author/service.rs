@@ -99,7 +99,7 @@ impl AuthorService {
 
         diesel::insert_into(authors::table)
             .values(&model)
-            .on_conflict((authors::dsl::page_id, authors::dsl::user_id))
+            .on_conflict((authors::dsl::page_id, authors::dsl::user_id, authors::dsl::author_type))
             .do_update()
             .set(&model)
             .execute(&*self.conn)?;
@@ -107,7 +107,7 @@ impl AuthorService {
         Ok(())
     }
 
-    pub fn remove(&self, page_id: PageId, user_id: UserId) -> Result<bool> {
+    pub fn remove(&self, page_id: PageId, user_id: UserId, author_type: AuthorType) -> Result<bool> {
         info!(
             "Removing author for page id {} / user id {}",
             page_id, user_id,
@@ -115,9 +115,11 @@ impl AuthorService {
 
         let page_id: i64 = page_id.into();
         let user_id: i64 = user_id.into();
+        let author_type: &str = author_type.into();
         let rows = diesel::delete(authors::table)
             .filter(authors::dsl::page_id.eq(page_id))
             .filter(authors::dsl::user_id.eq(user_id))
+            .filter(authors::dsl::author_type.eq(author_type))
             .execute(&*self.conn)?;
 
         Ok(rows_to_result(rows))
