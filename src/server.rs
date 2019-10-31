@@ -243,24 +243,6 @@ impl Server {
 
     /* Page methods */
 
-    fn get_user<'a>(
-        &self,
-        user: Either<UserId, &'a User>,
-        storage: &'a mut Option<User>,
-    ) -> Result<&'a User> {
-        match user {
-            Right(user) => Ok(user),
-            Left(id) => match self.user.get_from_id(id) {
-                Ok(Some(user)) => {
-                    *storage = Some(user);
-                    Ok(storage.as_ref().unwrap())
-                }
-                Ok(None) => Err(Error::UserNotFound),
-                Err(error) => Err(error),
-            },
-        }
-    }
-
     /// Creates a new page with the given contents and metadata.
     pub fn create_page(
         &self,
@@ -268,21 +250,17 @@ impl Server {
         slug: &str,
         content: &[u8],
         message: &str,
-        user: Either<UserId, &User>,
+        user: &User,
         title: &str,
         alt_title: &str,
     ) -> Result<(PageId, RevisionId)> {
-        let mut user_obj = None;
-        let user = self.get_user(user, &mut user_obj)?;
-
         // Empty string means use default
         let alt_title: Option<&str> = match alt_title {
             "" => None,
             _ => Some(alt_title),
         };
 
-        self.page
-            .create(wiki_id, slug, content, message, &user, title, alt_title)
+        self.page.create(wiki_id, slug, content, message, user, title, alt_title)
     }
 
     /// Edits an existing page to have the given content.
@@ -294,13 +272,10 @@ impl Server {
         slug: &str,
         content: &[u8],
         message: &str,
-        user: Either<UserId, &User>,
+        user: &User,
         title: Option<&str>,
         alt_title: Option<&str>,
     ) -> Result<RevisionId> {
-        let mut user_obj = None;
-        let user = self.get_user(user, &mut user_obj)?;
-
         // Empty string means use default
         let alt_title: Option<Option<&str>> = match alt_title {
             Some("") => Some(None),
@@ -313,31 +288,27 @@ impl Server {
     }
 
     /// Renames a page to use a different slug.
+    #[inline]
     pub fn rename_page(
         &self,
         wiki_id: WikiId,
         old_slug: &str,
         new_slug: &str,
         message: &str,
-        user: Either<UserId, &User>,
+        user: &User,
     ) -> Result<RevisionId> {
-        let mut user_obj = None;
-        let user = self.get_user(user, &mut user_obj)?;
-
         self.page.rename(wiki_id, old_slug, new_slug, message, user)
     }
 
     /// Removes the given page.
+    #[inline]
     pub fn remove_page(
         &self,
         wiki_id: WikiId,
         slug: &str,
         message: &str,
-        user: Either<UserId, &User>,
+        user: &User,
     ) -> Result<RevisionId> {
-        let mut user_obj = None;
-        let user = self.get_user(user, &mut user_obj)?;
-
         self.page.remove(wiki_id, slug, message, user)
     }
 
@@ -369,17 +340,15 @@ impl Server {
     }
 
     /// Sets all the tags for a given page.
+    #[inline]
     pub fn set_page_tags(
         &self,
         wiki_id: WikiId,
         slug: &str,
         message: &str,
-        user: Either<UserId, &User>,
+        user: &User,
         tags: &[&str],
     ) -> Result<RevisionId> {
-        let mut user_obj = None;
-        let user = self.get_user(user, &mut user_obj)?;
-
         self.page.tags(wiki_id, slug, message, user, tags)
     }
 
