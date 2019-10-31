@@ -147,7 +147,7 @@ impl RatingService {
         })
     }
 
-    pub fn remove(&self, page_id: PageId, user_id: UserId) -> Result<bool> {
+    pub fn remove(&self, page_id: PageId, user_id: UserId) -> Result<Option<RatingId>> {
         self.conn.transaction::<_, Error, _>(|| {
             let page_id: i64 = page_id.into();
             let user_id: i64 = user_id.into();
@@ -159,11 +159,21 @@ impl RatingService {
                 .execute(&*self.conn)?;
 
             if !rows_to_result(rows) {
-                return Ok(false);
+                return Ok(None);
             }
 
-            // TODO add entry
-            Ok(false)
+            let model = NewRatingHistory {
+                page_id,
+                user_id,
+                rating: None,
+            };
+
+            let rating_id = diesel::insert_into(ratings_history::table)
+                .values(&model)
+                .returning(ratings_history::dsl::rating_id)
+                .get_result::<RatingId>(&*self.conn)?;
+
+            Ok(Some(rating_id))
         })
     }
 

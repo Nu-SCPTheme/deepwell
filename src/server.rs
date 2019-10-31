@@ -454,8 +454,9 @@ impl Server {
     }
 
     /// Removes the rating for a given page and user.
+    /// Returns `None` if the rating is already deleted.
     #[inline]
-    pub fn remove_rating(&self, page_id: PageId, user_id: UserId) -> Result<bool> {
+    pub fn remove_rating(&self, page_id: PageId, user_id: UserId) -> Result<Option<RatingId>> {
         info!(
             "Removing rating for page ID {} / user ID {}",
             page_id, user_id,
