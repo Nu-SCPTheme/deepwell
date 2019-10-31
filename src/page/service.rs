@@ -185,7 +185,7 @@ impl PageService {
         })
     }
 
-    fn get_page_id(&self, wiki_id: WikiId, slug: &str) -> Result<Option<PageId>> {
+    pub fn get_page_id(&self, wiki_id: WikiId, slug: &str) -> Result<Option<PageId>> {
         debug!("Getting page id in wiki id {} for slug '{}'", wiki_id, slug);
 
         let wiki_id: i64 = wiki_id.into();

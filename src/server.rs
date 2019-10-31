@@ -25,6 +25,7 @@ use crate::prelude::*;
 use crate::rating::{RatingHistory, RatingId, RatingService};
 use crate::user::UserService;
 use crate::wiki::{UpdateWiki, WikiService};
+use chrono::prelude::*;
 use diesel::{Connection, PgConnection};
 use either::*;
 use std::fmt::{self, Debug};
@@ -368,6 +369,55 @@ impl Server {
         tags: &[&str],
     ) -> Result<RevisionId> {
         self.page.tags(wiki_id, slug, message, user, tags)
+    }
+
+    /* Author methods */
+
+    fn get_page_id(&self, page: Either<PageId, (WikiId, &str)>) -> Result<PageId> {
+        match page {
+            Left(id) => Ok(id),
+            Right((wiki_id, slug)) => self
+                .page
+                .get_page_id(wiki_id, slug)?
+                .ok_or(Error::PageNotFound),
+        }
+    }
+
+    /// Adds or sets a group of authors.
+    pub fn add_page_authors(
+        &self,
+        page: Either<PageId, (WikiId, &str)>,
+        authors: &[(UserId, AuthorType, Option<NaiveDate>)],
+    ) -> Result<()> {
+        self.conn.transaction::<_, Error, _>(|| {
+            let page_id = self.get_page_id(page)?;
+
+            for &(user_id, author_type, written_at) in authors {
+                self.author.add(page_id, user_id, author_type, written_at)?;
+            }
+
+            Ok(())
+        })
+    }
+
+    /// Removes a grou pof authors.
+    pub fn remove_page_authors(
+        &self,
+        page: Either<PageId, (WikiId, &str)>,
+        authors: &[UserId],
+    ) -> Result<usize> {
+        self.conn.transaction::<_, Error, _>(|| {
+            let page_id = self.get_page_id(page)?;
+            let mut count = 0;
+
+            for user_id in authors.iter().copied() {
+                if self.author.remove(page_id, user_id)? {
+                    count += 1;
+                }
+            }
+
+            Ok(count)
+        })
     }
 
     /* Rating methods */
