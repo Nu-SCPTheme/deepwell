@@ -68,7 +68,7 @@ CREATE TABLE pages (
     slug TEXT NOT NULL,
     title TEXT NOT NULL,
     alt_title TEXT,
-    tags TEXT[] NOT NULL,
+    tags TEXT[] NOT NULL DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMP WITH TIME ZONE,
     UNIQUE (deleted_at, slug)
