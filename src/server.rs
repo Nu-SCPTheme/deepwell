@@ -390,6 +390,8 @@ impl Server {
 
     /// Gets all authors for a given page.
     pub fn get_page_authors(&self, page: Either<PageId, (WikiId, &str)>) -> Result<Vec<Author>> {
+        info!("Getting authors for page {:?}", page);
+
         self.conn.transaction::<_, Error, _>(|| {
             let page_id = self.get_page_id(page)?;
 
@@ -403,6 +405,8 @@ impl Server {
         page: Either<PageId, (WikiId, &str)>,
         authors: &[(UserId, AuthorType, Option<NaiveDate>)],
     ) -> Result<()> {
+        info!("Adding authors to page {:?}: {:?}", page, authors);
+
         self.conn.transaction::<_, Error, _>(|| {
             let page_id = self.get_page_id(page)?;
 
@@ -420,6 +424,8 @@ impl Server {
         page: Either<PageId, (WikiId, &str)>,
         authors: &[UserId],
     ) -> Result<usize> {
+        info!("Removing authors from page {:?}: {:?}", page, authors);
+
         self.conn.transaction::<_, Error, _>(|| {
             let page_id = self.get_page_id(page)?;
             let mut count = 0;
