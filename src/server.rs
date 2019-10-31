@@ -86,6 +86,12 @@ impl Server {
         })
     }
 
+    #[cfg(test)]
+    #[inline]
+    pub fn test_transaction<F: FnOnce() -> Result<()>>(&self, f: F) {
+        self.conn.test_transaction::<_, Error, _>(f);
+    }
+
     /* Wiki methods */
 
     /// Creates a new wiki with the given parameters. Returns its ID.
@@ -183,8 +189,8 @@ impl Server {
 
     /// Get the model for a user from its ID.
     #[inline]
-    pub fn get_user_from_id(&self, id: UserId) -> Result<Option<User>> {
-        self.user.get_from_id(id)
+    pub fn get_user_from_id(&self, id: UserId) -> Result<User> {
+        self.user.get_from_id(id)?.ok_or(Error::UserNotFound)
     }
 
     /// Gets the models for users from their IDs.
@@ -215,13 +221,13 @@ impl Server {
 
     /// Marks the user as "inactive", effectively deleting them.
     #[inline]
-    pub fn make_user_inactive(&self, id: UserId) -> Result<()> {
+    pub fn mark_user_inactive(&self, id: UserId) -> Result<()> {
         self.user.mark_inactive(id, true)
     }
 
     /// Marks the user as "active" again, effectively un-deleting them.
     #[inline]
-    pub fn make_user_active(&self, id: UserId) -> Result<()> {
+    pub fn mark_user_active(&self, id: UserId) -> Result<()> {
         self.user.mark_inactive(id, false)
     }
 

@@ -62,9 +62,13 @@ mod user;
 mod utils;
 mod wiki;
 
+#[cfg(test)]
+mod test;
+
 pub mod prelude {
     pub use crate::id::*;
     pub use crate::model::*;
+    pub use crate::server::{Server, ServerConfig};
     pub use crate::{Error, Result, StdResult};
 }
 
@@ -87,6 +91,7 @@ mod service_prelude {
     pub use crate::schema::*;
     pub use chrono::prelude::*;
     pub use diesel::prelude::*;
+    pub use diesel::query_builder::debug_query;
     pub use parking_lot::RwLock;
     pub use std::collections::HashMap;
     pub use std::fmt::{self, Debug};
