@@ -66,7 +66,7 @@ impl AuthorService {
         AuthorService { conn }
     }
 
-    pub fn get_authors(&self, page_id: PageId) -> Result<Vec<Author>> {
+    pub fn get_all(&self, page_id: PageId) -> Result<Vec<Author>> {
         info!("Getting authors for page id {}", page_id);
 
         let id: i64 = page_id.into();
@@ -77,7 +77,7 @@ impl AuthorService {
         Ok(result)
     }
 
-    pub fn set_author(
+    pub fn add(
         &self,
         page_id: PageId,
         user_id: UserId,
@@ -85,8 +85,8 @@ impl AuthorService {
         written_at: Option<NaiveDate>,
     ) -> Result<()> {
         debug!(
-            "Setting author for page id {} / user id {}",
-            page_id, user_id
+            "Adding author for page id {} / user id {}",
+            page_id, user_id,
         );
 
         let model = NewAuthor {
@@ -104,6 +104,26 @@ impl AuthorService {
             .execute(&*self.conn)?;
 
         Ok(())
+    }
+
+    pub fn remove(&self, page_id: PageId, user_id: UserId) -> Result<bool> {
+        info!(
+            "Removing author for page id {} / user id {}",
+            page_id, user_id,
+        );
+
+        let page_id: i64 = page_id.into();
+        let user_id: i64 = user_id.into();
+        let rows = diesel::delete(authors::table)
+            .filter(authors::dsl::page_id.eq(page_id))
+            .filter(authors::dsl::user_id.eq(user_id))
+            .execute(&*self.conn)?;
+
+        match rows {
+            0 => Ok(false),
+            1 => Ok(true),
+            _ => panic!("Multiple rows deleted in primary key removal"),
+        }
     }
 }
 

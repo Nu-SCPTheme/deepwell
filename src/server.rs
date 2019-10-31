@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::author::AuthorService;
+use crate::author::{AuthorService, AuthorType};
 use crate::page::PageService;
 use crate::password::PasswordService;
 use crate::prelude::*;
@@ -251,6 +251,7 @@ impl Server {
         content: &[u8],
         message: &str,
         user: &User,
+        other_authors: &[UserId],
         title: &str,
         alt_title: &str,
     ) -> Result<(PageId, RevisionId)> {
@@ -260,7 +261,24 @@ impl Server {
             _ => Some(alt_title),
         };
 
-        self.page.create(wiki_id, slug, content, message, user, title, alt_title)
+        self.conn.transaction::<_, Error, _>(|| {
+            // Create page
+            let (page_id, revision_id) = self
+                .page
+                .create(wiki_id, slug, content, message, user, title, alt_title)?;
+
+            // Add committing user as author
+            self.author
+                .add(page_id, user.id(), AuthorType::Author, None)?;
+
+            // Add other users
+            for user_id in other_authors.iter().copied() {
+                self.author
+                    .add(page_id, user_id, AuthorType::Author, None)?;
+            }
+
+            Ok((page_id, revision_id))
+        })
     }
 
     /// Edits an existing page to have the given content.
