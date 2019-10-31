@@ -31,7 +31,7 @@ CREATE TABLE wikis (
     name TEXT NOT NULL,
     slug TEXT NOT NULL UNIQUE,
     domain TEXT NOT NULL UNIQUE CHECK(domain = LOWER(domain)),
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE wiki_membership (
