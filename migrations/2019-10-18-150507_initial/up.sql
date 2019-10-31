@@ -134,7 +134,7 @@ CREATE TABLE authors (
             'maintainer'
         )
     ),
-    written_at DATE NOT NULL,
+    written_at DATE NOT NULL DEFAULT NOW(),
     PRIMARY KEY (page_id, user_id, author_type)
 );
 
