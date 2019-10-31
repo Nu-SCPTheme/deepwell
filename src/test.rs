@@ -83,7 +83,7 @@ fn test_user() {
 
         srv.edit_user(
             user_id,
-            Some("Jenny User"),
+            Some("Jenny Person"),
             None,
             Some("http://www.scp-wiki.net/authors-pages"),
             None,
@@ -100,5 +100,34 @@ fn test_user() {
             .expect("Unable to mark user as inactive");
         srv.mark_user_active(user_id)
             .expect("Unable to reactivate user");
+
+        let user_id_2 = srv
+            .create_user("otheruser", "jeremy@example.net", "superstrongpassword")
+            .expect("Unable to create second user");
+
+        srv.edit_user(
+            user_id_2,
+            None,
+            None,
+            None,
+            None,
+            Some("test user 2"),
+            Some("nb"),
+            None,
+        )
+        .expect("Unable to edit second user");
+
+        let user_1 = srv
+            .get_user_from_name("Jenny Person")
+            .expect("Unable to get user by username")
+            .expect("No such user with this name");
+        let user_2 = srv
+            .get_user_from_id(user_id_2)
+            .expect("Unable to get user from ID");
+
+        let users = srv
+            .get_users_from_ids(&[user_id, UserId::from_raw(9999), user_id_2])
+            .expect("Unable to get multiple users");
+        assert_eq!(users, vec![Some(user_1), None, Some(user_2)]);
     });
 }
