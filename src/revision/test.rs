@@ -284,7 +284,7 @@ fn test_git() {
         };
 
         let hash = store
-            .commit(slug, content.as_bytes(), info)
+            .commit(slug, Some(content.as_bytes()), info)
             .expect("Unable to commit generated data");
 
         // Maybe add commit for checking diff
@@ -366,25 +366,25 @@ fn test_thread() {
         message: "message",
     };
 
-    store.commit("test-0", b"000", info).unwrap();
+    store.commit("test-0", Some(b"000"), info).unwrap();
 
     let rc = Arc::new((directory, store));
 
     let rc2 = Arc::clone(&rc);
     thread::spawn(move || {
         let (_, store) = &*rc2;
-        store.commit("test-1", b"abc", info).unwrap();
+        store.commit("test-1", Some(b"abc"), info).unwrap();
     });
 
     let rc2 = Arc::clone(&rc);
     thread::spawn(move || {
         let (_, store) = &*rc2;
-        store.commit("test-2", b"def", info).unwrap();
+        store.commit("test-2", Some(b"def"), info).unwrap();
     });
 
     let rc2 = Arc::clone(&rc);
     thread::spawn(move || {
         let (_, store) = &*rc2;
-        store.commit("test-3", b"ghi", info).unwrap();
+        store.commit("test-3", Some(b"ghi"), info).unwrap();
     });
 }
