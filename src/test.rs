@@ -192,6 +192,7 @@ fn test_page() {
         )
         .expect("Unable to remove page");
 
+        assert_eq!(srv.check_page(wiki_id, "nonexistent").unwrap(), false);
         assert_eq!(srv.check_page(wiki_id, "tale-here").unwrap(), false);
         assert_eq!(srv.check_page(wiki_id, "amazing-battle").unwrap(), false);
     });

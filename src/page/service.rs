@@ -524,6 +524,7 @@ impl PageService {
 
         let result = pages::table
             .filter(pages::slug.eq(slug))
+            .filter(pages::deleted_at.is_null())
             .select(pages::page_id)
             .first::<PageId>(&*self.conn)
             .optional()?;
@@ -532,12 +533,13 @@ impl PageService {
     }
 
     pub fn get_page(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Page>> {
-        info!("Getting page for wiki id {}, slug {}", wiki_id, slug,);
+        info!("Getting page for wiki id {}, slug {}", wiki_id, slug);
 
         let wiki_id: i64 = wiki_id.into();
         let page = pages::table
             .filter(pages::wiki_id.eq(wiki_id))
             .filter(pages::slug.eq(slug))
+            .filter(pages::deleted_at.is_null())
             .first::<Page>(&*self.conn)
             .optional()?;
 
