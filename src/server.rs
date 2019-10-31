@@ -203,7 +203,7 @@ impl Server {
 
     /// Gets the model for a user from its name.
     #[inline]
-    pub fn get_users_from_name(&self, name: &str) -> Result<Option<User>> {
+    pub fn get_user_from_name(&self, name: &str) -> Result<Option<User>> {
         self.user.get_from_name(name)
     }
 
