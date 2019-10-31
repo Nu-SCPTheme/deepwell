@@ -126,17 +126,6 @@ impl PasswordService {
         Ok(())
     }
 
-    pub fn has(&self, user_id: UserId) -> Result<bool> {
-        let id: i64 = user_id.into();
-        let record = passwords::table
-            .find(id)
-            .select(passwords::dsl::user_id)
-            .first::<UserId>(&*self.conn)
-            .optional()?;
-
-        Ok(record.is_some())
-    }
-
     pub fn set(&self, user_id: UserId, password: &str) -> Result<()> {
         self.verify_password(password)?;
 
