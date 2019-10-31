@@ -445,9 +445,23 @@ impl Server {
     /// Sets the rating for a given page and user.
     #[inline]
     pub fn set_rating(&self, page_id: PageId, user_id: UserId, rating: i16) -> Result<RatingId> {
-        info!("Setting rating for page ID {} / user ID {}: {}", page_id, user_id, rating);
+        info!(
+            "Setting rating for page ID {} / user ID {}: {}",
+            page_id, user_id, rating,
+        );
 
         self.rating.set(page_id, user_id, rating)
+    }
+
+    /// Removes the rating for a given page and user.
+    #[inline]
+    pub fn remove_rating(&self, page_id: PageId, user_id: UserId) -> Result<bool> {
+        info!(
+            "Removing rating for page ID {} / user ID {}",
+            page_id, user_id,
+        );
+
+        self.rating.remove(page_id, user_id)
     }
 
     /// Gets all changes in the rating for a given page and user.

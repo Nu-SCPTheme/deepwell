@@ -20,6 +20,7 @@
 
 use super::{NewRating, NewRatingHistory};
 use crate::service_prelude::*;
+use crate::utils::rows_to_result;
 
 make_id_type!(RatingId);
 
@@ -120,11 +121,6 @@ impl RatingService {
     }
 
     pub fn set(&self, page_id: PageId, user_id: UserId, rating: i16) -> Result<RatingId> {
-        info!(
-            "Starting transaction to set new rating for page ID {} / user ID {}",
-            page_id, user_id,
-        );
-
         self.conn.transaction::<_, Error, _>(|| {
             let model = NewRating {
                 page_id: page_id.into(),
@@ -132,6 +128,7 @@ impl RatingService {
                 rating,
             };
 
+            trace!("Inserting rating into rating table");
             diesel::insert_into(ratings::table)
                 .values(&model)
                 .on_conflict((ratings::dsl::page_id, ratings::dsl::user_id))
@@ -139,6 +136,7 @@ impl RatingService {
                 .set(ratings::dsl::rating.eq(rating))
                 .execute(&*self.conn)?;
 
+            trace!("Inserting rating into rating history");
             let model = NewRatingHistory::from(model);
             let rating_id = diesel::insert_into(ratings_history::table)
                 .values(&model)
@@ -149,10 +147,30 @@ impl RatingService {
         })
     }
 
+    pub fn remove(&self, page_id: PageId, user_id: UserId) -> Result<bool> {
+        self.conn.transaction::<_, Error, _>(|| {
+            let page_id: i64 = page_id.into();
+            let user_id: i64 = user_id.into();
+
+            trace!("Deleting rating from rating table");
+            let rows = diesel::delete(ratings::table)
+                .filter(ratings::page_id.eq(page_id))
+                .filter(ratings::user_id.eq(user_id))
+                .execute(&*self.conn)?;
+
+            if !rows_to_result(rows) {
+                return Ok(false);
+            }
+
+            // TODO add entry
+            Ok(false)
+        })
+    }
+
     pub fn get_history(&self, page_id: PageId, user_id: UserId) -> Result<Vec<RatingHistory>> {
-        info!(
+        debug!(
             "Getting rating history for page ID {} / user ID {}",
-            page_id, user_id
+            page_id, user_id,
         );
 
         let page_id: i64 = page_id.into();

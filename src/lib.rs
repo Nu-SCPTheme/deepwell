@@ -59,6 +59,7 @@ mod revision;
 mod schema;
 mod server;
 mod user;
+mod utils;
 mod wiki;
 
 pub mod prelude {

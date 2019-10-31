@@ -21,6 +21,7 @@
 use super::{AuthorType, NewAuthor};
 use crate::schema::authors;
 use crate::service_prelude::*;
+use crate::utils::rows_to_result;
 use std::convert::TryFrom;
 
 #[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
@@ -119,11 +120,7 @@ impl AuthorService {
             .filter(authors::dsl::user_id.eq(user_id))
             .execute(&*self.conn)?;
 
-        match rows {
-            0 => Ok(false),
-            1 => Ok(true),
-            _ => panic!("Multiple rows deleted in primary key removal"),
-        }
+        Ok(rows_to_result(rows))
     }
 }
 
