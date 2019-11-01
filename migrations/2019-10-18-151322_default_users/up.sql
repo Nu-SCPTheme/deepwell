@@ -1,3 +1,4 @@
+-- Default or dummy users
 INSERT INTO users (user_id, name, email, is_verified, is_bot, website, about, location)
     VALUES (
         0,
@@ -70,4 +71,66 @@ INSERT INTO users (user_id, name, email, is_verified, is_bot, website, about, lo
         '?'
     );
 
+-- Add invalid passwords to prevent logging in
+INSERT INTO passwords (user_id, hash, salt, logn, param_r, param_p)
+    VALUES (
+        0,
+        E'\\x0000000000000000000000000000000000000000000000000000000000000000',
+        E'\\x00000000000000000000000000000000',
+        1,
+        1,
+        1
+    );
+
+INSERT INTO passwords (user_id, hash, salt, logn, param_r, param_p)
+    VALUES (
+        1,
+        E'\\x0000000000000000000000000000000000000000000000000000000000000000',
+        E'\\x00000000000000000000000000000000',
+        1,
+        1,
+        1
+    );
+
+INSERT INTO passwords (user_id, hash, salt, logn, param_r, param_p)
+    VALUES (
+        2,
+        E'\\x0000000000000000000000000000000000000000000000000000000000000000',
+        E'\\x00000000000000000000000000000000',
+        1,
+        1,
+        1
+    );
+
+INSERT INTO passwords (user_id, hash, salt, logn, param_r, param_p)
+    VALUES (
+        3,
+        E'\\x0000000000000000000000000000000000000000000000000000000000000000',
+        E'\\x00000000000000000000000000000000',
+        1,
+        1,
+        1
+    );
+
+INSERT INTO passwords (user_id, hash, salt, logn, param_r, param_p)
+    VALUES (
+        4,
+        E'\\x0000000000000000000000000000000000000000000000000000000000000000',
+        E'\\x00000000000000000000000000000000',
+        1,
+        1,
+        1
+    );
+
+INSERT INTO passwords (user_id, hash, salt, logn, param_r, param_p)
+    VALUES (
+        5,
+        E'\\x0000000000000000000000000000000000000000000000000000000000000000',
+        E'\\x00000000000000000000000000000000',
+        1,
+        1,
+        1
+    );
+
+-- Ensure new users don't overrun with existing users
 ALTER SEQUENCE users_user_id_seq RESTART WITH 6;
