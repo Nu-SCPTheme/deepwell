@@ -62,3 +62,27 @@ fn password_service() {
         bad_password!(user_id, "letmein");
     });
 }
+
+#[test]
+fn password_default() {
+    run(|srv| {
+        macro_rules! bad_password {
+            ($user_id:expr, $password:expr) => {{
+                let user_id = UserId::from_raw($user_id);
+
+                match srv.validate_user_password(user_id, $password) {
+                    Err(Error::AuthenticationFailed) => (),
+                    Err(error) => panic!("Unexpected error: {}", error),
+                    Ok(_) => panic!("Password matched when it shouldn't have"),
+                }};
+            };
+        }
+
+        bad_password!(0, "blackmoon");
+        bad_password!(1, "blackmoon");
+        bad_password!(2, "blackmoon");
+        bad_password!(3, "blackmoon");
+        bad_password!(4, "blackmoon");
+        bad_password!(5, "blackmoon");
+    });
+}
