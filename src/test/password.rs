@@ -44,7 +44,6 @@ fn password_service() {
         bad_password!(bad_user_id, "blackmoonhowls");
         bad_password!(bad_user_id, "blackmonhowls");
         bad_password!(bad_user_id, "rustybirb1");
-        bad_password!(bad_user_id, "password");
         bad_password!(bad_user_id, "letmein");
 
         let user_id = srv
@@ -54,7 +53,6 @@ fn password_service() {
         good_password!(user_id, "blackmoonhowls");
         bad_password!(user_id, "blackmonhowls");
         bad_password!(user_id, "rustybirb1");
-        bad_password!(user_id, "password");
         bad_password!(user_id, "letmein");
 
         srv.set_user_password(user_id, "rustybirb1")
@@ -63,7 +61,6 @@ fn password_service() {
         bad_password!(user_id, "blackmoonhowls");
         bad_password!(user_id, "blackmonhowls");
         good_password!(user_id, "rustybirb1");
-        bad_password!(user_id, "password");
         bad_password!(user_id, "letmein");
     });
 }
