@@ -21,7 +21,7 @@
 use super::prelude::*;
 
 #[test]
-fn test_user() {
+fn user_service() {
     run(|srv| {
         let user_id = srv
             .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")

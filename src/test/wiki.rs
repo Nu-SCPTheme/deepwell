@@ -21,7 +21,7 @@
 use super::prelude::*;
 
 #[test]
-fn test_wiki() {
+fn wiki_service() {
     run(|srv| {
         let wiki_id = srv
             .create_wiki("Test Wiki", "test", "example.com")

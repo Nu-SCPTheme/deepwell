@@ -21,7 +21,7 @@
 use super::prelude::*;
 
 #[test]
-fn test_page() {
+fn page_service() {
     run(|srv| {
         let user = srv
             .get_user_from_name("unknown")

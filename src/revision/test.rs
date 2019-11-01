@@ -347,7 +347,7 @@ fn test_git() {
 }
 
 #[test]
-fn test_thread() {
+fn thread() {
     use std::sync::Arc;
     use std::thread;
 

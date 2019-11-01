@@ -22,7 +22,7 @@ use super::{check_password, new_password, Password};
 use crate::user::UserId;
 
 #[test]
-fn test_password() {
+fn crypto() {
     // Since we're not actually using Diesel to persist to disk,
     // we have to locally store the values here.
 

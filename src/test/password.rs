@@ -21,7 +21,7 @@
 use super::prelude::*;
 
 #[test]
-fn test_password() {
+fn password_service() {
     run(|srv| {
         macro_rules! good_password {
             ($user_id:expr, $password:expr) => {
