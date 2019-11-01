@@ -22,6 +22,7 @@ extern crate color_backtrace;
 extern crate tempfile;
 
 mod page;
+mod password;
 mod user;
 mod wiki;
 
