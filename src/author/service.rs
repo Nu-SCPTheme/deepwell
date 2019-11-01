@@ -73,6 +73,8 @@ impl AuthorService {
         let id: i64 = page_id.into();
         let result = authors::table
             .filter(authors::dsl::page_id.eq(id))
+            .order_by(authors::dsl::written_at.asc())
+            .order_by(authors::dsl::user_id.asc())
             .load::<Author>(&*self.conn)?;
 
         Ok(result)
