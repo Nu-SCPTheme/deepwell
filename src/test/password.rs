@@ -74,8 +74,8 @@ fn password_default() {
                     Err(Error::AuthenticationFailed) => (),
                     Err(error) => panic!("Unexpected error: {}", error),
                     Ok(_) => panic!("Password matched when it shouldn't have"),
-                }};
-            };
+                }
+            }};
         }
 
         bad_password!(0, "blackmoon");
