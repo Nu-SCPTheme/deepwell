@@ -42,7 +42,6 @@ fn password_service() {
 
         let bad_user_id = UserId::from_raw(999);
         bad_password!(bad_user_id, "blackmoonhowls");
-        bad_password!(bad_user_id, "blackmonhowls");
         bad_password!(bad_user_id, "rustybirb1");
         bad_password!(bad_user_id, "letmein");
 
@@ -59,7 +58,6 @@ fn password_service() {
             .expect("Unable to set new password");
 
         bad_password!(user_id, "blackmoonhowls");
-        bad_password!(user_id, "blackmonhowls");
         good_password!(user_id, "rustybirb1");
         bad_password!(user_id, "letmein");
     });
