@@ -107,7 +107,7 @@ impl RatingService {
                 .filter(ratings::page_id.eq(id))
                 .select(sum(ratings::rating))
                 .first::<Option<i64>>(&*self.conn)?
-                .ok_or_else(|| Error::StaticMsg("inconsistency between pages and ratings table"))?;
+                .unwrap_or(0);
 
             let votes = ratings::table
                 .filter(ratings::page_id.eq(id))
