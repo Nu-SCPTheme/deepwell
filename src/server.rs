@@ -365,15 +365,20 @@ impl Server {
 
     /// Sets all the tags for a given page.
     #[inline]
-    pub fn set_page_tags(
+    pub fn set_page_tags<S: AsRef<str>>(
         &self,
         wiki_id: WikiId,
         slug: &str,
         message: &str,
         user: &User,
-        tags: &[&str],
+        tags: &[S],
     ) -> Result<RevisionId> {
-        self.page.tags(wiki_id, slug, message, user, tags)
+        let mut tags = tags
+            .into_iter()
+            .map(|tag| tag.as_ref())
+            .collect::<Vec<&str>>();
+
+        self.page.tags(wiki_id, slug, message, user, &mut tags)
     }
 
     /* Author methods */

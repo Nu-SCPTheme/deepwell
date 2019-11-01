@@ -452,7 +452,7 @@ impl PageService {
         slug: &str,
         message: &str,
         user: &User,
-        tags: &[&str],
+        tags: &mut [&str],
     ) -> Result<RevisionId> {
         info!("Starting transaction for page tags");
 
@@ -510,6 +510,13 @@ impl PageService {
             trace!("Inserting tag change {:?} into tag history table", &model);
             diesel::insert_into(tag_history::table)
                 .values(&model)
+                .execute(&*self.conn)?;
+
+            tags.sort();
+
+            trace!("Updating tags for page");
+            diesel::update(pages::table)
+                .set(pages::dsl::tags.eq(&*tags))
                 .execute(&*self.conn)?;
 
             Ok(revision_id)
