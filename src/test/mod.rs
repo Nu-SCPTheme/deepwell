@@ -21,6 +21,7 @@
 extern crate color_backtrace;
 extern crate tempfile;
 
+mod authors;
 mod page;
 mod password;
 mod tags;
@@ -34,6 +35,7 @@ use tempfile::tempdir;
 mod prelude {
     pub use super::run;
     pub use crate::prelude::*;
+    pub use either::*;
 }
 
 pub fn run<F: FnOnce(&Server)>(f: F) {

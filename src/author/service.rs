@@ -26,21 +26,21 @@ use std::convert::TryFrom;
 
 #[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
 pub struct Author {
-    user_id: UserId,
     page_id: PageId,
+    user_id: UserId,
     author_type: String,
     written_at: NaiveDate,
 }
 
 impl Author {
     #[inline]
-    pub fn user_id(&self) -> UserId {
-        self.user_id
+    pub fn page_id(&self) -> PageId {
+        self.page_id
     }
 
     #[inline]
-    pub fn page_id(&self) -> PageId {
-        self.page_id
+    pub fn user_id(&self) -> UserId {
+        self.user_id
     }
 
     #[inline]
