@@ -30,7 +30,7 @@ fn author_service() {
 
         let user_1 = {
             let user_id = srv
-                .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
+                .create_user("superpersonyeah", "ralph@example.net", "blackmoonhowls")
                 .expect("Unable to create user");
 
             srv.get_user_from_id(user_id).expect("Unable to get user")
