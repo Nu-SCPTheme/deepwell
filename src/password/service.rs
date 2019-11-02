@@ -141,7 +141,21 @@ impl PasswordService {
         })
     }
 
+    #[inline]
     pub fn check(&self, user_id: UserId, password: &str) -> Result<()> {
+        match self.check_internal(user_id, password) {
+            Ok(_) => Ok(()),
+            Err(error) => {
+                warn!("Authentication failure by user ID {}", user_id);
+
+                password_pause();
+
+                Err(error)
+            }
+        }
+    }
+
+    fn check_internal(&self, user_id: UserId, password: &str) -> Result<()> {
         // To avoid computation-based DOS attacks
         if password.len() > MAX_PASSWORD_LEN {
             return Err(Error::AuthenticationFailed);
@@ -168,4 +182,18 @@ impl Debug for PasswordService {
             .field("conn", &"PgConnection { .. }")
             .finish()
     }
+}
+
+#[cfg(test)]
+#[inline]
+fn password_pause() {}
+
+#[cfg(not(test))]
+fn password_pause() {
+    use std::thread;
+    use std::time::Duration;
+
+    const PAUSE: Duration = Duration::from_millis(500);
+
+    thread::sleep(PAUSE);
 }
