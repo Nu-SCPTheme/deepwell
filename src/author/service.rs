@@ -68,7 +68,7 @@ impl AuthorService {
     }
 
     pub fn get_all(&self, page_id: PageId) -> Result<Vec<Author>> {
-        info!("Getting authors for page id {}", page_id);
+        info!("Getting authors for page ID {}", page_id);
 
         let id: i64 = page_id.into();
         let result = authors::table
@@ -88,7 +88,7 @@ impl AuthorService {
         written_at: Option<NaiveDate>,
     ) -> Result<()> {
         debug!(
-            "Adding author for page id {} / user id {}",
+            "Adding author for page ID {} / user ID {}",
             page_id, user_id,
         );
 
@@ -120,7 +120,7 @@ impl AuthorService {
         author_type: AuthorType,
     ) -> Result<bool> {
         info!(
-            "Removing author for page id {} / user id {}",
+            "Removing author for page ID {} / user ID {}",
             page_id, user_id,
         );
 

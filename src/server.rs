@@ -114,7 +114,7 @@ impl Server {
             domain: None,
         };
 
-        info!("Renaming wiki id {} to '{}'", id, new_name);
+        info!("Renaming wiki ID {} to '{}'", id, new_name);
 
         self.wiki.edit(id, model)?;
         Ok(())
@@ -127,7 +127,7 @@ impl Server {
             domain: Some(new_domain),
         };
 
-        info!("Changing domain for wiki id {} to '{}'", id, new_domain);
+        info!("Changing domain for wiki ID {} to '{}'", id, new_domain);
 
         self.conn.transaction::<_, Error, _>(|| {
             self.wiki.edit(id, model)?;

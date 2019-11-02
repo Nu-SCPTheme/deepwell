@@ -160,13 +160,13 @@ impl PageService {
     where
         F: FnOnce(&RevisionStore) -> Result<T>,
     {
-        trace!("Getting revision store for wiki id {}", wiki_id);
+        trace!("Getting revision store for wiki ID {}", wiki_id);
 
         let guard = self.stores.read();
         let store = match guard.get(&wiki_id) {
             Some(store) => store,
             None => {
-                error!("No revision store found for wiki id {}", wiki_id);
+                error!("No revision store found for wiki ID {}", wiki_id);
 
                 return Err(Error::WikiNotFound);
             }
@@ -189,7 +189,7 @@ impl PageService {
     }
 
     pub fn get_page_id(&self, wiki_id: WikiId, slug: &str) -> Result<Option<PageId>> {
-        debug!("Getting page id in wiki id {} for slug '{}'", wiki_id, slug);
+        debug!("Getting page id in wiki ID {} for slug '{}'", wiki_id, slug);
 
         let wiki_id: i64 = wiki_id.into();
         let page_id = pages::table
@@ -525,7 +525,7 @@ impl PageService {
 
     pub fn check_page(&self, wiki_id: WikiId, slug: &str) -> Result<bool> {
         info!(
-            "Checking if page for exists in wiki id {}, slug {} exists",
+            "Checking if page for exists in wiki ID {}, slug {} exists",
             wiki_id, slug,
         );
 
@@ -540,7 +540,7 @@ impl PageService {
     }
 
     pub fn get_page(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Page>> {
-        info!("Getting page for wiki id {}, slug {}", wiki_id, slug);
+        info!("Getting page for wiki ID {}, slug {}", wiki_id, slug);
 
         let wiki_id: i64 = wiki_id.into();
         let page = pages::table
@@ -554,13 +554,13 @@ impl PageService {
     }
 
     pub fn get_page_contents(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Box<[u8]>>> {
-        info!("Getting page for wiki id {}, slug {}", wiki_id, slug);
+        info!("Getting page for wiki ID {}, slug {}", wiki_id, slug);
 
         self.get_store(wiki_id, |store| store.get_page(slug))
     }
 
     pub fn get_blame(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Blame>> {
-        info!("Getting blame for wiki id {}, slug {}", wiki_id, slug);
+        info!("Getting blame for wiki ID {}, slug {}", wiki_id, slug);
 
         self.get_store(wiki_id, |store| store.get_blame(slug))
     }
@@ -592,7 +592,7 @@ impl PageService {
         revision: Either<RevisionId, GitHash>,
     ) -> Result<Option<Box<[u8]>>> {
         info!(
-            "Getting specific page version for wiki id {}, slug {}",
+            "Getting specific page version for wiki ID {}, slug {}",
             wiki_id, slug
         );
 
@@ -608,7 +608,7 @@ impl PageService {
         first: Either<RevisionId, GitHash>,
         second: Either<RevisionId, GitHash>,
     ) -> Result<Box<[u8]>> {
-        info!("Getting diff for wiki id {}, slug {}", wiki_id, slug);
+        info!("Getting diff for wiki ID {}, slug {}", wiki_id, slug);
 
         let first = self.commit_hash(first)?;
         let second = self.commit_hash(second)?;
@@ -619,7 +619,7 @@ impl PageService {
     pub fn edit_revision(&self, revision_id: RevisionId, message: &str) -> Result<()> {
         use self::revisions::dsl;
 
-        info!("Editing revision message for id {}", revision_id);
+        info!("Editing revision message for ID {}", revision_id);
 
         let id: i64 = revision_id.into();
         diesel::update(dsl::revisions.filter(dsl::revision_id.eq(id)))

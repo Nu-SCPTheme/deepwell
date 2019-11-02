@@ -140,12 +140,12 @@ impl UserService {
 
             if let Some((user_id, conflict_name, conflict_email)) = result {
                 if name == conflict_name {
-                    warn!("Cannot create user, name conflicts with id {}", user_id);
+                    warn!("Cannot create user, name conflicts with ID {}", user_id);
                     return Err(Error::UserNameExists);
                 }
 
                 if email == conflict_email {
-                    warn!("Cannot create user, email conflicts with id {}", user_id);
+                    warn!("Cannot create user, email conflicts with ID {}", user_id);
                     return Err(Error::UserEmailExists);
                 }
 
@@ -258,7 +258,7 @@ impl UserService {
             deleted_at: None,
         };
 
-        info!("Editing user id {}, data: {:?}", id, &model);
+        info!("Editing user ID {}, data: {:?}", id, &model);
 
         let id: i64 = id.into();
         diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
@@ -271,7 +271,7 @@ impl UserService {
     pub fn verify(&self, id: UserId) -> Result<()> {
         use self::users::dsl;
 
-        info!("Marking user id {} as verified", id);
+        info!("Marking user ID {} as verified", id);
 
         let id: i64 = id.into();
         diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
@@ -286,7 +286,7 @@ impl UserService {
         use diesel::dsl::now;
 
         info!(
-            "Marking user id {} as {}",
+            "Marking user ID {} as {}",
             id,
             if value { "inactive" } else { "active" }
         );

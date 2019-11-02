@@ -64,7 +64,7 @@ pub fn new_password<F>(user_id: UserId, password: &[u8], f: F) -> Result<()>
 where
     F: FnOnce(NewPassword<'_>) -> Result<()>,
 {
-    debug!("Creating new password for user id {}", user_id);
+    debug!("Creating new password for user ID {}", user_id);
 
     let salt = random_salt();
     let mut hash = new_hash();

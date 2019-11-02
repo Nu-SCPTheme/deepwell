@@ -126,7 +126,7 @@ impl WikiService {
     pub fn edit(&self, id: WikiId, model: UpdateWiki) -> Result<()> {
         use self::wikis::dsl;
 
-        info!("Editing wiki id {}: {:?}", id, model);
+        info!("Editing wiki ID {}: {:?}", id, model);
         model.check();
 
         let id: i64 = id.into();
