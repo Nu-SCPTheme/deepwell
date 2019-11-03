@@ -29,8 +29,8 @@ CREATE TABLE passwords (
 CREATE TABLE wikis (
     wiki_id BIGSERIAL PRIMARY KEY,
     name TEXT NOT NULL,
-    slug TEXT NOT NULL UNIQUE,
-    domain TEXT NOT NULL UNIQUE CHECK(domain = LOWER(domain)),
+    slug TEXT NOT NULL UNIQUE CHECK (slug ~ '[a-z0-9:_-]+'),
+    domain TEXT NOT NULL UNIQUE CHECK (domain = LOWER(domain)),
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
@@ -65,7 +65,7 @@ CREATE TABLE role_membership (
 CREATE TABLE pages (
     page_id BIGSERIAL PRIMARY KEY,
     wiki_id BIGSERIAL NOT NULL REFERENCES wikis(wiki_id),
-    slug TEXT NOT NULL,
+    slug TEXT NOT NULL CHECK (slug ~ '[a-z0-9:_-]+'),
     title TEXT NOT NULL,
     alt_title TEXT,
     tags TEXT[] NOT NULL DEFAULT '{}',
