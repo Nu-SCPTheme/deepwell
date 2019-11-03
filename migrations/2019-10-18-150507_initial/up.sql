@@ -24,6 +24,13 @@ CREATE TABLE passwords (
     param_p INTEGER NOT NULL
 );
 
+CREATE TABLE sessions (
+    user_id BIGSERIAL PRIMARY KEY REFERENCES users(user_id),
+    key VARCHAR(64) NOT NULL UNIQUE,
+    ip_address INET NOT NULL,
+    expires TIMESTAMP
+);
+
 -- Wikis and wiki settings
 
 CREATE TABLE wikis (
