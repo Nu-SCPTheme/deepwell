@@ -31,6 +31,7 @@ use either::*;
 use std::fmt::{self, Debug};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+use wikidot_normalize::normalize;
 
 #[derive(Debug, Clone)]
 pub struct ServerConfig<'a> {
@@ -95,9 +96,16 @@ impl Server {
     /* Wiki methods */
 
     /// Creates a new wiki with the given parameters. Returns its ID.
-    pub fn create_wiki(&self, name: &str, slug: &str, domain: &str) -> Result<WikiId> {
-        let domain = domain.to_ascii_lowercase();
-        let id = self.wiki.create(name, slug, &domain)?;
+    pub fn create_wiki<S1, S2>(&self, name: &str, slug: S1, domain: S2) -> Result<WikiId>
+    where
+        S1: Into<String>,
+        S2: Into<String>,
+    {
+        let slug = normalize_slug(slug);
+        let domain = to_lowercase(domain);
+
+        let id = self.wiki.create(name, &slug, &domain)?;
+
         self.wiki.get_by_id(id, |wiki| {
             let wiki = wiki.expect("Can't find wiki object after inserting");
 
@@ -139,8 +147,10 @@ impl Server {
 
     /// Gets the wiki ID with the given slug.
     /// Returns an error if the wiki doesn't exist.
-    pub fn get_wiki_id(&self, slug: &str) -> Result<WikiId> {
-        self.wiki.get_by_slug(slug, |wiki| match wiki {
+    pub fn get_wiki_id<S: Into<String>>(&self, slug: S) -> Result<WikiId> {
+        let slug = normalize_slug(slug);
+
+        self.wiki.get_by_slug(&slug, |wiki| match wiki {
             Some(wiki) => Ok(wiki.id()),
             None => Err(Error::WikiNotFound),
         })
@@ -284,15 +294,23 @@ impl Server {
 
     /// Renames a page to use a different slug.
     #[inline]
-    pub fn rename_page(
+    pub fn rename_page<S1, S2>(
         &self,
         wiki_id: WikiId,
-        old_slug: &str,
-        new_slug: &str,
+        old_slug: S1,
+        new_slug: S2,
         message: &str,
         user: &User,
-    ) -> Result<RevisionId> {
-        self.page.rename(wiki_id, old_slug, new_slug, message, user)
+    ) -> Result<RevisionId>
+    where
+        S1: Into<String>,
+        S2: Into<String>,
+    {
+        let old_slug = normalize_slug(old_slug);
+        let new_slug = normalize_slug(new_slug);
+
+        self.page
+            .rename(wiki_id, &old_slug, &new_slug, message, user)
     }
 
     /// Removes the given page.
@@ -303,17 +321,25 @@ impl Server {
 
     /// Determines if a page with the given slug exists.
     #[inline]
-    pub fn check_page(&self, wiki_id: WikiId, slug: &str) -> Result<bool> {
-        self.page.check_page(wiki_id, slug)
+    pub fn check_page<S: Into<String>>(&self, wiki_id: WikiId, slug: S) -> Result<bool> {
+        let slug = normalize_slug(slug);
+
+        self.page.check_page(wiki_id, &slug)
     }
 
     /// Gets the metadata for a given page, as well as its rating information.
     /// Uses Wikidot's `ups - downs` formula for scoring.
-    pub fn get_page(&self, wiki_id: WikiId, slug: &str) -> Result<Option<(Page, Rating)>> {
+    pub fn get_page<S: Into<String>>(
+        &self,
+        wiki_id: WikiId,
+        slug: S,
+    ) -> Result<Option<(Page, Rating)>> {
         debug!("Creating transaction for page and rating");
 
+        let slug = normalize_slug(slug);
+
         self.conn.transaction::<_, Error, _>(|| {
-            let page = match self.page.get_page(wiki_id, slug)? {
+            let page = match self.page.get_page(wiki_id, &slug)? {
                 Some(page) => page,
                 None => return Ok(None),
             };
@@ -324,8 +350,14 @@ impl Server {
     }
 
     /// Gets the contents for a given page.
-    pub fn get_page_contents(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Box<[u8]>>> {
-        self.page.get_page_contents(wiki_id, slug)
+    pub fn get_page_contents<S: Into<String>>(
+        &self,
+        wiki_id: WikiId,
+        slug: S,
+    ) -> Result<Option<Box<[u8]>>> {
+        let slug = normalize_slug(slug);
+
+        self.page.get_page_contents(wiki_id, &slug)
     }
 
     /// Sets all the tags for a given page.
@@ -342,13 +374,16 @@ impl Server {
 
     /* Author methods */
 
-    fn get_page_id(&self, page: Either<PageId, (WikiId, &str)>) -> Result<PageId> {
+    fn get_page_id<S: Into<String>>(&self, page: Either<PageId, (WikiId, S)>) -> Result<PageId> {
         match page {
             Left(id) => Ok(id),
-            Right((wiki_id, slug)) => self
-                .page
-                .get_page_id(wiki_id, slug)?
-                .ok_or(Error::PageNotFound),
+            Right((wiki_id, slug)) => {
+                let slug = normalize_slug(slug);
+
+                self.page
+                    .get_page_id(wiki_id, &slug)?
+                    .ok_or(Error::PageNotFound)
+            }
         }
     }
 
@@ -480,14 +515,16 @@ impl Server {
 
     /// Get a diff for a given page between the two specified revisions.
     #[inline]
-    pub fn get_page_diff(
+    pub fn get_page_diff<S: Into<String>>(
         &self,
         wiki_id: WikiId,
-        slug: &str,
+        slug: S,
         first: Either<RevisionId, GitHash>,
         second: Either<RevisionId, GitHash>,
     ) -> Result<Box<[u8]>> {
-        self.page.get_diff(wiki_id, slug, first, second)
+        let slug = normalize_slug(slug);
+
+        self.page.get_diff(wiki_id, &slug, first, second)
     }
 
     /// Overwrite the revision message for a given change.
@@ -506,4 +543,16 @@ impl Debug for Server {
             .field("wiki", &self.wiki)
             .finish()
     }
+}
+
+fn normalize_slug<S: Into<String>>(slug: S) -> String {
+    let mut slug = slug.into();
+    normalize(&mut slug);
+    slug
+}
+
+fn to_lowercase<S: Into<String>>(value: S) -> String {
+    let mut value = value.into();
+    value.make_ascii_lowercase();
+    value
 }
