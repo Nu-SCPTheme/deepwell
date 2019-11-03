@@ -161,30 +161,8 @@ impl Server {
 
     /// Edits data attached to a user with the given ID.
     #[inline]
-    pub fn edit_user(
-        &self,
-        id: UserId,
-        name: Option<&str>,
-        email: Option<&str>,
-        author_page: Option<&str>,
-        website: Option<&str>,
-        about: Option<&str>,
-        gender: Option<&str>,
-        location: Option<&str>,
-    ) -> Result<()> {
-        let gender = gender.map(|s| s.to_ascii_lowercase());
-        let gender = gender.as_ref().map(|s| s.as_str());
-
-        self.user.edit(
-            id,
-            name,
-            email,
-            author_page,
-            website,
-            about,
-            gender,
-            location,
-        )
+    pub fn edit_user(&self, id: UserId, changes: UserMetadata) -> Result<()> {
+        self.user.edit(id, changes)
     }
 
     /// Get the model for a user from its ID.

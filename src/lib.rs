@@ -70,6 +70,7 @@ pub mod prelude {
     pub use crate::model::*;
     pub use crate::page::PageCommit;
     pub use crate::server::{Server, ServerConfig};
+    pub use crate::user::UserMetadata;
     pub use crate::{Error, Result, StdResult};
 }
 

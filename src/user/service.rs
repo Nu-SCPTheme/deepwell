@@ -108,6 +108,17 @@ impl User {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct UserMetadata<'a> {
+    pub name: Option<&'a str>,
+    pub email: Option<&'a str>,
+    pub author_page: Option<&'a str>,
+    pub website: Option<&'a str>,
+    pub about: Option<&'a str>,
+    pub gender: Option<&'a str>,
+    pub location: Option<&'a str>,
+}
+
 pub struct UserService {
     conn: Arc<PgConnection>,
 }
@@ -232,18 +243,22 @@ impl UserService {
         Ok(result)
     }
 
-    pub fn edit(
-        &self,
-        id: UserId,
-        name: Option<&str>,
-        email: Option<&str>,
-        author_page: Option<&str>,
-        website: Option<&str>,
-        about: Option<&str>,
-        gender: Option<&str>,
-        location: Option<&str>,
-    ) -> Result<()> {
+    pub fn edit(&self, id: UserId, changes: UserMetadata) -> Result<()> {
         use self::users::dsl;
+
+        // Extract fields from metadata struct
+        let UserMetadata {
+            name,
+            email,
+            author_page,
+            website,
+            about,
+            gender,
+            location,
+        } = changes;
+
+        let gender = gender.map(|s| s.to_ascii_lowercase());
+        let gender = gender.as_ref().map(|s| s.as_str());
 
         let is_verified = if email.is_some() { Some(false) } else { None };
         let model = UpdateUser {
