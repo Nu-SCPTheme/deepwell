@@ -588,29 +588,41 @@ impl PageService {
         self.get_store(wiki_id, |store| store.get_page(slug))
     }
 
+    fn get_last_hash(&self, page_id: PageId) -> Result<Option<(WikiId, String, GitHash)>> {
+        debug!("Getting last commit for page ID {}", page_id);
+
+        let id: i64 = page_id.into();
+        let result = pages::table
+            .find(id)
+            .select((pages::dsl::wiki_id, pages::dsl::slug))
+            .first::<(WikiId, String)>(&*self.conn)
+            .optional()?;
+
+        let (wiki_id, slug) = match result {
+            Some((wiki_id, slug)) => (wiki_id, slug),
+            None => return Ok(None),
+        };
+
+        let raw_hash = revisions::table
+            .filter(revisions::dsl::page_id.eq(id))
+            .order_by(revisions::dsl::revision_id.desc())
+            .select(revisions::dsl::git_commit)
+            .first::<Vec<u8>>(&*self.conn)?;
+
+        let hash = GitHash::from(raw_hash.as_slice());
+
+        Ok(Some((wiki_id, slug, hash)))
+    }
+
     pub fn get_page_contents_by_id(&self, page_id: PageId) -> Result<Option<Box<[u8]>>> {
         info!("Getting contents for page ID {}", page_id);
 
         self.conn.transaction::<_, Error, _>(|| {
-            let id: i64 = page_id.into();
-            let result = pages::table
-                .find(id)
-                .select((pages::dsl::wiki_id, pages::dsl::slug))
-                .first::<(WikiId, String)>(&*self.conn)
-                .optional()?;
-
-            let (wiki_id, slug) = match result {
-                Some((wiki_id, slug)) => (wiki_id, slug),
+            let (wiki_id, slug, hash) = match self.get_last_hash(page_id)? {
+                Some(result) => result,
                 None => return Ok(None),
             };
 
-            let raw_hash = revisions::table
-                .filter(revisions::dsl::page_id.eq(id))
-                .order_by(revisions::dsl::revision_id.desc())
-                .select(revisions::dsl::git_commit)
-                .first::<Vec<u8>>(&*self.conn)?;
-
-            let hash = GitHash::from(raw_hash.as_slice());
             self.get_store(wiki_id, |store| store.get_page_version(&slug, hash))
         })
     }
@@ -618,7 +630,20 @@ impl PageService {
     pub fn get_blame(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Blame>> {
         info!("Getting blame for wiki ID {}, slug {}", wiki_id, slug);
 
-        self.get_store(wiki_id, |store| store.get_blame(slug))
+        self.get_store(wiki_id, |store| store.get_blame(slug, None))
+    }
+
+    pub fn get_blame_by_id(&self, page_id: PageId) -> Result<Option<Blame>> {
+        info!("Getting blame for page ID {}", page_id);
+
+        self.conn.transaction::<_, Error, _>(|| {
+            let (wiki_id, slug, hash) = match self.get_last_hash(page_id)? {
+                Some(result) => result,
+                None => return Ok(None),
+            };
+
+            self.get_store(wiki_id, |store| store.get_blame(&slug, Some(hash)))
+        })
     }
 
     fn commit_hash(&self, spec: Either<RevisionId, GitHash>) -> Result<GitHash> {

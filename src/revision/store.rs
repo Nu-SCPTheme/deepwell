@@ -376,14 +376,22 @@ impl RevisionStore {
 
     /// Gets the blame for a particular page.
     /// Returns `None` if the page does not exist.
-    pub fn get_blame(&self, slug: &str) -> Result<Option<Blame>> {
+    pub fn get_blame(&self, slug: &str, hash: Option<GitHash>) -> Result<Option<Blame>> {
         info!("Getting blame for slug '{}'", slug);
 
         let _guard = self.lock.read();
         check_normal(slug)?;
         let path = self.get_path(slug, false);
 
-        let args = arguments!["git", "blame", "--porcelain", "--", &path];
+        let commit;
+        let args = match hash {
+            Some(hash) => {
+                commit = format!("{:x}", hash);
+
+                arguments!["git", "blame", "--porcelain", &commit, "--", &path]
+            }
+            None => arguments!["git", "blame", "--porcelain", "--", &path],
+        };
 
         let raw_blame = match self.spawn_output(&args) {
             Ok(bytes) => bytes,

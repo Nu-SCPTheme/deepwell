@@ -538,6 +538,12 @@ impl Server {
         self.page.get_blame(wiki_id, slug)
     }
 
+    /// Get the blame for a given page ID.
+    #[inline]
+    pub fn get_page_blame_by_id(&self, page_id: PageId) -> Result<Option<Blame>> {
+        self.page.get_blame_by_id(page_id)
+    }
+
     /// Get a diff for a given page between the two specified revisions.
     #[inline]
     pub fn get_page_diff<S: Into<String>>(
