@@ -53,13 +53,17 @@ fn author_service() {
             .expect("Unable to get user")
             .expect("Default user not found");
 
+        let commit = PageCommit {
+            wiki_id,
+            slug: "scp-xxxx",
+            message: "new scp!!",
+            user: &user_1,
+        };
+
         let (page_id, _revision_id) = srv
             .create_page(
-                wiki_id,
-                "scp-xxxx",
+                commit,
                 b"item number spc-xxx\nobject: SUPER KETER",
-                "new scp!!",
-                &user_1,
                 &[],
                 "SCP-XXXX",
                 "Super-Keter",

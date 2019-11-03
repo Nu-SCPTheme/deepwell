@@ -40,45 +40,65 @@ fn tags() {
             .create_wiki("Test", "test", "example.org")
             .expect("Unable to create wiki");
 
+        let commit = PageCommit {
+            wiki_id,
+            slug: "scp-xxxx",
+            message: "New article!",
+            user: &user_1,
+        };
+
         let (_page_id, _revision_id) = srv
             .create_page(
-                wiki_id,
-                "scp-xxxx",
+                commit,
                 b"**Item #:** SCP-XXXX\n\n**Object Class:** Keter\n",
-                "New article!",
-                &user_1,
                 &[],
                 "SCP-XXXX",
                 "The Monster Behind the Door",
             )
             .expect("Unable to create page");
 
-        srv.set_page_tags(wiki_id, "scp-xxxx", "has image", &user_1, &["_image"])
+        let commit = PageCommit {
+            wiki_id,
+            slug: "scp-xxxx",
+            message: "has image",
+            user: &user_1,
+        };
+
+        srv.set_page_tags(commit, &["_image"])
             .expect("Unable to set page tags");
 
-        srv.set_page_tags(
+        let commit = PageCommit {
             wiki_id,
-            "scp-xxxx",
-            "initial tagging",
-            &user_2,
+            slug: "scp-xxxx",
+            message: "initial tagging",
+            user: &user_2,
+        };
+
+        srv.set_page_tags(
+            commit,
             &["scp", "keter", "_image", "ontokinetic", "artifact"],
         )
         .expect("Unable to set page tags");
 
-        srv.set_page_tags(
+        let commit = PageCommit {
             wiki_id,
-            "scp-xxxx",
-            "good image",
-            &user_1,
-            &["scp", "keter", "artifact", "ontokinetic", "_cc"],
-        )
-        .expect("Unable to set page tags");
+            slug: "scp-xxxx",
+            message: "good image",
+            user: &user_1,
+        };
+
+        srv.set_page_tags(commit, &["scp", "keter", "artifact", "ontokinetic", "_cc"])
+            .expect("Unable to set page tags");
+
+        let commit = PageCommit {
+            wiki_id,
+            slug: "scp-xxxx",
+            message: "goi tags",
+            user: &user_2,
+        };
 
         srv.set_page_tags(
-            wiki_id,
-            "scp-xxxx",
-            "goi tags",
-            &user_2,
+            commit,
             &[
                 "scp",
                 "keter",

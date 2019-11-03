@@ -34,17 +34,15 @@ fn page_service() {
 
         assert_eq!(srv.check_page(wiki_id, "tale-here").unwrap(), false);
 
+        let commit = PageCommit {
+            wiki_id,
+            slug: &"tale-here",
+            message: "new tale!",
+            user: &user,
+        };
+
         let (_page_id, _revision_id) = srv
-            .create_page(
-                wiki_id,
-                "tale-here",
-                b"my great article here",
-                "new s&c plastics",
-                &user,
-                &[],
-                "Tale Thing",
-                "",
-            )
+            .create_page(commit, b"my great article here", &[], "Tale Thing", "")
             .expect("Unable to create page");
 
         assert_eq!(srv.check_page(wiki_id, "tale-here").unwrap(), true);
@@ -58,12 +56,16 @@ fn page_service() {
         )
         .expect("Unable to rename page");
 
-        srv.edit_page(
+        let commit = PageCommit {
             wiki_id,
-            "amazing-battle",
+            slug: &"amazing-battle",
+            message: "changing title",
+            user: &user,
+        };
+
+        srv.edit_page(
+            commit,
             None,
-            "changing title",
-            &user,
             Some("Amazing Take-down of 682!"),
             Some("049 appears too"),
         )
@@ -72,13 +74,14 @@ fn page_service() {
         assert_eq!(srv.check_page(wiki_id, "tale-here").unwrap(), false);
         assert_eq!(srv.check_page(wiki_id, "amazing-battle").unwrap(), true);
 
-        srv.remove_page(
+        let commit = PageCommit {
             wiki_id,
-            "amazing-battle",
-            "people keep downvoting :(",
-            &user,
-        )
-        .expect("Unable to remove page");
+            slug: &"amazing-battle",
+            message: "people keep downvoting :(",
+            user: &user,
+        };
+
+        srv.remove_page(commit).expect("Unable to remove page");
 
         assert_eq!(srv.check_page(wiki_id, "nonexistent").unwrap(), false);
         assert_eq!(srv.check_page(wiki_id, "tale-here").unwrap(), false);

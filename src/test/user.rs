@@ -27,17 +27,18 @@ fn user_service() {
             .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
             .expect("Unable to create user");
 
-        srv.edit_user(
-            user_id,
-            Some("Jenny Person"),
-            None,
-            Some("http://www.scp-wiki.net/authors-pages"),
-            None,
-            Some("A totally real person who writes"),
-            Some("FEMALE"),
-            Some("Earth"),
-        )
-        .expect("Unable to edit user");
+        let metadata = UserMetadata {
+            name: Some("Jenny Person"),
+            email: None,
+            author_page: Some("http://www.scp-wiki.net/authors-pages"),
+            website: None,
+            about: Some("A totally real person who writes"),
+            gender: Some("FEMALE"),
+            location: Some("Earth"),
+        };
+
+        srv.edit_user(user_id, metadata)
+            .expect("Unable to edit user");
 
         srv.verify_user(user_id)
             .expect("Unable to mark user as verified");
@@ -51,17 +52,18 @@ fn user_service() {
             .create_user("otheruser", "jeremy@example.net", "superstrongpassword")
             .expect("Unable to create second user");
 
-        srv.edit_user(
-            user_id_2,
-            None,
-            None,
-            None,
-            None,
-            Some("test user 2"),
-            Some("nb"),
-            None,
-        )
-        .expect("Unable to edit second user");
+        let metadata = UserMetadata {
+            name: None,
+            email: None,
+            author_page: None,
+            website: None,
+            about: Some("test user 2"),
+            gender: Some("non-binary"),
+            location: Some("Earth"),
+        };
+
+        srv.edit_user(user_id_2, metadata)
+            .expect("Unable to edit second user");
 
         let user_1 = srv
             .get_user_from_name("Jenny Person")
