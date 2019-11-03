@@ -258,12 +258,7 @@ impl Server {
         title: &str,
         alt_title: &str,
     ) -> Result<(PageId, RevisionId)> {
-        let PageCommit {
-            wiki_id: _,
-            slug: _,
-            message: _,
-            user,
-        } = commit;
+        let PageCommit { user, .. } = commit;
 
         // Empty string means use default
         let alt_title: Option<&str> = match alt_title {
@@ -362,10 +357,7 @@ impl Server {
         commit: PageCommit,
         tags: &[S],
     ) -> Result<RevisionId> {
-        let mut tags = tags
-            .into_iter()
-            .map(|tag| tag.as_ref())
-            .collect::<Vec<&str>>();
+        let mut tags = tags.iter().map(|tag| tag.as_ref()).collect::<Vec<&str>>();
 
         self.page.tags(commit, &mut tags)
     }
