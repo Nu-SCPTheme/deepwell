@@ -368,6 +368,7 @@ impl Server {
     }
 
     /// Gets the contents for a given page.
+    #[inline]
     pub fn get_page_contents<S: Into<String>>(
         &self,
         wiki_id: WikiId,
@@ -376,6 +377,12 @@ impl Server {
         let slug = normalize_slug(slug);
 
         self.page.get_page_contents(wiki_id, &slug)
+    }
+
+    /// Gets the contents for a given page ID.
+    #[inline]
+    pub fn get_page_contents_by_id(&self, page_id: PageId) -> Result<Option<Box<[u8]>>> {
+        self.page.get_page_contents_by_id(page_id)
     }
 
     /// Sets all the tags for a given page.

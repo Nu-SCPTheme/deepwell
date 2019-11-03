@@ -583,9 +583,36 @@ impl PageService {
     }
 
     pub fn get_page_contents(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Box<[u8]>>> {
-        info!("Getting page for wiki ID {}, slug {}", wiki_id, slug);
+        info!("Getting contents for wiki ID {}, slug {}", wiki_id, slug);
 
         self.get_store(wiki_id, |store| store.get_page(slug))
+    }
+
+    pub fn get_page_contents_by_id(&self, page_id: PageId) -> Result<Option<Box<[u8]>>> {
+        info!("Getting contents for page ID {}", page_id);
+
+        self.conn.transaction::<_, Error, _>(|| {
+            let id: i64 = page_id.into();
+            let result = pages::table
+                .find(id)
+                .select((pages::dsl::wiki_id, pages::dsl::slug))
+                .first::<(WikiId, String)>(&*self.conn)
+                .optional()?;
+
+            let (wiki_id, slug) = match result {
+                Some((wiki_id, slug)) => (wiki_id, slug),
+                None => return Ok(None),
+            };
+
+            let raw_hash = revisions::table
+                .filter(revisions::dsl::page_id.eq(id))
+                .order_by(revisions::dsl::revision_id.desc())
+                .select(revisions::dsl::git_commit)
+                .first::<Vec<u8>>(&*self.conn)?;
+
+            let hash = GitHash::from(raw_hash.as_slice());
+            self.get_store(wiki_id, |store| store.get_page_version(&slug, hash))
+        })
     }
 
     pub fn get_blame(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Blame>> {
