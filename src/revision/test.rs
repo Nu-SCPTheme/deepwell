@@ -336,7 +336,7 @@ fn test_git() {
     // Get a blame
     {
         let slug = pick(&mut rng, TEST_SLUGS.as_ref());
-        let blame = store.get_blame(slug).expect("Unable to get blame");
+        let blame = store.get_blame(slug, None).expect("Unable to get blame");
 
         println!();
         match blame {
