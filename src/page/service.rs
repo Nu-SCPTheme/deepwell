@@ -41,6 +41,14 @@ mod revision_id {
 pub use self::page_id::PageId;
 pub use self::revision_id::RevisionId;
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub struct PageCommit<'a> {
+    pub wiki_id: WikiId,
+    pub slug: &'a str,
+    pub message: &'a str,
+    pub user: &'a User,
+}
+
 #[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
 pub struct Page {
     page_id: PageId,
@@ -204,15 +212,19 @@ impl PageService {
 
     pub fn create(
         &self,
-        wiki_id: WikiId,
-        slug: &str,
+        commit: PageCommit,
         content: &[u8],
-        message: &str,
-        user: &User,
         title: &str,
         alt_title: Option<&str>,
     ) -> Result<(PageId, RevisionId)> {
         info!("Starting transaction for page creation");
+
+        let PageCommit {
+            wiki_id,
+            slug,
+            message,
+            user,
+        } = commit;
 
         self.conn.transaction::<_, Error, _>(|| {
             let model = NewPage {
@@ -263,15 +275,19 @@ impl PageService {
 
     pub fn commit(
         &self,
-        wiki_id: WikiId,
-        slug: &str,
+        commit: PageCommit,
         content: Option<&[u8]>,
-        message: &str,
-        user: &User,
         title: Option<&str>,
         alt_title: Option<Nullable<&str>>,
     ) -> Result<RevisionId> {
         info!("Starting transaction for page commit");
+
+        let PageCommit {
+            wiki_id,
+            slug,
+            message,
+            user,
+        } = commit;
 
         self.conn.transaction::<_, Error, _>(|| {
             let model = UpdatePage {
@@ -385,14 +401,15 @@ impl PageService {
         })
     }
 
-    pub fn remove(
-        &self,
-        wiki_id: WikiId,
-        slug: &str,
-        message: &str,
-        user: &User,
-    ) -> Result<RevisionId> {
+    pub fn remove(&self, commit: PageCommit) -> Result<RevisionId> {
         info!("Starting transaction for page removal");
+
+        let PageCommit {
+            wiki_id,
+            slug,
+            message,
+            user,
+        } = commit;
 
         self.conn.transaction::<_, Error, _>(|| {
             use diesel::dsl::now;
@@ -446,15 +463,15 @@ impl PageService {
         })
     }
 
-    pub fn tags(
-        &self,
-        wiki_id: WikiId,
-        slug: &str,
-        message: &str,
-        user: &User,
-        tags: &mut [&str],
-    ) -> Result<RevisionId> {
+    pub fn tags(&self, commit: PageCommit, tags: &mut [&str]) -> Result<RevisionId> {
         info!("Starting transaction for page tags");
+
+        let PageCommit {
+            wiki_id,
+            slug,
+            message,
+            user,
+        } = commit;
 
         self.conn.transaction::<_, Error, _>(|| {
             let page_id = self

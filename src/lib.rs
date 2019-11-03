@@ -68,6 +68,7 @@ mod test;
 pub mod prelude {
     pub use crate::id::*;
     pub use crate::model::*;
+    pub use crate::page::PageCommit;
     pub use crate::server::{Server, ServerConfig};
     pub use crate::{Error, Result, StdResult};
 }

@@ -252,15 +252,19 @@ impl Server {
     /// Creates a new page with the given contents and metadata.
     pub fn create_page(
         &self,
-        wiki_id: WikiId,
-        slug: &str,
+        commit: PageCommit,
         content: &[u8],
-        message: &str,
-        user: &User,
         other_authors: &[UserId],
         title: &str,
         alt_title: &str,
     ) -> Result<(PageId, RevisionId)> {
+        let PageCommit {
+            wiki_id: _,
+            slug: _,
+            message: _,
+            user,
+        } = commit;
+
         // Empty string means use default
         let alt_title: Option<&str> = match alt_title {
             "" => None,
@@ -269,9 +273,7 @@ impl Server {
 
         self.conn.transaction::<_, Error, _>(|| {
             // Create page
-            let (page_id, revision_id) = self
-                .page
-                .create(wiki_id, slug, content, message, user, title, alt_title)?;
+            let (page_id, revision_id) = self.page.create(commit, content, title, alt_title)?;
 
             // Add committing user as author
             self.author
@@ -292,11 +294,8 @@ impl Server {
     /// (An empty alternate title signifies that none is used)
     pub fn edit_page(
         &self,
-        wiki_id: WikiId,
-        slug: &str,
+        commit: PageCommit,
         content: Option<&[u8]>,
-        message: &str,
-        user: &User,
         title: Option<&str>,
         alt_title: Option<&str>,
     ) -> Result<RevisionId> {
@@ -307,8 +306,7 @@ impl Server {
             None => None,
         };
 
-        self.page
-            .commit(wiki_id, slug, content, message, user, title, alt_title)
+        self.page.commit(commit, content, title, alt_title)
     }
 
     /// Renames a page to use a different slug.
@@ -326,14 +324,8 @@ impl Server {
 
     /// Removes the given page.
     #[inline]
-    pub fn remove_page(
-        &self,
-        wiki_id: WikiId,
-        slug: &str,
-        message: &str,
-        user: &User,
-    ) -> Result<RevisionId> {
-        self.page.remove(wiki_id, slug, message, user)
+    pub fn remove_page(&self, commit: PageCommit) -> Result<RevisionId> {
+        self.page.remove(commit)
     }
 
     /// Determines if a page with the given slug exists.
@@ -367,10 +359,7 @@ impl Server {
     #[inline]
     pub fn set_page_tags<S: AsRef<str>>(
         &self,
-        wiki_id: WikiId,
-        slug: &str,
-        message: &str,
-        user: &User,
+        commit: PageCommit,
         tags: &[S],
     ) -> Result<RevisionId> {
         let mut tags = tags
@@ -378,7 +367,7 @@ impl Server {
             .map(|tag| tag.as_ref())
             .collect::<Vec<&str>>();
 
-        self.page.tags(wiki_id, slug, message, user, &mut tags)
+        self.page.tags(commit, &mut tags)
     }
 
     /* Author methods */
