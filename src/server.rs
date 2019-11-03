@@ -343,7 +343,25 @@ impl Server {
                 Some(page) => page,
                 None => return Ok(None),
             };
+
             let rating = self.rating.get_rating(page.id())?;
+
+            Ok(Some((page, rating)))
+        })
+    }
+
+    /// Gets the metadata for a given page ID, as well as its rating information.
+    /// Uses Wikidot's `ups - downs` formula for scoring.
+    pub fn get_page_by_id(&self, page_id: PageId) -> Result<Option<(Page, Rating)>> {
+        debug!("Creating transaction for page ID and rating");
+
+        self.conn.transaction::<_, Error, _>(|| {
+            let page = match self.page.get_page_by_id(page_id)? {
+                Some(page) => page,
+                None => return Ok(None),
+            };
+
+            let rating = self.rating.get_rating(page_id)?;
 
             Ok(Some((page, rating)))
         })

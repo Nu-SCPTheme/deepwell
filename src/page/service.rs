@@ -570,6 +570,18 @@ impl PageService {
         Ok(page)
     }
 
+    pub fn get_page_by_id(&self, page_id: PageId) -> Result<Option<Page>> {
+        info!("Getting page for page ID {}", page_id);
+
+        let id: i64 = page_id.into();
+        let page = pages::table
+            .find(id)
+            .first::<Page>(&*self.conn)
+            .optional()?;
+
+        Ok(page)
+    }
+
     pub fn get_page_contents(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Box<[u8]>>> {
         info!("Getting page for wiki ID {}, slug {}", wiki_id, slug);
 
