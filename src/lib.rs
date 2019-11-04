@@ -28,6 +28,7 @@ extern crate crypto;
 extern crate diesel;
 extern crate either;
 extern crate hex;
+extern crate ipnetwork;
 
 #[macro_use]
 extern crate lazy_static;
@@ -58,6 +59,7 @@ mod rating;
 mod revision;
 mod schema;
 mod server;
+mod session;
 mod user;
 mod utils;
 mod wiki;

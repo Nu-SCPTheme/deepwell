@@ -23,11 +23,13 @@ use crate::page::PageService;
 use crate::password::PasswordService;
 use crate::prelude::*;
 use crate::rating::{RatingHistory, RatingId, RatingService};
+use crate::session::SessionService;
 use crate::user::UserService;
 use crate::wiki::{UpdateWiki, WikiService};
 use chrono::prelude::*;
 use diesel::{Connection, PgConnection};
 use either::*;
+use ipnetwork::IpNetwork;
 use std::fmt::{self, Debug};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -46,6 +48,7 @@ pub struct Server {
     page: PageService,
     password: PasswordService,
     rating: RatingService,
+    session: SessionService,
     user: UserService,
     wiki: WikiService,
 }
@@ -73,6 +76,7 @@ impl Server {
         let page = PageService::new(&conn, revisions_dir);
         let password = PasswordService::new(&conn, password_blacklist)?;
         let rating = RatingService::new(&conn);
+        let session = SessionService::new(&conn);
         let user = UserService::new(&conn);
         let wiki = WikiService::new(&conn)?;
 
@@ -82,6 +86,7 @@ impl Server {
             page,
             password,
             rating,
+            session,
             user,
             wiki,
         })
@@ -227,12 +232,37 @@ impl Server {
         self.password.set(user_id, password)
     }
 
-    // TODO: return token instead of doing dummy validation
     /// Validates the password for the given user.
     /// Returns `()` on success, authentication error on failure.
     #[inline]
     pub fn validate_user_password(&self, user_id: UserId, password: &str) -> Result<()> {
         self.password.check(user_id, password)
+    }
+
+    /* Session methods */
+
+    /// Creates a session by validating the password and creating a token.
+    pub fn create_session(
+        &self,
+        user_id: UserId,
+        password: &str,
+        ip_address: IpNetwork,
+    ) -> Result<String> {
+        info!(
+            "Trying to create session for user ID {} (from {})",
+            user_id, ip_address,
+        );
+
+        self.password.check(user_id, password)?;
+
+        trace!("Password validated, getting or creating session token");
+        self.conn.transaction::<_, Error, _>(|| {
+            if let Some(token) = self.session.get_token(user_id)? {
+                return Ok(token);
+            }
+
+            self.session.create_token(user_id, ip_address)
+        })
     }
 
     /* Page methods */
