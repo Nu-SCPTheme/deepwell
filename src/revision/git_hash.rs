@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::StdResult;
 use arrayvec::ArrayString;
+use crate::StdResult;
 use regex::Regex;
 use std::borrow::Borrow;
 use std::convert::TryFrom;
@@ -31,8 +31,8 @@ lazy_static! {
     static ref GIT_HASH_REGEX: Regex = Regex::new(r"[a-f0-9]{40}").unwrap();
 }
 
-#[derive(Copy, Clone, PartialEq, Eq)]
-pub struct GitHash(ArrayString<[u8; 40]>);
+#[derive(Clone, PartialEq, Eq)]
+pub struct GitHash(Box<ArrayString<[u8; 40]>>);
 
 impl GitHash {
     pub fn from_checked<B>(hash: B) -> Self
@@ -59,7 +59,7 @@ impl TryFrom<&str> for GitHash {
         if GIT_HASH_REGEX.is_match(hash) {
             let arrstr = ArrayString::from(hash).unwrap();
 
-            Ok(GitHash(arrstr))
+            Ok(GitHash(Box::new(arrstr)))
         } else {
             Err(())
         }
@@ -77,13 +77,6 @@ impl AsRef<OsStr> for GitHash {
     #[inline]
     fn as_ref(&self) -> &OsStr {
         OsStr::new(self.as_str())
-    }
-}
-
-impl Into<ArrayString<[u8; 40]>> for GitHash {
-    #[inline]
-    fn into(self) -> ArrayString<[u8; 40]> {
-        self.0
     }
 }
 
