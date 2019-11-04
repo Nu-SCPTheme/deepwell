@@ -10,7 +10,6 @@ arrayvec = "0.5"
 chrono = { version = "0.4", features = ["serde"] }
 diesel = { version = "1", features = ["chrono", "network-address", "postgres"] }
 either = "1"
-hex = "0.4"
 ipnetwork = "*"
 lazy_static = "1"
 log = "0.4"

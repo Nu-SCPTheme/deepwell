@@ -27,7 +27,6 @@ extern crate crypto;
 #[macro_use]
 extern crate diesel;
 extern crate either;
-extern crate hex;
 extern crate ipnetwork;
 
 #[macro_use]

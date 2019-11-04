@@ -20,7 +20,6 @@
 
 use crate::StdResult;
 use arrayvec::ArrayString;
-use hex::decode_to_slice;
 use regex::Regex;
 use std::borrow::Borrow;
 use std::convert::TryFrom;
