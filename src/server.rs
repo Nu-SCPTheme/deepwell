@@ -612,6 +612,16 @@ impl Server {
     pub fn edit_revision(&self, revision_id: RevisionId, message: &str) -> Result<()> {
         self.page.edit_revision(revision_id, message)
     }
+
+    /* Helper methods */
+
+    #[inline]
+    pub fn transaction<F, T>(&self, f: F) -> Result<T>
+    where
+        F: FnOnce() -> Result<T>,
+    {
+        self.conn.transaction(f)
+    }
 }
 
 impl Debug for Server {
