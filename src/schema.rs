@@ -101,9 +101,9 @@ table! {
 table! {
     sessions (user_id) {
         user_id -> Int8,
-        key -> Varchar,
+        token -> Varchar,
         ip_address -> Inet,
-        expires -> Nullable<Timestamp>,
+        created_at -> Timestamp,
     }
 }
 

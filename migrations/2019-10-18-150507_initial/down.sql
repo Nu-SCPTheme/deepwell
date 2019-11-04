@@ -10,5 +10,6 @@ DROP TABLE roles;
 DROP TABLE pages;
 DROP TABLE wiki_membership;
 DROP TABLE wikis;
+DROP TABLE sessions;
 DROP TABLE passwords;
 DROP TABLE users;

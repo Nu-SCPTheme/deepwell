@@ -26,9 +26,9 @@ CREATE TABLE passwords (
 
 CREATE TABLE sessions (
     user_id BIGSERIAL PRIMARY KEY REFERENCES users(user_id),
-    key VARCHAR(64) NOT NULL UNIQUE,
+    token VARCHAR(64) NOT NULL UNIQUE,
     ip_address INET NOT NULL,
-    expires TIMESTAMP
+    created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- Wikis and wiki settings
