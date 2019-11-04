@@ -41,7 +41,7 @@ impl GitHash {
     {
         let hash = hash.borrow();
 
-        Self::try_from(hash).expect("Invalid git hash in database")
+        Self::try_from(hash).expect("Invalid git hash")
     }
 
     #[inline]
@@ -54,6 +54,8 @@ impl TryFrom<&str> for GitHash {
     type Error = ();
 
     fn try_from(hash: &str) -> StdResult<Self, ()> {
+        let hash = hash.trim();
+
         if GIT_HASH_REGEX.is_match(hash) {
             let arrstr = ArrayString::from(hash).unwrap();
 

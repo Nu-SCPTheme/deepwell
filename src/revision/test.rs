@@ -254,7 +254,8 @@ fn test_git() {
         pick_str(&mut rng, &mut message, &MESSAGE_CHARACTERS, 32, range);
 
         // Create random content
-        let mut content = match store.get_page(slug).expect("Unable to get existing page") {
+        let page = store.get_page(slug).expect("Unable to get existing page");
+        let mut content = match page {
             Some(bytes) => {
                 let bytes = Vec::from(bytes);
                 String::from_utf8(bytes).expect("Content wasn't UTF-8")
