@@ -29,6 +29,14 @@ use std::iter;
 
 const TOKEN_LENGTH: usize = 64;
 
+// This implementation is extremely primitive -- it just stores a securely-generated
+// random string as the token and then matches it when the user makes calls.
+//
+// In the future we will want distinct session objects which are separated by IP and
+// can be invalidated separately.
+//
+// This also might want to be in-memory instead of persisted.
+
 #[derive(Debug, Queryable)]
 pub struct Session {
     user_id: UserId,
