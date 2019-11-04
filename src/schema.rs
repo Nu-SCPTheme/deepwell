@@ -75,7 +75,7 @@ table! {
         page_id -> Int8,
         user_id -> Int8,
         message -> Text,
-        git_commit -> Bytea,
+        git_commit -> Bpchar,
         change_type -> Varchar,
     }
 }

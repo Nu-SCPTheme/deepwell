@@ -18,94 +18,82 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use crate::StdResult;
+use arrayvec::ArrayString;
 use hex::decode_to_slice;
-use std::fmt::{self, Debug, Display, LowerHex, UpperHex};
+use regex::Regex;
+use std::borrow::Borrow;
+use std::convert::TryFrom;
+use std::ffi::OsStr;
+use std::fmt::{self, Debug, Display};
 use std::str;
 
+lazy_static! {
+    static ref GIT_HASH_REGEX: Regex = Regex::new(r"[a-f0-9]{40}").unwrap();
+}
+
 #[derive(Copy, Clone, PartialEq, Eq)]
-pub struct GitHash([u8; 20]);
+pub struct GitHash(ArrayString<[u8; 40]>);
 
 impl GitHash {
-    pub fn parse_str<B>(hex_digest: B) -> Option<Self>
+    pub fn from_checked<B>(hash: B) -> Self
     where
-        B: AsRef<[u8]>,
+        B: Borrow<str>,
     {
-        let hex_digest = match str::from_utf8(hex_digest.as_ref()) {
-            Ok(digest) => digest.trim(),
-            Err(_) => return None,
-        };
+        let hash = hash.borrow();
 
-        debug!("Parsing git hash: '{}'", hex_digest);
+        Self::try_from(hash).expect("Invalid git hash in database")
+    }
 
-        let mut hash = [0; 20];
-        if decode_to_slice(hex_digest, &mut hash[..]).is_err() {
-            return None;
+    #[inline]
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+impl TryFrom<&str> for GitHash {
+    type Error = ();
+
+    fn try_from(hash: &str) -> StdResult<Self, ()> {
+        if GIT_HASH_REGEX.is_match(hash) {
+            let arrstr = ArrayString::from(hash).unwrap();
+
+            Ok(GitHash(arrstr))
+        } else {
+            Err(())
         }
-
-        Some(GitHash(hash))
     }
 }
 
-impl From<[u8; 20]> for GitHash {
+impl AsRef<str> for GitHash {
     #[inline]
-    fn from(hash: [u8; 20]) -> Self {
-        GitHash(hash)
-    }
-}
-
-impl From<&[u8]> for GitHash {
-    fn from(bytes: &[u8]) -> Self {
-        debug!("Extracting git hash from raw bytes: {:?}", bytes);
-
-        let mut hash = [0; 20];
-        let slice = &mut hash[..];
-        slice.copy_from_slice(bytes);
-        GitHash(hash)
-    }
-}
-
-impl AsRef<[u8; 20]> for GitHash {
-    #[inline]
-    fn as_ref(&self) -> &[u8; 20] {
+    fn as_ref(&self) -> &str {
         &self.0
     }
 }
 
-impl AsRef<[u8]> for GitHash {
+impl AsRef<OsStr> for GitHash {
     #[inline]
-    fn as_ref(&self) -> &[u8] {
-        &self.0
+    fn as_ref(&self) -> &OsStr {
+        OsStr::new(self.as_str())
+    }
+}
+
+impl Into<ArrayString<[u8; 40]>> for GitHash {
+    #[inline]
+    fn into(self) -> ArrayString<[u8; 40]> {
+        self.0
     }
 }
 
 impl Debug for GitHash {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "GitHash(b\"{:x}\")", self)
+        f.debug_tuple("GitHash").field(&self.0).finish()
     }
 }
 
 impl Display for GitHash {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{:x}", self)
-    }
-}
-
-impl LowerHex for GitHash {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for byte in &self.0 {
-            write!(f, "{:02x}", byte)?;
-        }
-
-        Ok(())
-    }
-}
-
-impl UpperHex for GitHash {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for byte in &self.0 {
-            write!(f, "{:02X}", byte)?;
-        }
-
-        Ok(())
+        write!(f, "{}", &self)
     }
 }

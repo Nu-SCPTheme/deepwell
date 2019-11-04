@@ -87,7 +87,7 @@ pub struct NewRevision<'a> {
     pub page_id: i64,
     pub user_id: i64,
     pub message: &'a str,
-    pub git_commit: &'a [u8],
+    pub git_commit: &'a str,
     pub change_type: &'a str,
 }
 

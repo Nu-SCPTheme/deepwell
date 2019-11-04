@@ -154,7 +154,8 @@ impl Blame {
                     let new_lineno = utf!(captures, "new_line").parse().unwrap();
                     let commit = {
                         let sha1 = utf!(captures, "sha1");
-                        GitHash::parse_str(sha1).unwrap()
+
+                        GitHash::from_checked(sha1)
                     };
 
                     trace!(
@@ -222,7 +223,7 @@ impl Blame {
                         }
                         "previous" => {
                             let (value, _) = value.expect("No value for key previous").split_at(40);
-                            let hash = GitHash::parse_str(value).expect("Unable to parse git hash");
+                            let hash = GitHash::from_checked(value);
                             previous_commit = Some(hash);
                         }
                         "boundary" => trace!("Hit metadata boundary"),

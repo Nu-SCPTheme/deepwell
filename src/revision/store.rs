@@ -21,16 +21,17 @@
 use super::{Blame, CommitInfo, GitHash};
 use crate::{Error, Result};
 use parking_lot::RwLock;
+use std::convert::TryFrom;
 use std::ffi::{OsStr, OsString};
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::PathBuf;
+use std::str;
 use wikidot_normalize::is_normal;
 
 macro_rules! arguments {
     ($($x:expr), *) => {{
         use arrayvec::ArrayVec;
-        use std::ffi::OsStr;
 
         let mut arguments = ArrayVec::<[&OsStr; 16]>::new();
 
@@ -195,11 +196,14 @@ impl RevisionStore {
 
         debug!("Getting current HEAD commit");
 
-        let hex_digest = self.spawn_output(&args)?;
-        match GitHash::parse_str(&hex_digest) {
-            Some(hash) => Ok(hash),
-            None => Err(Error::StaticMsg("unable to parse git hash from output")),
-        }
+        let digest_bytes = self.spawn_output(&args)?;
+        let digest = str::from_utf8(&digest_bytes)
+            .map_err(|_| Error::StaticMsg("git hash wasn't valid UTF-8"))?;
+
+        let hash = GitHash::try_from(digest)
+            .map_err(|_| Error::StaticMsg("unable to parse git hash from output"))?;
+
+        Ok(hash)
     }
 
     /// Create the first commit of the repo.
@@ -338,7 +342,7 @@ impl RevisionStore {
         check_normal(slug)?;
 
         let path = self.get_path(slug, false);
-        let spec = format!("{:x}:{}", hash, path.display());
+        let spec = format!("{}:{}", hash, path.display());
         let args = arguments!["git", "show", "--format=%B", &spec];
 
         match self.spawn_output(&args) {
@@ -357,8 +361,6 @@ impl RevisionStore {
         );
 
         let _guard = self.lock.read();
-        let first = format!("{:x}", first);
-        let second = format!("{:x}", second);
         check_normal(slug)?;
         let path = self.get_path(slug, false);
 
@@ -383,13 +385,8 @@ impl RevisionStore {
         check_normal(slug)?;
         let path = self.get_path(slug, false);
 
-        let commit;
         let args = match hash {
-            Some(hash) => {
-                commit = format!("{:x}", hash);
-
-                arguments!["git", "blame", "--porcelain", &commit, "--", &path]
-            }
+            Some(ref hash) => arguments!["git", "blame", "--porcelain", hash, "--", &path],
             None => arguments!["git", "blame", "--porcelain", "--", &path],
         };
 

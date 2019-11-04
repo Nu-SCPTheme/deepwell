@@ -607,9 +607,9 @@ impl PageService {
             .filter(revisions::dsl::page_id.eq(id))
             .order_by(revisions::dsl::revision_id.desc())
             .select(revisions::dsl::git_commit)
-            .first::<Vec<u8>>(&*self.conn)?;
+            .first::<String>(&*self.conn)?;
 
-        let hash = GitHash::from(raw_hash.as_slice());
+        let hash = GitHash::from_checked(raw_hash);
 
         Ok(Some((wiki_id, slug, hash)))
     }
@@ -657,11 +657,11 @@ impl PageService {
         let result = revisions::table
             .find(id)
             .select(revisions::dsl::git_commit)
-            .first::<Vec<u8>>(&*self.conn)
+            .first::<String>(&*self.conn)
             .optional()?;
 
         match result {
-            Some(hash) => Ok(GitHash::from(hash.as_slice())),
+            Some(hash) => Ok(GitHash::from_checked(hash)),
             None => Err(Error::RevisionNotFound),
         }
     }

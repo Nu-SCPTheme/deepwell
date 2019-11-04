@@ -98,6 +98,7 @@ mod service_prelude {
     pub use diesel::query_builder::debug_query;
     pub use parking_lot::RwLock;
     pub use std::collections::HashMap;
+    pub use std::convert::TryFrom;
     pub use std::fmt::{self, Debug};
     pub use std::sync::Arc;
 
