@@ -98,6 +98,23 @@ impl SessionService {
         Ok(token)
     }
 
+    pub fn check_token(&self, user_id: UserId, token: &str) -> Result<()> {
+        debug!("Checking token for user ID {}", user_id);
+
+        let id: i64 = user_id.into();
+        let result = sessions::table
+            .find(id)
+            .filter(sessions::dsl::token.eq(token))
+            .select(sessions::dsl::user_id)
+            .first::<UserId>(&*self.conn)
+            .optional()?;
+
+        match result {
+            Some(_) => Ok(()),
+            None => Err(Error::InvalidToken),
+        }
+    }
+
     pub fn create_token(&self, user_id: UserId, ip_address: IpNetwork) -> Result<String> {
         debug!("Creating token for user ID {}", user_id);
 

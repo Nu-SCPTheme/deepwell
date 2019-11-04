@@ -241,6 +241,12 @@ impl Server {
 
     /* Session methods */
 
+    /// Checks if a given token is valid for the given user.
+    #[inline]
+    pub fn check_token(&self, user_id: UserId, token: &str) -> Result<()> {
+        self.session.check_token(user_id, token)
+    }
+
     /// Creates a session by validating the password and creating a token.
     pub fn create_session(
         &self,

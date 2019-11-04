@@ -50,6 +50,9 @@ pub enum Error {
     #[error("invalid username or password")]
     AuthenticationFailed,
 
+    #[error("session expired or invalid")]
+    InvalidToken,
+
     #[error("invalid password: {0}")]
     NewPasswordInvalid(&'static str),
 
