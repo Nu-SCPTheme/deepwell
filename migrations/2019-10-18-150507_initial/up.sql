@@ -28,7 +28,7 @@ CREATE TABLE sessions (
     user_id BIGSERIAL PRIMARY KEY REFERENCES users(user_id),
     token VARCHAR(64) NOT NULL UNIQUE,
     ip_address INET NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 -- Wikis and wiki settings

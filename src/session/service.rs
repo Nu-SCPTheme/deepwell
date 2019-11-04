@@ -21,6 +21,7 @@
 use super::NewSession;
 use crate::schema::sessions;
 use crate::service_prelude::*;
+use crate::utils::rows_to_result;
 use chrono::prelude::*;
 use ipnetwork::IpNetwork;
 use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
@@ -64,8 +65,20 @@ impl SessionService {
         SessionService { conn }
     }
 
+    pub fn get_session(&self, user_id: UserId) -> Result<Option<Session>> {
+        info!("Getting session information any for user ID {}", user_id);
+
+        let id: i64 = user_id.into();
+        let session = sessions::table
+            .find(id)
+            .first::<Session>(&*self.conn)
+            .optional()?;
+
+        Ok(session)
+    }
+
     pub fn get_token(&self, user_id: UserId) -> Result<Option<String>> {
-        debug!("Getting token if any for user ID {}", user_id);
+        debug!("Getting token (if any) for user ID {}", user_id);
 
         let id: i64 = user_id.into();
         let token = sessions::table
@@ -92,6 +105,17 @@ impl SessionService {
             .execute(&*self.conn)?;
 
         Ok(token)
+    }
+
+    pub fn revoke_token(&self, user_id: UserId) -> Result<bool> {
+        debug!("Revoking token for user ID {}", user_id);
+
+        let id: i64 = user_id.into();
+        let rows = diesel::delete(sessions::table)
+            .filter(sessions::dsl::user_id.eq(id))
+            .execute(&*self.conn)?;
+
+        Ok(rows_to_result(rows))
     }
 }
 

@@ -103,7 +103,7 @@ table! {
         user_id -> Int8,
         token -> Varchar,
         ip_address -> Inet,
-        created_at -> Timestamp,
+        created_at -> Timestamptz,
     }
 }
 

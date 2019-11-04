@@ -23,7 +23,7 @@ use crate::page::PageService;
 use crate::password::PasswordService;
 use crate::prelude::*;
 use crate::rating::{RatingHistory, RatingId, RatingService};
-use crate::session::SessionService;
+use crate::session::{Session, SessionService};
 use crate::user::UserService;
 use crate::wiki::{UpdateWiki, WikiService};
 use chrono::prelude::*;
@@ -263,6 +263,19 @@ impl Server {
 
             self.session.create_token(user_id, ip_address)
         })
+    }
+
+    /// Gets an existing session object for a given user.
+    #[inline]
+    pub fn get_session(&self, user_id: UserId) -> Result<Option<Session>> {
+        self.session.get_session(user_id)
+    }
+
+    /// Invalidates a session object manually.
+    /// Returns true if there was a session present.
+    #[inline]
+    pub fn end_session(&self, user_id: UserId) -> Result<bool> {
+        self.session.revoke_token(user_id)
     }
 
     /* Page methods */

@@ -21,6 +21,6 @@
 mod models;
 mod service;
 
-pub use self::service::SessionService;
+pub use self::service::*;
 
 use self::models::*;
