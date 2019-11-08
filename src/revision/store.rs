@@ -332,7 +332,7 @@ impl RevisionStore {
 
     /// Gets the version of a page at the specified commit.
     /// Returns `None` if the page did not at exist at the time.
-    pub fn get_page_version(&self, slug: &str, hash: GitHash) -> Result<Option<Box<[u8]>>> {
+    pub fn get_page_version(&self, slug: &str, hash: &GitHash) -> Result<Option<Box<[u8]>>> {
         info!(
             "Getting page content for slug '{}' at commit {}",
             slug, hash,
@@ -354,7 +354,7 @@ impl RevisionStore {
 
     /// Gets the diff between commits of a particular page.
     /// Returns `None` if the page or commits do not exist.
-    pub fn get_diff(&self, slug: &str, first: GitHash, second: GitHash) -> Result<Box<[u8]>> {
+    pub fn get_diff(&self, slug: &str, first: &GitHash, second: &GitHash) -> Result<Box<[u8]>> {
         info!(
             "Getting diff for slug '{}' between {}..{}",
             slug, first, second,

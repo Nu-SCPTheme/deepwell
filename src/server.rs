@@ -576,7 +576,7 @@ impl Server {
         &self,
         wiki_id: WikiId,
         slug: &str,
-        revision: Either<RevisionId, GitHash>,
+        revision: Either<RevisionId, &GitHash>,
     ) -> Result<Option<Box<[u8]>>> {
         self.page.get_page_version(wiki_id, slug, revision)
     }
@@ -599,8 +599,8 @@ impl Server {
         &self,
         wiki_id: WikiId,
         slug: S,
-        first: Either<RevisionId, GitHash>,
-        second: Either<RevisionId, GitHash>,
+        first: Either<RevisionId, &GitHash>,
+        second: Either<RevisionId, &GitHash>,
     ) -> Result<Box<[u8]>> {
         let slug = normalize_slug(slug);
 

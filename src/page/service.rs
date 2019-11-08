@@ -26,6 +26,7 @@ use crate::user::{User, UserId};
 use crate::wiki::{Wiki, WikiId};
 use either::*;
 use serde_json as json;
+use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::path::PathBuf;
@@ -623,7 +624,7 @@ impl PageService {
                 None => return Ok(None),
             };
 
-            self.get_store(wiki_id, |store| store.get_page_version(&slug, hash))
+            self.get_store(wiki_id, |store| store.get_page_version(&slug, &hash))
         })
     }
 
@@ -646,14 +647,10 @@ impl PageService {
         })
     }
 
-    fn commit_hash(&self, spec: Either<RevisionId, GitHash>) -> Result<GitHash> {
-        let id: i64 = match spec {
-            Left(id) => id.into(),
-            Right(hash) => return Ok(hash),
-        };
+    fn revision_commit(&self, revision_id: RevisionId) -> Result<GitHash> {
+        debug!("Getting commit hash for revision ID {}", revision_id);
 
-        debug!("Getting commit hash for revision {}", id);
-
+        let id: i64 = revision_id.into();
         let result = revisions::table
             .find(id)
             .select(revisions::dsl::git_commit)
@@ -666,11 +663,24 @@ impl PageService {
         }
     }
 
+    fn commit_hash<'a>(
+        &self,
+        revision: Either<RevisionId, &'a GitHash>,
+    ) -> Result<Cow<'a, GitHash>> {
+        match revision {
+            Left(id) => {
+                let hash = self.revision_commit(id)?;
+                Ok(Cow::Owned(hash))
+            }
+            Right(hash) => Ok(Cow::Borrowed(hash)),
+        }
+    }
+
     pub fn get_page_version(
         &self,
         wiki_id: WikiId,
         slug: &str,
-        revision: Either<RevisionId, GitHash>,
+        revision: Either<RevisionId, &GitHash>,
     ) -> Result<Option<Box<[u8]>>> {
         info!(
             "Getting specific page version for wiki ID {}, slug {}",
@@ -679,22 +689,22 @@ impl PageService {
 
         let hash = self.commit_hash(revision)?;
 
-        self.get_store(wiki_id, |store| store.get_page_version(slug, hash))
+        self.get_store(wiki_id, |store| store.get_page_version(slug, &hash))
     }
 
     pub fn get_diff(
         &self,
         wiki_id: WikiId,
         slug: &str,
-        first: Either<RevisionId, GitHash>,
-        second: Either<RevisionId, GitHash>,
+        first: Either<RevisionId, &GitHash>,
+        second: Either<RevisionId, &GitHash>,
     ) -> Result<Box<[u8]>> {
         info!("Getting diff for wiki ID {}, slug {}", wiki_id, slug);
 
         let first = self.commit_hash(first)?;
         let second = self.commit_hash(second)?;
 
-        self.get_store(wiki_id, |store| store.get_diff(slug, first, second))
+        self.get_store(wiki_id, |store| store.get_diff(slug, &first, &second))
     }
 
     pub fn edit_revision(&self, revision_id: RevisionId, message: &str) -> Result<()> {

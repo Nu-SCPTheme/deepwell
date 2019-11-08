@@ -326,7 +326,7 @@ fn test_git() {
         let second = hashes.pop().unwrap();
         let first = hashes.pop().unwrap();
         let diff = store
-            .get_diff(slug, first, second)
+            .get_diff(slug, &first, &second)
             .expect("Unable to get diff");
 
         println!();
