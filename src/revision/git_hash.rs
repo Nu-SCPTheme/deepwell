@@ -32,7 +32,7 @@ lazy_static! {
 }
 
 #[derive(Clone, PartialEq, Eq)]
-pub struct GitHash(Box<ArrayString<[u8; 40]>>);
+pub struct GitHash(ArrayString<[u8; 40]>);
 
 impl GitHash {
     pub fn from_checked<B>(hash: B) -> Self
@@ -59,7 +59,7 @@ impl TryFrom<&str> for GitHash {
         if GIT_HASH_REGEX.is_match(hash) {
             let arrstr = ArrayString::from(hash).unwrap();
 
-            Ok(GitHash(Box::new(arrstr)))
+            Ok(GitHash(arrstr))
         } else {
             Err(())
         }
