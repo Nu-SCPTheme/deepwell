@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::prelude::*;
+use crate::service_prelude::*;
 use crate::rating::{RatingHistory, RatingId};
 
 impl Server {

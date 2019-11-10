@@ -18,9 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::prelude::*;
-
-use diesel::Connection;
+use crate::service_prelude::*;
 
 impl Server {
     /// Creates a new user with the given name and email. Returns its ID.

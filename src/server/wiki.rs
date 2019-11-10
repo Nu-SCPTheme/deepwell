@@ -19,10 +19,8 @@
  */
 
 // This file contains implementations for the "Server" struct for wiki/domain methods
-use crate::prelude::*;
+use crate::service_prelude::*;
 use crate::wiki::UpdateWiki;
-use diesel::Connection;
-
 use super::utils::{normalize_slug, to_lowercase};
 
 impl Server {

@@ -18,6 +18,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+mod author;
+mod page;
+mod password;
+mod rating;
+mod revision;
+mod session;
+mod user;
+mod utils;
+mod wiki;
+
 use crate::author::AuthorService;
 use crate::page::PageService;
 use crate::password::PasswordService;
@@ -117,13 +127,3 @@ impl Debug for Server {
             .finish()
     }
 }
-
-mod authentication;
-mod author;
-mod page;
-mod rating;
-mod revision;
-mod session;
-mod user;
-mod utils;
-mod wiki;

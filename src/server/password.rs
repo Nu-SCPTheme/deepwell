@@ -1,5 +1,5 @@
 /*
- * server/authentication.rs
+ * server/password.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::prelude::*;
+use crate::service_prelude::*;
 
 impl Server {
     /// Sets or overwrites the given user's password.

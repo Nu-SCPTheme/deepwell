@@ -18,10 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::prelude::*;
+use crate::service_prelude::*;
 use crate::session::Session;
-use diesel::Connection;
-use ipnetwork::IpNetwork;
 
 impl Server {
     /// Checks if a given token is valid for the given user.

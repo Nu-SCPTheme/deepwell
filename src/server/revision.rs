@@ -19,8 +19,7 @@
  */
 
 use super::utils::normalize_slug;
-use crate::prelude::*;
-use either::Either;
+use crate::service_prelude::*;
 
 impl Server {
     /// Get the version of a page at the specified revision.
