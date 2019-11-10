@@ -34,17 +34,16 @@ mod wiki;
 use crate::author::AuthorService;
 use crate::page::PageService;
 use crate::password::PasswordService;
-use crate::prelude::*;
+use crate::service_prelude::*;
 use crate::rating::RatingService;
 use crate::session::SessionService;
 use crate::user::UserService;
 use crate::wiki::WikiService;
-use diesel::{Connection, PgConnection};
 use std::fmt::{self, Debug};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-pub use self::utils::{normalize_slug, to_lowercase};
+use self::utils::{normalize_slug, to_lowercase};
 
 #[derive(Debug, Clone)]
 pub struct ServerConfig<'a> {
