@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::service_prelude::*;
 use crate::rating::{RatingHistory, RatingId};
+use crate::service_prelude::*;
 
 impl Server {
     /// Sets the rating for a given page and user.

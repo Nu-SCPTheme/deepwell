@@ -18,9 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::service_prelude::*;
-use crate::author::{Author, AuthorType};
 use super::utils::normalize_slug;
+use crate::author::{Author, AuthorType};
+use crate::service_prelude::*;
 
 impl Server {
     fn get_page_id<S: Into<String>>(&self, page: Either<PageId, (WikiId, S)>) -> Result<PageId> {

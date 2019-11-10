@@ -18,9 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use super::utils::{normalize_slug, to_lowercase};
 use crate::service_prelude::*;
 use crate::wiki::UpdateWiki;
-use super::utils::{normalize_slug, to_lowercase};
 
 impl Server {
     /// Creates a new wiki with the given parameters. Returns its ID.
