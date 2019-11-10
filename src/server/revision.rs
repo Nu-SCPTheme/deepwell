@@ -18,9 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use super::utils::normalize_slug;
 use crate::prelude::*;
 use either::Either;
-use super::utils::normalize_slug;
 
 impl Server {
     /// Get the version of a page at the specified revision.

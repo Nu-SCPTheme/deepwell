@@ -20,10 +20,10 @@
 
 use crate::prelude::*;
 
-use diesel::{Connection};
+use diesel::Connection;
 
 impl Server {
-/// Creates a new user with the given name and email. Returns its ID.
+    /// Creates a new user with the given name and email. Returns its ID.
     #[inline]
     pub fn create_user(&self, name: &str, email: &str, password: &str) -> Result<UserId> {
         self.conn.transaction::<_, Error, _>(|| {

@@ -18,12 +18,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use chrono::prelude::*;
-use crate::prelude::*;
-use crate::author::{Author, AuthorType};
-use either::{Left, Either, Right};
-use diesel::Connection;
 use super::utils::normalize_slug;
+use crate::author::{Author, AuthorType};
+use crate::prelude::*;
+use chrono::prelude::*;
+use diesel::Connection;
+use either::{Either, Left, Right};
 
 impl Server {
     fn get_page_id<S: Into<String>>(&self, page: Either<PageId, (WikiId, S)>) -> Result<PageId> {

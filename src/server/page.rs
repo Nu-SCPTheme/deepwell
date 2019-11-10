@@ -18,10 +18,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::prelude::*;
-use crate::author::AuthorType;
-use diesel::Connection;
 use super::utils::normalize_slug;
+use crate::author::AuthorType;
+use crate::prelude::*;
+use diesel::Connection;
 
 impl Server {
     /// Creates a new page with the given contents and metadata.
