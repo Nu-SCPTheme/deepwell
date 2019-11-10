@@ -1,5 +1,5 @@
 /*
- * server.rs
+ * server/mod.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -33,7 +33,8 @@ use ipnetwork::IpNetwork;
 use std::fmt::{self, Debug};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use wikidot_normalize::normalize;
+
+pub use self::utils::{normalize_slug, to_lowercase};
 
 #[derive(Debug, Clone)]
 pub struct ServerConfig<'a> {
@@ -635,14 +636,4 @@ impl Debug for Server {
     }
 }
 
-fn normalize_slug<S: Into<String>>(slug: S) -> String {
-    let mut slug = slug.into();
-    normalize(&mut slug);
-    slug
-}
-
-fn to_lowercase<S: Into<String>>(value: S) -> String {
-    let mut value = value.into();
-    value.make_ascii_lowercase();
-    value
-}
+mod utils;
