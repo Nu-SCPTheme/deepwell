@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-// utilities used by other server methods
+// text manipulation functions used by other server methods
 use wikidot_normalize::normalize;
 
 pub fn normalize_slug<S: Into<String>>(slug: S) -> String {
