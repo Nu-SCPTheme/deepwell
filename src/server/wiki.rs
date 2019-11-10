@@ -18,7 +18,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-// This file contains implementations for the "Server" struct for wiki/domain methods
 use crate::service_prelude::*;
 use crate::wiki::UpdateWiki;
 use super::utils::{normalize_slug, to_lowercase};
