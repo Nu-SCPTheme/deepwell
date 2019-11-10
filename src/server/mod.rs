@@ -42,7 +42,6 @@ use crate::wiki::WikiService;
 use std::fmt::{self, Debug};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use self::utils::{normalize_slug, to_lowercase};
 
 #[derive(Debug, Clone)]
 pub struct ServerConfig<'a> {
