@@ -35,7 +35,6 @@ extern crate lazy_static;
 
 #[macro_use]
 extern crate log;
-extern crate parking_lot;
 extern crate rand;
 extern crate regex;
 
@@ -93,12 +92,14 @@ pub mod model {
 mod service_prelude {
     pub use crate::prelude::*;
     pub use crate::schema::*;
+    pub use async_std::prelude::*;
+    pub use async_std::sync::RwLock;
+    pub use async_std::task;
     pub use chrono::prelude::*;
     pub use diesel::prelude::*;
     pub use diesel::query_builder::debug_query;
     pub use either::{Either, Left, Right};
     pub use ipnetwork::IpNetwork;
-    pub use parking_lot::RwLock;
     pub use std::collections::HashMap;
     pub use std::convert::TryFrom;
     pub use std::fmt::{self, Debug};

@@ -192,7 +192,6 @@ async fn password_pause() {}
 
 #[cfg(not(test))]
 async fn password_pause() {
-    use async_std::task;
     use std::time::Duration;
 
     const PAUSE: Duration = Duration::from_millis(500);

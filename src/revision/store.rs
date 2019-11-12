@@ -22,7 +22,7 @@ use super::{Blame, CommitInfo, GitHash};
 use crate::{Error, Result};
 use async_std::fs::{self, File};
 use async_std::prelude::*;
-use parking_lot::RwLock;
+use async_std::sync::RwLock;
 use std::convert::TryFrom;
 use std::ffi::{OsStr, OsString};
 use std::path::PathBuf;
@@ -423,7 +423,7 @@ impl RevisionStore {
 
     /// Gets the blame for a particular page.
     /// Returns `None` if the page does not exist.
-    pub async fn get_blame(&self, slug: &str, hash: Option<GitHash>) -> Result<Option<Blame>> {
+    pub async fn get_blame(&self, slug: &str, hash: Option<&GitHash>) -> Result<Option<Blame>> {
         info!("Getting blame for slug '{}'", slug);
 
         let _guard = self.lock.read();
