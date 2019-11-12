@@ -20,11 +20,12 @@
 
 use super::{Blame, CommitInfo, GitHash};
 use crate::{Error, Result};
+use async_std::prelude::*;
+use async_std::fs::{self, File};
 use parking_lot::RwLock;
 use std::convert::TryFrom;
 use std::ffi::{OsStr, OsString};
-use std::fs::{self, File};
-use std::io::{Read, Write};
+use async_std::io::{Read, Write};
 use std::path::PathBuf;
 use std::str;
 use wikidot_normalize::is_normal;
@@ -42,6 +43,26 @@ macro_rules! arguments {
         arguments
     }};
     ($($x:expr,)*) => (arguments![$($x),*]);
+}
+
+macro_rules! check_normal {
+    ($slug:expr) => {
+        match check_normal($slug) {
+            Ok(_) => (),
+            Err(error) => return Err(error),
+        }
+    };
+}
+
+
+fn check_normal(slug: &str) -> Result<()> {
+    trace!("Checking slug for normal form: {}", slug);
+
+    if is_normal(slug, false) {
+        Ok(())
+    } else {
+        Err(Error::StaticMsg("slug not in wikidot normal form"))
+    }
 }
 
 /// An object that can't be copied or cloned for a `RwLock`.
@@ -113,12 +134,12 @@ impl RevisionStore {
         path
     }
 
-    fn read_file(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
+    async fn read_file(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
         let path = self.get_path(slug, true);
 
         debug!("Reading file from {}", path.display());
 
-        let mut file = match File::open(&path) {
+        let mut file = match File::open(&path).await {
             Ok(file) => file,
             Err(error) => {
                 use std::io::ErrorKind;
@@ -131,27 +152,27 @@ impl RevisionStore {
         };
 
         let mut content = Vec::new();
-        file.read_to_end(&mut content)?;
+        file.read_to_end(&mut content).await?;
         let bytes = content.into_boxed_slice();
         Ok(Some(bytes))
     }
 
-    fn write_file(&self, slug: &str, content: &[u8]) -> Result<()> {
+    async fn write_file(&self, slug: &str, content: &[u8]) -> Result<()> {
         let path = self.get_path(slug, true);
 
         debug!("Writing {} bytes to {}", content.len(), path.display());
 
-        let mut file = File::create(path)?;
-        file.write_all(content)?;
+        let mut file = File::create(path).await?;
+        file.write_all(content).await?;
         Ok(())
     }
 
-    fn remove_file(&self, slug: &str) -> Result<Option<()>> {
+    async fn remove_file(&self, slug: &str) -> Result<Option<()>> {
         let path = self.get_path(slug, true);
 
         debug!("Removing file {}", path.display());
 
-        match fs::remove_file(path) {
+        match fs::remove_file(path).await {
             Ok(_) => (),
             Err(error) => {
                 use std::io::ErrorKind;
@@ -182,21 +203,23 @@ impl RevisionStore {
         self.repo.as_os_str().to_os_string()
     }
 
-    fn spawn(&self, arguments: &[&OsStr]) -> Result<()> {
+    async fn spawn(&self, arguments: &[&OsStr]) -> Result<()> {
+        // TODO async-ify
         super::spawn(self.repo(), arguments)
     }
 
-    fn spawn_output(&self, arguments: &[&OsStr]) -> Result<Box<[u8]>> {
+    async fn spawn_output(&self, arguments: &[&OsStr]) -> Result<Box<[u8]>> {
+        // TODO async-ify
         super::spawn_output(self.repo(), arguments)
     }
 
     // Git helpers
-    fn get_commit(&self) -> Result<GitHash> {
+    async fn get_commit(&self) -> Result<GitHash> {
         let args = arguments!["git", "rev-parse", "--verify", "HEAD"];
 
         debug!("Getting current HEAD commit");
 
-        let digest_bytes = self.spawn_output(&args)?;
+        let digest_bytes = self.spawn_output(&args).await?;
         let digest = str::from_utf8(&digest_bytes)
             .map_err(|_| Error::StaticMsg("git hash wasn't valid UTF-8"))?;
 
@@ -209,23 +232,23 @@ impl RevisionStore {
     /// Create the first commit of the repo.
     /// Should only be called on empty repositories.
     #[cold]
-    pub fn initial_commit(&self) -> Result<()> {
+    pub async fn initial_commit(&self) -> Result<()> {
         info!("Initializing new git repository");
 
         let _guard = self.lock.write();
         let args = arguments!["git", "init"];
-        self.spawn(&args)?;
+        self.spawn(&args).await?;
 
         let author = self.arg_author("DEEPWELL");
         let message = self.arg_message("Initial commit");
         let args = arguments!["git", "commit", "--allow-empty", &author, &message];
 
-        self.spawn(&args)?;
+        self.spawn(&args).await?;
         Ok(())
     }
 
     /// For the given slug, create or edit a page to have the specified contents.
-    pub fn commit(&self, slug: &str, content: Option<&[u8]>, info: CommitInfo) -> Result<GitHash> {
+    pub async fn commit(&self, slug: &str, content: Option<&[u8]>, info: CommitInfo<'_>) -> Result<GitHash> {
         info!(
             "Committing file changes for slug '{}' ({} bytes)",
             slug,
@@ -233,15 +256,15 @@ impl RevisionStore {
         );
 
         let _guard = self.lock.write();
-        check_normal(slug)?;
+        check_normal!(slug);
 
         if let Some(content) = content {
-            self.write_file(slug, content)?;
+            self.write_file(slug, content).await?;
         }
 
         let path = self.get_path(slug, false);
         let args = arguments!["git", "add", &path];
-        self.spawn(&args)?;
+        self.spawn(&args).await?;
 
         let author = self.arg_author(info.username);
         let message = self.arg_message(info.message);
@@ -254,31 +277,33 @@ impl RevisionStore {
             "--",
             &path,
         ];
-        self.spawn(&args)?;
+        self.spawn(&args).await?;
 
-        self.get_commit()
+        let commit = self.get_commit().await?;
+        Ok(commit)
     }
 
     /// Creates an empty commit.
-    pub fn empty_commit(&self, info: CommitInfo) -> Result<GitHash> {
+    pub async fn empty_commit(&self, info: CommitInfo<'_>) -> Result<GitHash> {
         info!("Creating empty commit");
 
         let _guard = self.lock.write();
         let author = self.arg_author(info.username);
         let message = self.arg_message(info.message);
         let args = arguments!["git", "commit", "--allow-empty", &author, &message];
-        self.spawn(&args)?;
+        self.spawn(&args).await?;
 
-        self.get_commit()
+        let commit = self.get_commit().await?;
+        Ok(commit)
     }
 
     /// Renames the given page in the repository.
-    pub fn rename(&self, old_slug: &str, new_slug: &str, info: CommitInfo) -> Result<GitHash> {
+    pub async fn rename(&self, old_slug: &str, new_slug: &str, info: CommitInfo<'_>) -> Result<GitHash> {
         info!("Renaming file for slug '{}' -> '{}'", old_slug, new_slug);
 
         let _guard = self.lock.write();
-        check_normal(old_slug)?;
-        check_normal(new_slug)?;
+        check_normal!(old_slug);
+        check_normal!(new_slug);
 
         let new_path = self.get_path(new_slug, true);
         if new_path.exists() {
@@ -288,25 +313,27 @@ impl RevisionStore {
         let old_path = self.get_path(old_slug, false);
         let new_path = self.get_path(new_slug, false);
         let args = arguments!["git", "mv", "--", &old_path, &new_path];
-        self.spawn(&args)?;
+        self.spawn(&args).await?;
 
         let author = self.arg_author(info.username);
         let message = self.arg_message(info.message);
         let args = arguments!["git", "commit", &author, &message, "--", &new_path];
-        self.spawn(&args)?;
+        self.spawn(&args).await?;
 
-        self.get_commit()
+        let commit = self.get_commit().await?;
+        Ok(commit)
     }
 
     /// Remove the given page from the repository.
     /// Returns `None` if the page does not exist.
-    pub fn remove(&self, slug: &str, info: CommitInfo) -> Result<Option<GitHash>> {
+    pub async fn remove(&self, slug: &str, info: CommitInfo<'_>) -> Result<Option<GitHash>> {
         info!("Removing file for slug '{}' (info: {:?})", slug, info);
 
         let _guard = self.lock.write();
-        check_normal(slug)?;
+        check_normal!(slug);
 
-        if self.remove_file(slug)?.is_none() {
+        let removed = self.remove_file(slug).await?;
+        if removed.is_none() {
             return Ok(None);
         }
 
@@ -315,37 +342,40 @@ impl RevisionStore {
         let path = self.get_path(slug, false);
         let args = arguments!["git", "commit", &author, &message, "--", &path];
 
-        self.spawn(&args)?;
-        self.get_commit().map(Some)
+        self.spawn(&args).await?;
+
+        let commit = self.get_commit().await.map(Some)?;
+        Ok(commit)
     }
 
     /// Gets the current version of a page.
     /// Returns `None` if the page does not exist.
-    pub fn get_page(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
+    pub async fn get_page(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
         info!("Getting page content for slug '{}'", slug);
 
         let _guard = self.lock.read();
-        check_normal(slug)?;
+        check_normal!(slug);
 
-        self.read_file(slug)
+        let contents = self.read_file(slug).await?;
+        Ok(contents)
     }
 
     /// Gets the version of a page at the specified commit.
     /// Returns `None` if the page did not at exist at the time.
-    pub fn get_page_version(&self, slug: &str, hash: &GitHash) -> Result<Option<Box<[u8]>>> {
+    pub async fn get_page_version(&self, slug: &str, hash: GitHash) -> Result<Option<Box<[u8]>>> {
         info!(
             "Getting page content for slug '{}' at commit {}",
             slug, hash,
         );
 
         let _guard = self.lock.read();
-        check_normal(slug)?;
+        check_normal!(slug);
 
         let path = self.get_path(slug, false);
         let spec = format!("{}:{}", hash, path.display());
         let args = arguments!["git", "show", "--format=%B", &spec];
 
-        match self.spawn_output(&args) {
+        match self.spawn_output(&args).await {
             Ok(bytes) => Ok(Some(bytes)),
             Err(Error::CommandFailed(_)) => Ok(None),
             Err(error) => Err(error),
@@ -354,14 +384,14 @@ impl RevisionStore {
 
     /// Gets the diff between commits of a particular page.
     /// Returns `None` if the page or commits do not exist.
-    pub fn get_diff(&self, slug: &str, first: &GitHash, second: &GitHash) -> Result<Box<[u8]>> {
+    pub async fn get_diff(&self, slug: &str, first: &GitHash, second: &GitHash) -> Result<Box<[u8]>> {
         info!(
             "Getting diff for slug '{}' between {}..{}",
             slug, first, second,
         );
 
         let _guard = self.lock.read();
-        check_normal(slug)?;
+        check_normal!(slug);
         let path = self.get_path(slug, false);
 
         let args = arguments![
@@ -373,16 +403,18 @@ impl RevisionStore {
             "--",
             &path,
         ];
-        self.spawn_output(&args)
+
+        let diff = self.spawn_output(&args).await?;
+        Ok(diff)
     }
 
     /// Gets the blame for a particular page.
     /// Returns `None` if the page does not exist.
-    pub fn get_blame(&self, slug: &str, hash: Option<GitHash>) -> Result<Option<Blame>> {
+    pub async fn get_blame(&self, slug: &str, hash: Option<GitHash>) -> Result<Option<Blame>> {
         info!("Getting blame for slug '{}'", slug);
 
         let _guard = self.lock.read();
-        check_normal(slug)?;
+        check_normal!(slug);
         let path = self.get_path(slug, false);
 
         let args = match hash {
@@ -390,7 +422,7 @@ impl RevisionStore {
             None => arguments!["git", "blame", "--porcelain", "--", &path],
         };
 
-        let raw_blame = match self.spawn_output(&args) {
+        let raw_blame = match self.spawn_output(&args).await {
             Ok(bytes) => bytes,
             Err(Error::CommandFailed(_)) => return Ok(None),
             Err(error) => return Err(error),
@@ -407,15 +439,5 @@ impl RevisionStore {
         let mut guard = self.domain.write();
         guard.clear();
         guard.push_str(new_domain);
-    }
-}
-
-fn check_normal(slug: &str) -> Result<()> {
-    trace!("Checking slug for normal form: {}", slug);
-
-    if is_normal(slug, false) {
-        Ok(())
-    } else {
-        Err(Error::StaticMsg("slug not in wikidot normal form"))
     }
 }

@@ -21,6 +21,7 @@
 #![deny(missing_debug_implementations)]
 
 extern crate arrayvec;
+extern crate async_std;
 extern crate chrono;
 extern crate crypto;
 
