@@ -30,6 +30,7 @@ extern crate color_backtrace;
 extern crate tempfile;
 
 use super::{CommitInfo, RevisionStore};
+use async_std::task;
 use rand::prelude::*;
 use std::cmp;
 use std::fmt::Write as _;
@@ -223,16 +224,26 @@ where
     start..end
 }
 
+#[inline]
+fn count(max: u32) -> Range<u32> {
+    0..max
+}
+
 #[test]
-fn test_git() {
+fn git() {
     color_backtrace::install();
 
+    task::block_on(git_internal());
+}
+
+async fn git_internal() {
     // Create revision store
     let directory = tempdir().expect("Unable to create temporary directory");
     let repo = directory.path();
     let store = RevisionStore::new(repo, "example.org");
     store
         .initial_commit()
+        .await
         .expect("Unable to create initial commit");
 
     // Setup shared buffers
@@ -243,7 +254,7 @@ fn test_git() {
     let mut hashes = Vec::with_capacity(2);
 
     // Randomly generate some commits
-    for _ in 0..20 {
+    for _ in count(20) {
         let slug = pick(&mut rng, TEST_SLUGS.as_ref());
         let username = pick(&mut rng, TEST_USERNAMES.as_ref());
 
@@ -254,8 +265,11 @@ fn test_git() {
         pick_str(&mut rng, &mut message, &MESSAGE_CHARACTERS, 32, range);
 
         // Create random content
-        let page = store.get_page(slug).expect("Unable to get existing page");
-        let mut content = match page {
+        let result = store
+            .get_page(slug)
+            .await
+            .expect("Unable to get existing page");
+        let mut content = match result {
             Some(bytes) => {
                 let bytes = Vec::from(bytes);
                 String::from_utf8(bytes).expect("Content wasn't UTF-8")
@@ -286,6 +300,7 @@ fn test_git() {
 
         let hash = store
             .commit(slug, Some(content.as_bytes()), info)
+            .await
             .expect("Unable to commit generated data");
 
         // Maybe add commit for checking diff
@@ -299,7 +314,7 @@ fn test_git() {
     }
 
     // Randomly delete some pages
-    for _ in 0..5 {
+    for _ in count(5) {
         let slug = pick(&mut rng, TEST_SLUGS.as_ref());
         let username = pick(&mut rng, TEST_USERNAMES.as_ref());
 
@@ -317,6 +332,7 @@ fn test_git() {
 
         store
             .remove(slug, info)
+            .await
             .expect("Unable to commit removed file");
     }
 
@@ -327,6 +343,7 @@ fn test_git() {
         let first = hashes.pop().unwrap();
         let diff = store
             .get_diff(slug, &first, &second)
+            .await
             .expect("Unable to get diff");
 
         println!();
@@ -337,7 +354,10 @@ fn test_git() {
     // Get a blame
     {
         let slug = pick(&mut rng, TEST_SLUGS.as_ref());
-        let blame = store.get_blame(slug, None).expect("Unable to get blame");
+        let blame = store
+            .get_blame(slug, None)
+            .await
+            .expect("Unable to get blame");
 
         println!();
         match blame {
@@ -349,10 +369,14 @@ fn test_git() {
 
 #[test]
 fn thread() {
+    color_backtrace::install();
+
+    task::block_on(thread_internal());
+}
+
+async fn thread_internal() {
     use std::sync::Arc;
     use std::thread;
-
-    color_backtrace::install();
 
     // Create revision store
     let directory = tempdir().expect("Unable to create temporary directory");
@@ -360,6 +384,7 @@ fn thread() {
     let store = RevisionStore::new(repo, "example.org");
     store
         .initial_commit()
+        .await
         .expect("Unable to create initial commit");
 
     let info = CommitInfo {
@@ -367,25 +392,31 @@ fn thread() {
         message: "message",
     };
 
-    store.commit("test-0", Some(b"000"), info).unwrap();
+    store.commit("test-0", Some(b"000"), info).await.unwrap();
 
     let rc = Arc::new((directory, store));
 
     let rc2 = Arc::clone(&rc);
     thread::spawn(move || {
         let (_, store) = &*rc2;
-        store.commit("test-1", Some(b"abc"), info).unwrap();
+        task::block_on(async {
+            store.commit("test-1", Some(b"abc"), info).await.unwrap();
+        });
     });
 
     let rc2 = Arc::clone(&rc);
     thread::spawn(move || {
         let (_, store) = &*rc2;
-        store.commit("test-2", Some(b"def"), info).unwrap();
+        task::block_on(async {
+            store.commit("test-2", Some(b"def"), info).await.unwrap();
+        });
     });
 
     let rc2 = Arc::clone(&rc);
     thread::spawn(move || {
         let (_, store) = &*rc2;
-        store.commit("test-3", Some(b"ghi"), info).unwrap();
+        task::block_on(async {
+            store.commit("test-3", Some(b"ghi"), info).await.unwrap();
+        });
     });
 }
