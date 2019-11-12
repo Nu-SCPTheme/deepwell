@@ -24,11 +24,11 @@ use crate::schema::{pages, revisions, tag_history};
 use crate::service_prelude::*;
 use crate::user::{User, UserId};
 use crate::wiki::{Wiki, WikiId};
+use async_std::{fs, task};
 use either::*;
 use serde_json as json;
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
-use std::fs;
 use std::path::PathBuf;
 
 mod page_id {
@@ -153,16 +153,18 @@ impl PageService {
     }
 
     pub fn add_store(&self, wiki: &Wiki) -> Result<()> {
-        let repo = self.directory.join(wiki.slug());
-        fs::create_dir(&repo)?;
+        task::block_on(async {
+            let repo = self.directory.join(wiki.slug());
+            fs::create_dir(&repo).await?;
 
-        let store = RevisionStore::new(repo, wiki.domain());
-        store.initial_commit()?;
+            let store = RevisionStore::new(repo, wiki.domain());
+            store.initial_commit().await?;
 
-        let mut guard = self.stores.write();
-        guard.insert(wiki.id(), store);
+            let mut guard = self.stores.write();
+            guard.insert(wiki.id(), store);
 
-        Ok(())
+            Ok(())
+        })
     }
 
     fn get_store<F, T>(&self, wiki_id: WikiId, f: F) -> Result<T>
@@ -193,7 +195,7 @@ impl PageService {
     ) -> Result<GitHash> {
         self.get_store::<_, GitHash>(wiki_id, |store| {
             trace!("Committing content to repository");
-            store.commit(slug, content, info)
+            task::block_on(store.commit(slug, content, info))
         })
     }
 
@@ -381,7 +383,7 @@ impl PageService {
 
             let hash = self.get_store::<_, GitHash>(wiki_id, |store| {
                 trace!("Committing rename to repository");
-                store.rename(old_slug, new_slug, info)
+                task::block_on(store.rename(old_slug, new_slug, info))
             })?;
 
             let model = NewRevision {
@@ -440,7 +442,9 @@ impl PageService {
 
             let hash = self.get_store::<_, GitHash>(wiki_id, |store| {
                 trace!("Committing removal to repository");
-                match store.remove(slug, info)? {
+
+                let hash = task::block_on(store.remove(slug, info))?;
+                match hash {
                     Some(hash) => Ok(hash),
                     None => Err(Error::PageNotFound),
                 }
@@ -502,7 +506,7 @@ impl PageService {
 
             let hash = self.get_store::<_, GitHash>(wiki_id, |store| {
                 trace!("Committing tag changes to repository");
-                store.empty_commit(info)
+                task::block_on(store.empty_commit(info))
             })?;
 
             let model = NewRevision {
@@ -586,7 +590,7 @@ impl PageService {
     pub fn get_page_contents(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Box<[u8]>>> {
         info!("Getting contents for wiki ID {}, slug {}", wiki_id, slug);
 
-        self.get_store(wiki_id, |store| store.get_page(slug))
+        self.get_store(wiki_id, |store| task::block_on(store.get_page(slug)))
     }
 
     fn get_last_hash(&self, page_id: PageId) -> Result<Option<(WikiId, String, GitHash)>> {
@@ -624,14 +628,16 @@ impl PageService {
                 None => return Ok(None),
             };
 
-            self.get_store(wiki_id, |store| store.get_page_version(&slug, &hash))
+            self.get_store(wiki_id, |store| {
+                task::block_on(store.get_page_version(&slug, &hash))
+            })
         })
     }
 
     pub fn get_blame(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Blame>> {
         info!("Getting blame for wiki ID {}, slug {}", wiki_id, slug);
 
-        self.get_store(wiki_id, |store| store.get_blame(slug, None))
+        self.get_store(wiki_id, |store| task::block_on(store.get_blame(slug, None)))
     }
 
     pub fn get_blame_by_id(&self, page_id: PageId) -> Result<Option<Blame>> {
@@ -643,7 +649,9 @@ impl PageService {
                 None => return Ok(None),
             };
 
-            self.get_store(wiki_id, |store| store.get_blame(&slug, Some(hash)))
+            self.get_store(wiki_id, |store| {
+                task::block_on(store.get_blame(&slug, Some(hash)))
+            })
         })
     }
 
@@ -689,7 +697,9 @@ impl PageService {
 
         let hash = self.commit_hash(revision)?;
 
-        self.get_store(wiki_id, |store| store.get_page_version(slug, &hash))
+        self.get_store(wiki_id, |store| {
+            task::block_on(store.get_page_version(slug, &hash))
+        })
     }
 
     pub fn get_diff(
@@ -704,7 +714,9 @@ impl PageService {
         let first = self.commit_hash(first)?;
         let second = self.commit_hash(second)?;
 
-        self.get_store(wiki_id, |store| store.get_diff(slug, &first, &second))
+        self.get_store(wiki_id, |store| {
+            task::block_on(store.get_diff(slug, &first, &second))
+        })
     }
 
     pub fn edit_revision(&self, revision_id: RevisionId, message: &str) -> Result<()> {

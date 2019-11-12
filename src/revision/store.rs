@@ -21,7 +21,6 @@
 use super::{Blame, CommitInfo, GitHash};
 use crate::{Error, Result};
 use async_std::fs::{self, File};
-use async_std::io::{Read, Write};
 use async_std::prelude::*;
 use parking_lot::RwLock;
 use std::convert::TryFrom;
@@ -371,7 +370,7 @@ impl RevisionStore {
 
     /// Gets the version of a page at the specified commit.
     /// Returns `None` if the page did not at exist at the time.
-    pub async fn get_page_version(&self, slug: &str, hash: GitHash) -> Result<Option<Box<[u8]>>> {
+    pub async fn get_page_version(&self, slug: &str, hash: &GitHash) -> Result<Option<Box<[u8]>>> {
         info!(
             "Getting page content for slug '{}' at commit {}",
             slug, hash,
