@@ -60,7 +60,7 @@ fn new_hash() -> Hash {
     [0; 32]
 }
 
-pub fn new_password<F>(user_id: UserId, password: &[u8], f: F) -> Result<()>
+pub async fn new_password<F>(user_id: UserId, password: &[u8], f: F) -> Result<()>
 where
     F: FnOnce(NewPassword<'_>) -> Result<()>,
 {
@@ -76,7 +76,7 @@ where
     f(model)
 }
 
-pub fn check_password(record: &Password, password: &[u8]) -> bool {
+pub async fn check_password(record: &Password, password: &[u8]) -> bool {
     let params = ScryptParams::new(record.logn(), record.param_r(), record.param_p());
     let mut calculated = new_hash();
 

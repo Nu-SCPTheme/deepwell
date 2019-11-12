@@ -19,16 +19,19 @@
  */
 
 use crate::service_prelude::*;
+use async_std::task;
 
 impl Server {
     /// Creates a new user with the given name and email. Returns its ID.
     #[inline]
     pub fn create_user(&self, name: &str, email: &str, password: &str) -> Result<UserId> {
         self.conn.transaction::<_, Error, _>(|| {
-            let user_id = self.user.create(name, email)?;
-            self.password.set(user_id, password)?;
+            task::block_on(async {
+                let user_id = self.user.create(name, email)?;
+                self.password.set(user_id, password).await?;
 
-            Ok(user_id)
+                Ok(user_id)
+            })
         })
     }
 

@@ -19,18 +19,21 @@
  */
 
 use crate::service_prelude::*;
+use async_std::task;
 
 impl Server {
     /// Sets or overwrites the given user's password.
     #[inline]
     pub fn set_user_password(&self, user_id: UserId, password: &str) -> Result<()> {
-        self.password.set(user_id, password)
+        task::block_on(self.password.set(user_id, password))?;
+        Ok(())
     }
 
     /// Validates the password for the given user.
     /// Returns `()` on success, authentication error on failure.
     #[inline]
     pub fn validate_user_password(&self, user_id: UserId, password: &str) -> Result<()> {
-        self.password.check(user_id, password)
+        task::block_on(self.password.check(user_id, password))?;
+        Ok(())
     }
 }

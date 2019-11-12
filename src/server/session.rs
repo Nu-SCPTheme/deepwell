@@ -20,6 +20,7 @@
 
 use crate::service_prelude::*;
 use crate::session::Session;
+use async_std::task;
 
 impl Server {
     /// Checks if a given token is valid for the given user.
@@ -40,15 +41,17 @@ impl Server {
             user_id, ip_address,
         );
 
-        self.password.check(user_id, password)?;
-
         trace!("Password validated, getting or creating session token");
         self.conn.transaction::<_, Error, _>(|| {
-            if let Some(token) = self.session.get_token(user_id)? {
-                return Ok(token);
-            }
+            task::block_on(async {
+                self.password.check(user_id, password).await?;
 
-            self.session.create_token(user_id, ip_address)
+                if let Some(token) = self.session.get_token(user_id)? {
+                    return Ok(token);
+                }
+
+                self.session.create_token(user_id, ip_address)
+            })
         })
     }
 

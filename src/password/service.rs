@@ -126,7 +126,7 @@ impl PasswordService {
         Ok(())
     }
 
-    pub fn set(&self, user_id: UserId, password: &str) -> Result<()> {
+    pub async fn set(&self, user_id: UserId, password: &str) -> Result<()> {
         self.verify_password(password)?;
 
         new_password(user_id, password.as_bytes(), |model| {
@@ -139,23 +139,24 @@ impl PasswordService {
 
             Ok(())
         })
+        .await?;
+
+        Ok(())
     }
 
     #[inline]
-    pub fn check(&self, user_id: UserId, password: &str) -> Result<()> {
-        match self.check_internal(user_id, password) {
+    pub async fn check(&self, user_id: UserId, password: &str) -> Result<()> {
+        match self.check_internal(user_id, password).await {
             Ok(_) => Ok(()),
             Err(error) => {
                 warn!("Authentication failure by user ID {}", user_id);
-
-                password_pause();
-
+                password_pause().await;
                 Err(error)
             }
         }
     }
 
-    fn check_internal(&self, user_id: UserId, password: &str) -> Result<()> {
+    async fn check_internal(&self, user_id: UserId, password: &str) -> Result<()> {
         // To avoid computation-based DOS attacks
         if password.len() > MAX_PASSWORD_LEN {
             return Err(Error::AuthenticationFailed);
@@ -168,7 +169,8 @@ impl PasswordService {
             .optional()?;
 
         let record = record.ok_or(Error::AuthenticationFailed)?;
-        if check_password(&record, password.as_bytes()) {
+        let password = password.as_bytes();
+        if check_password(&record, password).await {
             Ok(())
         } else {
             Err(Error::AuthenticationFailed)
@@ -186,14 +188,14 @@ impl Debug for PasswordService {
 
 #[cfg(test)]
 #[inline]
-fn password_pause() {}
+async fn password_pause() {}
 
 #[cfg(not(test))]
-fn password_pause() {
-    use std::thread;
+async fn password_pause() {
+    use async_std::task;
     use std::time::Duration;
 
     const PAUSE: Duration = Duration::from_millis(500);
 
-    thread::sleep(PAUSE);
+    task::sleep(PAUSE).await;
 }
