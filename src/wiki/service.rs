@@ -82,7 +82,7 @@ impl WikiService {
         Ok(WikiService { conn, wikis })
     }
 
-    pub fn create(&self, name: &str, slug: &str, domain: &str) -> Result<WikiId> {
+    pub async fn create(&self, name: &str, slug: &str, domain: &str) -> Result<WikiId> {
         info!("Creating new wiki with name '{}' ('{}')", name, slug);
 
         let model = NewWiki { name, slug, domain };
@@ -90,21 +90,23 @@ impl WikiService {
             .values(&model)
             .get_result::<Wiki>(&*self.conn)?;
 
-        let id = wiki.id();
-        self.wikis.write().insert(id, wiki);
-        Ok(id)
+        let wiki_id = wiki.id();
+        let guard = self.wikis.write().await;
+        guard.insert(wiki_id, wiki);
+
+        Ok(wiki_id)
     }
 
-    pub fn get_by_id<F, T>(&self, id: WikiId, f: F) -> Result<T>
+    pub async fn get_by_id<F, T>(&self, id: WikiId, f: F) -> Result<T>
     where
         F: FnOnce(Option<&Wiki>) -> Result<T>,
     {
-        let guard = self.wikis.read();
+        let guard = self.wikis.read().await;
         let wiki = guard.get(&id);
         f(wiki)
     }
 
-    pub fn get_by_slug<F, T>(&self, slug: &str, f: F) -> Result<T>
+    pub async fn get_by_slug<F, T>(&self, slug: &str, f: F) -> Result<T>
     where
         F: FnOnce(Option<&Wiki>) -> Result<T>,
     {
@@ -118,7 +120,7 @@ impl WikiService {
             None
         }
 
-        let guard = self.wikis.read();
+        let guard = self.wikis.read().await;
         let wiki = get(&*guard, slug);
         f(wiki)
     }

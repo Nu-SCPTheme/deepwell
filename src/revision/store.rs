@@ -186,8 +186,8 @@ impl RevisionStore {
     }
 
     // Argument helpers
-    fn arg_author(&self, name: &str) -> String {
-        let domain = self.domain.read();
+    async fn arg_author(&self, name: &str) -> String {
+        let domain = self.domain.read().await;
 
         format!("--author={} <noreply@{}>", name, domain)
     }
@@ -237,7 +237,7 @@ impl RevisionStore {
         let args = arguments!["git", "init"];
         self.spawn(&args).await?;
 
-        let author = self.arg_author("DEEPWELL");
+        let author = self.arg_author("DEEPWELL").await;
         let message = self.arg_message("Initial commit");
         let args = arguments!["git", "commit", "--allow-empty", &author, &message];
 
@@ -269,7 +269,7 @@ impl RevisionStore {
         let args = arguments!["git", "add", &path];
         self.spawn(&args).await?;
 
-        let author = self.arg_author(info.username);
+        let author = self.arg_author(info.username).await;
         let message = self.arg_message(info.message);
         let args = arguments![
             "git",
@@ -291,8 +291,9 @@ impl RevisionStore {
         info!("Creating empty commit");
 
         let _guard = self.lock.write();
-        let author = self.arg_author(info.username);
+        let author = self.arg_author(info.username).await;
         let message = self.arg_message(info.message);
+
         let args = arguments!["git", "commit", "--allow-empty", &author, &message];
         self.spawn(&args).await?;
 
@@ -323,7 +324,7 @@ impl RevisionStore {
         let args = arguments!["git", "mv", "--", &old_path, &new_path];
         self.spawn(&args).await?;
 
-        let author = self.arg_author(info.username);
+        let author = self.arg_author(info.username).await;
         let message = self.arg_message(info.message);
         let args = arguments!["git", "commit", &author, &message, "--", &new_path];
         self.spawn(&args).await?;
@@ -345,7 +346,7 @@ impl RevisionStore {
             return Ok(None);
         }
 
-        let author = self.arg_author(info.username);
+        let author = self.arg_author(info.username).await;
         let message = self.arg_message(info.message);
         let path = self.get_path(slug, false);
         let args = arguments!["git", "commit", &author, &message, "--", &path];
@@ -446,10 +447,10 @@ impl RevisionStore {
     }
 
     /// Sets the domain to a different value.
-    pub fn set_domain(&self, new_domain: &str) {
+    pub async fn set_domain(&self, new_domain: &str) {
         trace!("Acquiring domain write lock to change: {}", new_domain);
 
-        let mut guard = self.domain.write();
+        let mut guard = self.domain.write().await;
         guard.clear();
         guard.push_str(new_domain);
     }

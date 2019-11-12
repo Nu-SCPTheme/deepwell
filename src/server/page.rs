@@ -142,14 +142,17 @@ impl Server {
         debug!("Creating transaction for page ID and rating");
 
         self.conn.transaction::<_, Error, _>(|| {
-            let page = match self.page.get_page_by_id(page_id)? {
-                Some(page) => page,
-                None => return Ok(None),
-            };
+            task::block_on(async {
+                let page = self.page.get_page_by_id(page_id).await?;
+                let page = match page {
+                    Some(page) => page,
+                    None => return Ok(None),
+                };
 
-            let rating = self.rating.get_rating(page_id)?;
+                let rating = self.rating.get_rating(page_id)?;
 
-            Ok(Some((page, rating)))
+                Ok(Some((page, rating)))
+            })
         })
     }
 
@@ -162,13 +165,13 @@ impl Server {
     ) -> Result<Option<Box<[u8]>>> {
         let slug = normalize_slug(slug);
 
-        self.page.get_page_contents(wiki_id, &slug)
+        task::block_on(self.page.get_page_contents(wiki_id, &slug))
     }
 
     /// Gets the contents for a given page ID.
     #[inline]
     pub fn get_page_contents_by_id(&self, page_id: PageId) -> Result<Option<Box<[u8]>>> {
-        self.page.get_page_contents_by_id(page_id)
+        task::block_on(self.page.get_page_contents_by_id(page_id))
     }
 
     /// Sets all the tags for a given page.

@@ -593,7 +593,7 @@ impl PageService {
         Ok(page)
     }
 
-    pub fn get_page_by_id(&self, page_id: PageId) -> Result<Option<Page>> {
+    pub async fn get_page_by_id(&self, page_id: PageId) -> Result<Option<Page>> {
         info!("Getting page for page ID {}", page_id);
 
         let id: i64 = page_id.into();
@@ -647,7 +647,7 @@ impl PageService {
         Ok(Some((wiki_id, slug, hash)))
     }
 
-    pub fn get_page_contents_by_id(&self, page_id: PageId) -> Result<Option<Box<[u8]>>> {
+    pub async fn get_page_contents_by_id(&self, page_id: PageId) -> Result<Option<Box<[u8]>>> {
         info!("Getting contents for page ID {}", page_id);
 
         self.conn.transaction::<_, Error, _>(|| {
