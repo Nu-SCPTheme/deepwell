@@ -20,9 +20,16 @@
 
 use super::{check_password, new_password, Password};
 use crate::user::UserId;
+use async_std::task;
 
 #[test]
 fn crypto() {
+    color_backtrace::install();
+
+    task::block_on(crypto_inner());
+}
+
+async fn crypto_inner() {
     // Since we're not actually using Diesel to persist to disk,
     // we have to locally store the values here.
 
@@ -42,6 +49,7 @@ fn crypto() {
 
         Ok(())
     })
+    .await
     .unwrap();
 
     let record = Password::new(user, hash, salt, logn, param_r, param_p);
@@ -49,7 +57,7 @@ fn crypto() {
     macro_rules! check {
         ($password:expr, $expected:expr) => {{
             println!("Checking password: '{}'", $password);
-            let actual = check_password(&record, $password.as_bytes());
+            let actual = check_password(&record, $password.as_bytes()).await;
             assert_eq!(actual, $expected, "Password result mismatch");
         }};
     }
