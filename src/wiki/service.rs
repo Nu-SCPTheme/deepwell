@@ -91,7 +91,7 @@ impl WikiService {
             .get_result::<Wiki>(&*self.conn)?;
 
         let wiki_id = wiki.id();
-        let guard = self.wikis.write().await;
+        let mut guard = self.wikis.write().await;
         guard.insert(wiki_id, wiki);
 
         Ok(wiki_id)

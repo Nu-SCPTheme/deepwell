@@ -117,7 +117,7 @@ struct WriteGuard<'a> {
 }
 
 impl WriteGuard<'_> {
-    fn get(&mut self) -> Result<&RevisionStore> {
+    fn get(&self) -> Result<&RevisionStore> {
         match self.guard.get(&self.wiki_id) {
             Some(store) => Ok(store),
             None => {
@@ -781,7 +781,7 @@ impl PageService {
         task::block_on(async {
             let guard = self.store(wiki_id).await;
             let store = guard.get()?;
-            store.set_domain(new_domain);
+            store.set_domain(new_domain).await;
             Ok(())
         })
     }
