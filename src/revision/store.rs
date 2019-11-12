@@ -20,12 +20,12 @@
 
 use super::{Blame, CommitInfo, GitHash};
 use crate::{Error, Result};
-use async_std::prelude::*;
 use async_std::fs::{self, File};
+use async_std::io::{Read, Write};
+use async_std::prelude::*;
 use parking_lot::RwLock;
 use std::convert::TryFrom;
 use std::ffi::{OsStr, OsString};
-use async_std::io::{Read, Write};
 use std::path::PathBuf;
 use std::str;
 use wikidot_normalize::is_normal;
@@ -53,7 +53,6 @@ macro_rules! check_normal {
         }
     };
 }
-
 
 fn check_normal(slug: &str) -> Result<()> {
     trace!("Checking slug for normal form: {}", slug);
@@ -248,7 +247,12 @@ impl RevisionStore {
     }
 
     /// For the given slug, create or edit a page to have the specified contents.
-    pub async fn commit(&self, slug: &str, content: Option<&[u8]>, info: CommitInfo<'_>) -> Result<GitHash> {
+    pub async fn commit(
+        &self,
+        slug: &str,
+        content: Option<&[u8]>,
+        info: CommitInfo<'_>,
+    ) -> Result<GitHash> {
         info!(
             "Committing file changes for slug '{}' ({} bytes)",
             slug,
@@ -298,7 +302,12 @@ impl RevisionStore {
     }
 
     /// Renames the given page in the repository.
-    pub async fn rename(&self, old_slug: &str, new_slug: &str, info: CommitInfo<'_>) -> Result<GitHash> {
+    pub async fn rename(
+        &self,
+        old_slug: &str,
+        new_slug: &str,
+        info: CommitInfo<'_>,
+    ) -> Result<GitHash> {
         info!("Renaming file for slug '{}' -> '{}'", old_slug, new_slug);
 
         let _guard = self.lock.write();
@@ -384,7 +393,12 @@ impl RevisionStore {
 
     /// Gets the diff between commits of a particular page.
     /// Returns `None` if the page or commits do not exist.
-    pub async fn get_diff(&self, slug: &str, first: &GitHash, second: &GitHash) -> Result<Box<[u8]>> {
+    pub async fn get_diff(
+        &self,
+        slug: &str,
+        first: &GitHash,
+        second: &GitHash,
+    ) -> Result<Box<[u8]>> {
         info!(
             "Getting diff for slug '{}' between {}..{}",
             slug, first, second,
