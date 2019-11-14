@@ -100,20 +100,20 @@ impl Server {
         })
     }
 
+    /* Helper methods */
+
     #[cfg(test)]
     #[inline]
     pub fn test_transaction<F: FnOnce() -> Result<()>>(&self, f: F) {
         self.conn.test_transaction::<_, Error, _>(f);
     }
 
-    /* Helper methods */
-
     #[inline]
-    pub fn transaction<F, T>(&self, f: F) -> Result<T>
+    async fn transaction<F, T>(&self, f: F) -> Result<T>
     where
-        F: FnOnce() -> Result<T>,
+        F: Future<Output = Result<T>>,
     {
-        self.conn.transaction(f)
+        self.conn.transaction(|| task::block_on(f))
     }
 }
 
