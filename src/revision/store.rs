@@ -136,7 +136,7 @@ impl RevisionStore {
         path
     }
 
-    async fn read_file(&self, _guard: &RevisionBlock, slug: &str) -> Result<Option<Box<[u8]>>> {
+    async fn read_file(&self, _guard: &mut RevisionBlock, slug: &str) -> Result<Option<Box<[u8]>>> {
         let path = self.get_path(slug, true);
 
         debug!("Reading file from {}", path.display());
@@ -159,7 +159,7 @@ impl RevisionStore {
         Ok(Some(bytes))
     }
 
-    async fn write_file(&self, slug: &str, content: &[u8]) -> Result<()> {
+    async fn write_file(&self, _guard: &mut RevisionBlock, slug: &str, content: &[u8]) -> Result<()> {
         let path = self.get_path(slug, true);
 
         debug!("Writing {} bytes to {}", content.len(), path.display());
@@ -169,7 +169,7 @@ impl RevisionStore {
         Ok(())
     }
 
-    async fn remove_file(&self, slug: &str) -> Result<Option<()>> {
+    async fn remove_file(&self, _guard: &mut RevisionBlock, slug: &str) -> Result<Option<()>> {
         let path = self.get_path(slug, true);
 
         debug!("Removing file {}", path.display());
@@ -270,7 +270,7 @@ impl RevisionStore {
         let guard = &mut self.mutex.lock().await;
 
         if let Some(content) = content {
-            self.write_file(slug, content).await?;
+            self.write_file(guard, slug, content).await?;
         }
 
         let path = self.get_path(slug, false);
@@ -349,7 +349,7 @@ impl RevisionStore {
         check_normal!(slug);
         let guard = &mut self.mutex.lock().await;
 
-        let removed = self.remove_file(slug).await?;
+        let removed = self.remove_file(guard, slug).await?;
         if removed.is_none() {
             return Ok(None);
         }
@@ -403,7 +403,7 @@ impl RevisionStore {
         }?;
 
         // Write and commit contents
-        self.write_file(slug, &content).await?;
+        self.write_file(guard, slug, &content).await?;
 
         let path = self.get_path(slug, false);
         let args = arguments!["git", "add", &path];
