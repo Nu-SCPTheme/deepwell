@@ -22,22 +22,22 @@ use super::prelude::*;
 
 #[test]
 fn page_service() {
-    run(|server| task::block_on(page_service_internal(server)));
+    run(|handle| task::block_on(page_service_internal(handle)));
 }
 
-async fn page_service_internal(srv: &Server) {
-    let user = srv
+async fn page_service_internal(handle: &Handle) {
+    let user = handle
         .get_user_from_name("unknown")
         .await
         .expect("Unable to get user")
         .expect("Default user not found");
 
-    let wiki_id = srv
+    let wiki_id = handle
         .create_wiki("Test", "test", "example.org")
         .await
         .expect("Unable to create wiki");
 
-    assert_eq!(srv.check_page(wiki_id, "tale-here").await.unwrap(), false);
+    assert_eq!(handle.check_page(wiki_id, "tale-here").await.unwrap(), false);
 
     let commit = PageCommit {
         wiki_id,
@@ -46,14 +46,14 @@ async fn page_service_internal(srv: &Server) {
         user: &user,
     };
 
-    let (_page_id, _revision_id) = srv
+    let (_page_id, _revision_id) = handle
         .create_page(commit, b"my great article here", &[], "Tale Thing", "")
         .await
         .expect("Unable to create page");
 
-    assert_eq!(srv.check_page(wiki_id, "tale-here").await.unwrap(), true);
+    assert_eq!(handle.check_page(wiki_id, "tale-here").await.unwrap(), true);
 
-    srv.rename_page(
+    handle.rename_page(
         wiki_id,
         "tale-here",
         "amazing-battle",
@@ -70,7 +70,7 @@ async fn page_service_internal(srv: &Server) {
         user: &user,
     };
 
-    srv.edit_page(
+    handle.edit_page(
         commit,
         None,
         Some("Amazing Take-down of 682!"),
@@ -79,9 +79,9 @@ async fn page_service_internal(srv: &Server) {
     .await
     .expect("Unable to edit page");
 
-    assert_eq!(srv.check_page(wiki_id, "tale-here").await.unwrap(), false);
+    assert_eq!(handle.check_page(wiki_id, "tale-here").await.unwrap(), false);
     assert_eq!(
-        srv.check_page(wiki_id, "amazing-battle").await.unwrap(),
+        handle.check_page(wiki_id, "amazing-battle").await.unwrap(),
         true
     );
 
@@ -92,14 +92,14 @@ async fn page_service_internal(srv: &Server) {
         user: &user,
     };
 
-    srv.remove_page(commit)
+    handle.remove_page(commit)
         .await
         .expect("Unable to remove page");
 
-    assert_eq!(srv.check_page(wiki_id, "nonexistent").await.unwrap(), false);
-    assert_eq!(srv.check_page(wiki_id, "tale-here").await.unwrap(), false);
+    assert_eq!(handle.check_page(wiki_id, "nonexistent").await.unwrap(), false);
+    assert_eq!(handle.check_page(wiki_id, "tale-here").await.unwrap(), false);
     assert_eq!(
-        srv.check_page(wiki_id, "amazing-battle").await.unwrap(),
+        handle.check_page(wiki_id, "amazing-battle").await.unwrap(),
         false
     );
 }

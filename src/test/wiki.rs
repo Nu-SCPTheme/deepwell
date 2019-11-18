@@ -22,30 +22,30 @@ use super::prelude::*;
 
 #[test]
 fn wiki_service() {
-    run(|server| task::block_on(wiki_service_internal(server)));
+    run(|handle| task::block_on(wiki_service_internal(handle)));
 }
 
-async fn wiki_service_internal(srv: &Server) {
-    let wiki_id = srv
+async fn wiki_service_internal(handle: &Handle) {
+    let wiki_id = handle
         .create_wiki("Test Wiki", "test", "example.com")
         .await
         .expect("Unable to create wiki");
 
-    srv.rename_wiki(wiki_id, "NUTTEST")
+    handle.rename_wiki(wiki_id, "NUTTEST")
         .await
         .expect("Unable to rename wiki");
 
-    srv.set_wiki_domain(wiki_id, "example.org")
+    handle.set_wiki_domain(wiki_id, "example.org")
         .await
         .expect("Unable to change domain");
 
     {
-        let id = srv.get_wiki_id("test").await.expect("Couldn't find wiki");
+        let id = handle.get_wiki_id("test").await.expect("Couldn't find wiki");
         assert_eq!(id, wiki_id);
     }
 
     {
-        let err = srv
+        let err = handle
             .get_wiki_id("nonexistent")
             .await
             .expect_err("Found wiki");

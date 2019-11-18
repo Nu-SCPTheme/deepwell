@@ -1,5 +1,5 @@
 /*
- * server/mod.rs
+ * handle/mod.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -17,9 +17,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
-// This file operates the server
-// Implementations are seperated into other modules in this directory
 
 mod author;
 mod page;
@@ -44,13 +41,13 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 #[derive(Debug, Clone)]
-pub struct ServerConfig<'a> {
+pub struct Config<'a> {
     pub database_url: &'a str,
     pub revisions_dir: PathBuf,
     pub password_blacklist: Option<&'a Path>,
 }
 
-pub struct Server {
+pub struct Handle {
     conn: Arc<PgConnection>,
     author: AuthorService,
     page: PageService,
@@ -61,11 +58,11 @@ pub struct Server {
     wiki: WikiService,
 }
 
-impl Server {
-    pub fn new(config: ServerConfig) -> Result<Self> {
+impl Handle {
+    pub fn new(config: Config) -> Result<Self> {
         info!("Creating diesel::Handle, establishing connection to Postgres");
 
-        let ServerConfig {
+        let Config {
             database_url,
             revisions_dir,
             password_blacklist,
@@ -88,7 +85,7 @@ impl Server {
         let user = UserService::new(&conn);
         let wiki = WikiService::new(&conn)?;
 
-        Ok(Server {
+        Ok(Handle {
             author,
             conn,
             page,
@@ -109,9 +106,9 @@ impl Server {
     }
 }
 
-impl_async_transaction!(Server);
+impl_async_transaction!(Handle);
 
-impl Debug for Server {
+impl Debug for Handle {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("diesel::Handle")
             .field("conn", &"PgConnection { .. }")

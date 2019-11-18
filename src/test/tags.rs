@@ -22,28 +22,28 @@ use super::prelude::*;
 
 #[test]
 fn tags() {
-    run(|server| task::block_on(tags_internal(server)));
+    run(|handle| task::block_on(tags_internal(handle)));
 }
 
-async fn tags_internal(srv: &Server) {
-    let user_1 = srv
+async fn tags_internal(handle: &Handle) {
+    let user_1 = handle
         .get_user_from_name("unknown")
         .await
         .expect("Unable to get user")
         .expect("Default user not found");
 
     let user_2 = {
-        let user_id = srv
+        let user_id = handle
             .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
             .await
             .expect("Unable to create user");
 
-        srv.get_user_from_id(user_id)
+        handle.get_user_from_id(user_id)
             .await
             .expect("Unable to get user")
     };
 
-    let wiki_id = srv
+    let wiki_id = handle
         .create_wiki("Test", "test", "example.org")
         .await
         .expect("Unable to create wiki");
@@ -55,7 +55,7 @@ async fn tags_internal(srv: &Server) {
         user: &user_1,
     };
 
-    let (_page_id, _revision_id) = srv
+    let (_page_id, _revision_id) = handle
         .create_page(
             commit,
             b"**Item #:** SCP-XXXX\n\n**Object Class:** Keter\n",
@@ -73,7 +73,7 @@ async fn tags_internal(srv: &Server) {
         user: &user_1,
     };
 
-    srv.set_page_tags(commit, &["_image"])
+    handle.set_page_tags(commit, &["_image"])
         .await
         .expect("Unable to set page tags");
 
@@ -84,7 +84,7 @@ async fn tags_internal(srv: &Server) {
         user: &user_2,
     };
 
-    srv.set_page_tags(
+    handle.set_page_tags(
         commit,
         &["scp", "keter", "_image", "ontokinetic", "artifact"],
     )
@@ -98,7 +98,7 @@ async fn tags_internal(srv: &Server) {
         user: &user_1,
     };
 
-    srv.set_page_tags(commit, &["scp", "keter", "artifact", "ontokinetic", "_cc"])
+    handle.set_page_tags(commit, &["scp", "keter", "artifact", "ontokinetic", "_cc"])
         .await
         .expect("Unable to set page tags");
 
@@ -109,7 +109,7 @@ async fn tags_internal(srv: &Server) {
         user: &user_2,
     };
 
-    srv.set_page_tags(
+    handle.set_page_tags(
         commit,
         &[
             "scp",
@@ -124,7 +124,7 @@ async fn tags_internal(srv: &Server) {
     .await
     .expect("Unable to set page tags");
 
-    let (page, _) = srv
+    let (page, _) = handle
         .get_page(wiki_id, "scp-xxxx")
         .await
         .expect("Unable to get page")

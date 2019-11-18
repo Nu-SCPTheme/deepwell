@@ -22,20 +22,20 @@ use super::prelude::*;
 
 #[test]
 fn password_service() {
-    run(|server| task::block_on(password_service_internal(server)));
+    run(|handle| task::block_on(password_service_internal(handle)));
 }
 
-async fn password_service_internal(srv: &Server) {
+async fn password_service_internal(handle: &Handle) {
     macro_rules! good_password {
         ($user_id:expr, $password:expr) => {
-            srv.validate_user_password($user_id, $password)
+            handle.validate_user_password($user_id, $password)
                 .expect("Password doesn't match")
         };
     }
 
     macro_rules! bad_password {
         ($user_id:expr, $password:expr) => {
-            match srv.validate_user_password($user_id, $password) {
+            match handle.validate_user_password($user_id, $password) {
                 Err(Error::AuthenticationFailed) => (),
                 Err(error) => panic!("Unexpected error: {}", error),
                 Ok(_) => panic!("Password matched when it shouldn't have"),
@@ -48,7 +48,7 @@ async fn password_service_internal(srv: &Server) {
     bad_password!(bad_user_id, "rustybirb1");
     bad_password!(bad_user_id, "letmein");
 
-    let user_id = srv
+    let user_id = handle
         .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
         .await
         .expect("Unable to create user");
@@ -58,7 +58,7 @@ async fn password_service_internal(srv: &Server) {
     bad_password!(user_id, "rustybirb1");
     bad_password!(user_id, "letmein");
 
-    srv.set_user_password(user_id, "rustybirb1")
+    handle.set_user_password(user_id, "rustybirb1")
         .expect("Unable to set new password");
 
     bad_password!(user_id, "blackmoonhowls");
@@ -68,15 +68,15 @@ async fn password_service_internal(srv: &Server) {
 
 #[test]
 fn password_default() {
-    run(|server| task::block_on(password_default_internal(server)));
+    run(|handle| task::block_on(password_default_internal(handle)));
 }
 
-async fn password_default_internal(srv: &Server) {
+async fn password_default_internal(handle: &Handle) {
     macro_rules! bad_password {
         ($user_id:expr, $password:expr) => {{
             let user_id = UserId::from_raw($user_id);
 
-            match srv.validate_user_password(user_id, $password) {
+            match handle.validate_user_password(user_id, $password) {
                 Err(Error::AuthenticationFailed) => (),
                 Err(error) => panic!("Unexpected error: {}", error),
                 Ok(_) => panic!("Password matched when it shouldn't have"),

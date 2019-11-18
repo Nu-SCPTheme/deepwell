@@ -22,11 +22,11 @@ use super::prelude::*;
 
 #[test]
 fn user_service() {
-    run(|server| task::block_on(user_service_internal(server)));
+    run(|handle| task::block_on(user_service_internal(handle)));
 }
 
-async fn user_service_internal(srv: &Server) {
-    let user_id = srv
+async fn user_service_internal(handle: &Handle) {
+    let user_id = handle
         .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
         .await
         .expect("Unable to create user");
@@ -41,23 +41,23 @@ async fn user_service_internal(srv: &Server) {
         location: Some("Earth"),
     };
 
-    srv.edit_user(user_id, metadata)
+    handle.edit_user(user_id, metadata)
         .await
         .expect("Unable to edit user");
 
-    srv.verify_user(user_id)
+    handle.verify_user(user_id)
         .await
         .expect("Unable to mark user as verified");
 
-    srv.mark_user_inactive(user_id)
+    handle.mark_user_inactive(user_id)
         .await
         .expect("Unable to mark user as inactive");
 
-    srv.mark_user_active(user_id)
+    handle.mark_user_active(user_id)
         .await
         .expect("Unable to reactivate user");
 
-    let user_id_2 = srv
+    let user_id_2 = handle
         .create_user("otheruser", "jeremy@example.net", "superstrongpassword")
         .await
         .expect("Unable to create second user");
@@ -72,22 +72,22 @@ async fn user_service_internal(srv: &Server) {
         location: Some("Earth"),
     };
 
-    srv.edit_user(user_id_2, metadata)
+    handle.edit_user(user_id_2, metadata)
         .await
         .expect("Unable to edit second user");
 
-    let user_1 = srv
+    let user_1 = handle
         .get_user_from_name("Jenny Person")
         .await
         .expect("Unable to get user by username")
         .expect("No such user with this name");
 
-    let user_2 = srv
+    let user_2 = handle
         .get_user_from_id(user_id_2)
         .await
         .expect("Unable to get user from ID");
 
-    let users = srv
+    let users = handle
         .get_users_from_ids(&[user_id, UserId::from_raw(9999), user_id_2])
         .await
         .expect("Unable to get multiple users");

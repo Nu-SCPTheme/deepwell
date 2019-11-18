@@ -1,5 +1,5 @@
 /*
- * server/page.rs
+ * handle/page.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -22,7 +22,7 @@ use super::utils::normalize_slug;
 use crate::author::AuthorType;
 use crate::service_prelude::*;
 
-impl Server {
+impl Handle {
     /// Creates a new page with the given contents and metadata.
     pub async fn create_page(
         &self,

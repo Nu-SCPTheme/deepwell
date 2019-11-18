@@ -23,28 +23,28 @@ use crate::author::AuthorType;
 
 #[test]
 fn author_service() {
-    run(|server| task::block_on(author_service_internal(server)));
+    run(|handle| task::block_on(author_service_internal(handle)));
 }
 
-async fn author_service_internal(srv: &Server) {
-    let wiki_id = srv
+async fn author_service_internal(handle: &Handle) {
+    let wiki_id = handle
         .create_wiki("Test", "test", "example.org")
         .await
         .expect("Unable to create wiki");
 
     let user_1 = {
-        let user_id = srv
+        let user_id = handle
             .create_user("superpersonyeah", "ralph@example.net", "blackmoonhowls")
             .await
             .expect("Unable to create user");
 
-        srv.get_user_from_id(user_id)
+        handle.get_user_from_id(user_id)
             .await
             .expect("Unable to get user")
     };
 
     let user_2 = {
-        let user_id = srv
+        let user_id = handle
             .create_user(
                 "so many forgotten accounts",
                 "smfa@example.net",
@@ -53,12 +53,12 @@ async fn author_service_internal(srv: &Server) {
             .await
             .expect("Unable to create user");
 
-        srv.get_user_from_id(user_id)
+        handle.get_user_from_id(user_id)
             .await
             .expect("Unable to get user")
     };
 
-    let user_3 = srv
+    let user_3 = handle
         .get_user_from_name("unknown")
         .await
         .expect("Unable to get user")
@@ -71,7 +71,7 @@ async fn author_service_internal(srv: &Server) {
         user: &user_1,
     };
 
-    let (page_id, _revision_id) = srv
+    let (page_id, _revision_id) = handle
         .create_page(
             commit,
             b"item number spc-xxx\nobject: SUPER KETER",
@@ -83,7 +83,7 @@ async fn author_service_internal(srv: &Server) {
         .expect("Unable to create page");
 
     let page = Left(page_id);
-    let authors = srv
+    let authors = handle
         .get_page_authors(page)
         .await
         .expect("Unable to get page authors");
@@ -94,7 +94,7 @@ async fn author_service_internal(srv: &Server) {
     assert_eq!(authors[0].page_id(), page_id);
     assert_eq!(authors[0].author_type(), AuthorType::Author);
 
-    srv.add_page_authors(
+    handle.add_page_authors(
         page,
         &[
             (user_1.id(), AuthorType::Rewrite, None),
@@ -105,7 +105,7 @@ async fn author_service_internal(srv: &Server) {
     .await
     .expect("Unable to add authors");
 
-    let authors = srv
+    let authors = handle
         .get_page_authors(page)
         .await
         .expect("Unable to get page authors");

@@ -1,5 +1,5 @@
 /*
- * server/user.rs
+ * handle/user.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -20,7 +20,7 @@
 
 use crate::service_prelude::*;
 
-impl Server {
+impl Handle {
     /// Creates a new user with the given name and email. Returns its ID.
     #[inline]
     pub async fn create_user(&self, name: &str, email: &str, password: &str) -> Result<UserId> {

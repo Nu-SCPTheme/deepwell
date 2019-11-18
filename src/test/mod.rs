@@ -39,23 +39,23 @@ mod prelude {
     pub use either::*;
 }
 
-pub fn run(f: fn(&Server)) {
+pub fn run(f: fn(&Handle)) {
     color_backtrace::install();
 
     let database_url = &env::var("DATABASE_URL").expect("No DATABASE_URL specified!");
     let temp_dir = tempdir().expect("Unable to create temp dir");
     let revisions_dir = temp_dir.path().into();
 
-    let config = ServerConfig {
+    let config = Config {
         database_url,
         revisions_dir,
         password_blacklist: None,
     };
 
-    let server = Server::new(config).expect("Unable to create server");
+    let handle = Handle::new(config).expect("Unable to create deepwell handle");
 
-    server.test_transaction(|| {
-        f(&server);
+    handle.test_transaction(|| {
+        f(&handle);
         Ok(())
     });
 }

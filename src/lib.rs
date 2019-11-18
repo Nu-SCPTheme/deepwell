@@ -55,12 +55,12 @@ mod macros;
 
 mod author;
 mod error;
+mod handle;
 mod page;
 mod password;
 mod rating;
 mod revision;
 mod schema;
-mod server;
 mod session;
 mod user;
 mod utils;
@@ -70,10 +70,10 @@ mod wiki;
 mod test;
 
 pub mod prelude {
+    pub use crate::handle::{Config, Handle};
     pub use crate::id::*;
     pub use crate::model::*;
     pub use crate::page::PageCommit;
-    pub use crate::server::{Server, ServerConfig};
     pub use crate::user::UserMetadata;
     pub use crate::{Error, Result, StdResult};
 }
@@ -115,4 +115,4 @@ pub type StdResult<T, E> = std::result::Result<T, E>;
 pub type Result<T> = StdResult<T, Error>;
 
 pub use self::error::Error;
-pub use self::server::{Server, ServerConfig};
+pub use self::handle::{Config, Handle};
