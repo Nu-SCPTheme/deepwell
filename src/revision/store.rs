@@ -132,7 +132,7 @@ impl RevisionStore {
         path
     }
 
-    async fn read_file(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
+    async fn read_file(&self, _guard: &RevisionBlock, slug: &str) -> Result<Option<Box<[u8]>>> {
         let path = self.get_path(slug, true);
 
         debug!("Reading file from {}", path.display());
@@ -201,23 +201,23 @@ impl RevisionStore {
         self.repo.as_os_str().to_os_string()
     }
 
-    async fn spawn(&self, arguments: &[&OsStr]) -> Result<()> {
+    async fn spawn(&self, _guard: &RevisionBlock, arguments: &[&OsStr]) -> Result<()> {
         // TODO async-ify
         super::spawn(self.repo(), arguments)
     }
 
-    async fn spawn_output(&self, arguments: &[&OsStr]) -> Result<Box<[u8]>> {
+    async fn spawn_output(&self, _guard: &RevisionBlock, arguments: &[&OsStr]) -> Result<Box<[u8]>> {
         // TODO async-ify
         super::spawn_output(self.repo(), arguments)
     }
 
     // Git helpers
-    async fn get_commit(&self) -> Result<GitHash> {
+    async fn get_commit(&self, guard: &mut RevisionBlock) -> Result<GitHash> {
         let args = arguments!["git", "rev-parse", "--verify", "HEAD"];
 
         debug!("Getting current HEAD commit");
 
-        let digest_bytes = self.spawn_output(&args).await?;
+        let digest_bytes = self.spawn_output(guard, &args).await?;
         let digest = str::from_utf8(&digest_bytes)
             .map_err(|_| Error::StaticMsg("git hash wasn't valid UTF-8"))?;
 
@@ -233,15 +233,15 @@ impl RevisionStore {
     pub async fn initial_commit(&self) -> Result<()> {
         info!("Initializing new git repository");
 
-        let _guard = self.lock.write();
+        let guard = &mut self.lock.write().await;
         let args = arguments!["git", "init"];
-        self.spawn(&args).await?;
+        self.spawn(guard, &args).await?;
 
         let author = self.arg_author("DEEPWELL").await;
         let message = self.arg_message("Initial commit");
         let args = arguments!["git", "commit", "--allow-empty", &author, &message];
 
-        self.spawn(&args).await?;
+        self.spawn(guard, &args).await?;
         Ok(())
     }
 
@@ -259,7 +259,7 @@ impl RevisionStore {
         );
 
         check_normal!(slug);
-        let _guard = self.lock.write();
+        let guard = &mut self.lock.write().await;
 
         if let Some(content) = content {
             self.write_file(slug, content).await?;
@@ -267,7 +267,7 @@ impl RevisionStore {
 
         let path = self.get_path(slug, false);
         let args = arguments!["git", "add", &path];
-        self.spawn(&args).await?;
+        self.spawn(guard, &args).await?;
 
         let author = self.arg_author(info.username).await;
         let message = self.arg_message(info.message);
@@ -280,9 +280,9 @@ impl RevisionStore {
             "--",
             &path,
         ];
-        self.spawn(&args).await?;
+        self.spawn(guard, &args).await?;
 
-        let commit = self.get_commit().await?;
+        let commit = self.get_commit(guard).await?;
         Ok(commit)
     }
 
@@ -290,14 +290,14 @@ impl RevisionStore {
     pub async fn empty_commit(&self, info: CommitInfo<'_>) -> Result<GitHash> {
         info!("Creating empty commit");
 
-        let _guard = self.lock.write();
+        let guard = &mut self.lock.write().await;
         let author = self.arg_author(info.username).await;
         let message = self.arg_message(info.message);
 
         let args = arguments!["git", "commit", "--allow-empty", &author, &message];
-        self.spawn(&args).await?;
+        self.spawn(guard, &args).await?;
 
-        let commit = self.get_commit().await?;
+        let commit = self.get_commit(guard).await?;
         Ok(commit)
     }
 
@@ -312,7 +312,7 @@ impl RevisionStore {
 
         check_normal!(old_slug);
         check_normal!(new_slug);
-        let _guard = self.lock.write();
+        let guard = &mut self.lock.write().await;
 
         let new_path = self.get_path(new_slug, true);
         if new_path.exists() {
@@ -322,14 +322,14 @@ impl RevisionStore {
         let old_path = self.get_path(old_slug, false);
         let new_path = self.get_path(new_slug, false);
         let args = arguments!["git", "mv", "--", &old_path, &new_path];
-        self.spawn(&args).await?;
+        self.spawn(guard, &args).await?;
 
         let author = self.arg_author(info.username).await;
         let message = self.arg_message(info.message);
         let args = arguments!["git", "commit", &author, &message, "--", &new_path];
-        self.spawn(&args).await?;
+        self.spawn(guard, &args).await?;
 
-        let commit = self.get_commit().await?;
+        let commit = self.get_commit(guard).await?;
         Ok(commit)
     }
 
@@ -339,7 +339,7 @@ impl RevisionStore {
         info!("Removing file for slug '{}' (info: {:?})", slug, info);
 
         check_normal!(slug);
-        let _guard = self.lock.write();
+        let guard = &mut self.lock.write().await;
 
         let removed = self.remove_file(slug).await?;
         if removed.is_none() {
@@ -351,9 +351,9 @@ impl RevisionStore {
         let path = self.get_path(slug, false);
         let args = arguments!["git", "commit", &author, &message, "--", &path];
 
-        self.spawn(&args).await?;
+        self.spawn(guard, &args).await?;
 
-        let commit = self.get_commit().await.map(Some)?;
+        let commit = self.get_commit(guard).await.map(Some)?;
         Ok(commit)
     }
 
@@ -363,9 +363,9 @@ impl RevisionStore {
         info!("Getting page content for slug '{}'", slug);
 
         check_normal!(slug);
-        let _guard = self.lock.read();
+        let guard = &self.lock.read().await;
 
-        let contents = self.read_file(slug).await?;
+        let contents = self.read_file(guard, slug).await?;
         Ok(contents)
     }
 
@@ -378,13 +378,13 @@ impl RevisionStore {
         );
 
         check_normal!(slug);
-        let _guard = self.lock.read();
+        let guard = &self.lock.read().await;
 
         let path = self.get_path(slug, false);
         let spec = format!("{}:{}", hash, path.display());
         let args = arguments!["git", "show", "--format=%B", &spec];
 
-        match self.spawn_output(&args).await {
+        match self.spawn_output(guard, &args).await {
             Ok(bytes) => Ok(Some(bytes)),
             Err(Error::CommandFailed(_)) => Ok(None),
             Err(error) => Err(error),
@@ -405,7 +405,7 @@ impl RevisionStore {
         );
 
         check_normal!(slug);
-        let _guard = self.lock.read();
+        let guard = &self.lock.read().await;
         let path = self.get_path(slug, false);
 
         let args = arguments![
@@ -418,7 +418,7 @@ impl RevisionStore {
             &path,
         ];
 
-        let diff = self.spawn_output(&args).await?;
+        let diff = self.spawn_output(guard, &args).await?;
         Ok(diff)
     }
 
@@ -428,7 +428,7 @@ impl RevisionStore {
         info!("Getting blame for slug '{}'", slug);
 
         check_normal!(slug);
-        let _guard = self.lock.read();
+        let guard = &self.lock.read().await;
         let path = self.get_path(slug, false);
 
         let args = match hash {
@@ -436,7 +436,7 @@ impl RevisionStore {
             None => arguments!["git", "blame", "--porcelain", "--", &path],
         };
 
-        let raw_blame = match self.spawn_output(&args).await {
+        let raw_blame = match self.spawn_output(guard, &args).await {
             Ok(bytes) => bytes,
             Err(Error::CommandFailed(_)) => return Ok(None),
             Err(error) => return Err(error),

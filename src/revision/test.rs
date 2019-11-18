@@ -397,7 +397,7 @@ async fn thread_internal() {
     let rc = Arc::new((directory, store));
 
     let rc2 = Arc::clone(&rc);
-    thread::spawn(move || {
+    let t1 = thread::spawn(move || {
         let (_, store) = &*rc2;
 
         task::block_on(async {
@@ -406,7 +406,7 @@ async fn thread_internal() {
     });
 
     let rc2 = Arc::clone(&rc);
-    thread::spawn(move || {
+    let t2 = thread::spawn(move || {
         let (_, store) = &*rc2;
 
         task::block_on(async {
@@ -415,11 +415,15 @@ async fn thread_internal() {
     });
 
     let rc2 = Arc::clone(&rc);
-    thread::spawn(move || {
+    let t3 = thread::spawn(move || {
         let (_, store) = &*rc2;
 
         task::block_on(async {
             store.commit("test-3", Some(b"ghi"), info).await.unwrap();
         });
     });
+
+    t1.join().expect("Unable to join thread 1");
+    t2.join().expect("Unable to join thread 2");
+    t3.join().expect("Unable to join thread 3");
 }
