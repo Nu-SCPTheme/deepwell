@@ -33,6 +33,20 @@ pub enum ChangeType {
     Tags,
 }
 
+impl ChangeType {
+    pub fn verb(&self) -> &'static str {
+        use self::ChangeType::*;
+
+        match self {
+            Create => "created",
+            Modify => "modified",
+            Delete => "deleted",
+            Rename => "renamed",
+            Tags => "tags",
+        }
+    }
+}
+
 impl Into<&'static str> for ChangeType {
     fn into(self) -> &'static str {
         use self::ChangeType::*;

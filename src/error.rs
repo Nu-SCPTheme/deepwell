@@ -19,7 +19,6 @@
  */
 
 use diesel::result::{ConnectionError, Error as DieselError};
-use serde_json as json;
 use std::io;
 use subprocess::PopenError;
 
@@ -40,9 +39,6 @@ pub enum Error {
 
     #[error("error running subprocess: {0}")]
     Subprocess(#[from] PopenError),
-
-    #[error("error serializing JSON: {0}")]
-    JsonSerialize(#[from] json::Error),
 
     #[error("command failed: {0}")]
     CommandFailed(String),

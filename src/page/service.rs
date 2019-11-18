@@ -27,7 +27,6 @@ use crate::wiki::{Wiki, WikiId};
 use async_std::fs;
 use async_std::sync::RwLockReadGuard;
 use either::*;
-use serde_json as json;
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
@@ -152,23 +151,14 @@ impl PageService {
         page_id: PageId,
         user_id: UserId,
         change_type: ChangeType,
-    ) -> Result<String> {
-        #[derive(Debug, Serialize)]
-        struct CommitMessage {
-            wiki_id: WikiId,
-            page_id: PageId,
-            user_id: UserId,
-            change_type: &'static str,
-        }
-
-        let message = CommitMessage {
-            wiki_id,
-            page_id,
+    ) -> String {
+        format!(
+            "User ID {} {} page ID {} on wiki ID {}",
             user_id,
-            change_type: change_type.into(),
-        };
-
-        json::to_string(&message).map_err(Error::from)
+            change_type.verb(),
+            page_id,
+            wiki_id,
+        )
     }
 
     pub async fn add_store(&self, wiki: &Wiki) -> Result<()> {
@@ -259,7 +249,7 @@ impl PageService {
             let user_id = user.id();
             let change_type = ChangeType::Create;
 
-            let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
+            let commit = self.commit_data(wiki_id, page_id, user_id, change_type);
             let info = CommitInfo {
                 username: user.name(),
                 message: &commit,
@@ -326,7 +316,7 @@ impl PageService {
             let user_id = user.id();
             let change_type = ChangeType::Modify;
 
-            let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
+            let commit = self.commit_data(wiki_id, page_id, user_id, change_type);
             let info = CommitInfo {
                 username: user.name(),
                 message: &commit,
@@ -387,7 +377,7 @@ impl PageService {
             let user_id = user.id();
             let change_type = ChangeType::Rename;
 
-            let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
+            let commit = self.commit_data(wiki_id, page_id, user_id, change_type);
             let info = CommitInfo {
                 username: user.name(),
                 message: &commit,
@@ -448,7 +438,7 @@ impl PageService {
             let user_id = user.id();
             let change_type = ChangeType::Delete;
 
-            let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
+            let commit = self.commit_data(wiki_id, page_id, user_id, change_type);
             let info = CommitInfo {
                 username: user.name(),
                 message: &commit,
@@ -513,7 +503,7 @@ impl PageService {
             let user_id = user.id();
             let change_type = ChangeType::Tags;
 
-            let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
+            let commit = self.commit_data(wiki_id, page_id, user_id, change_type);
             let info = CommitInfo {
                 username: user.name(),
                 message: &commit,
