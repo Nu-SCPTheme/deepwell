@@ -22,7 +22,7 @@ use super::{Blame, CommitInfo, GitHash};
 use crate::{Error, Result};
 use async_std::fs::{self, File};
 use async_std::prelude::*;
-use async_std::sync::RwLock;
+use async_std::sync::{Mutex, RwLock};
 use std::convert::TryFrom;
 use std::ffi::{OsStr, OsString};
 use std::path::PathBuf;
@@ -63,14 +63,14 @@ fn check_normal(slug: &str) -> Result<()> {
     }
 }
 
-/// An object that can't be copied or cloned for a `RwLock`.
+/// An object that can't be copied or cloned for the `Mutex`.
 #[derive(Debug)]
 struct RevisionBlock;
 
 /// Represents a git repository to store page contents and their histories.
 #[derive(Debug)]
 pub struct RevisionStore {
-    lock: RwLock<RevisionBlock>,
+    mutex: Mutex<RevisionBlock>,
     repo: PathBuf,
     domain: RwLock<String>,
 }
@@ -86,7 +86,7 @@ impl RevisionStore {
         P: Into<PathBuf>,
         S: Into<String>,
     {
-        let lock = RwLock::new(RevisionBlock);
+        let mutex = Mutex::new(RevisionBlock);
         let repo = repo.into();
         let domain = domain.into();
 
@@ -98,7 +98,11 @@ impl RevisionStore {
 
         let domain = RwLock::new(domain);
 
-        RevisionStore { lock, repo, domain }
+        RevisionStore {
+            mutex,
+            repo,
+            domain,
+        }
     }
 
     // Filesystem helpers
@@ -201,12 +205,16 @@ impl RevisionStore {
         self.repo.as_os_str().to_os_string()
     }
 
-    async fn spawn(&self, _guard: &RevisionBlock, arguments: &[&OsStr]) -> Result<()> {
+    async fn spawn(&self, _guard: &mut RevisionBlock, arguments: &[&OsStr]) -> Result<()> {
         // TODO async-ify
         super::spawn(self.repo(), arguments)
     }
 
-    async fn spawn_output(&self, _guard: &RevisionBlock, arguments: &[&OsStr]) -> Result<Box<[u8]>> {
+    async fn spawn_output(
+        &self,
+        _guard: &mut RevisionBlock,
+        arguments: &[&OsStr],
+    ) -> Result<Box<[u8]>> {
         // TODO async-ify
         super::spawn_output(self.repo(), arguments)
     }
@@ -233,7 +241,7 @@ impl RevisionStore {
     pub async fn initial_commit(&self) -> Result<()> {
         info!("Initializing new git repository");
 
-        let guard = &mut self.lock.write().await;
+        let guard = &mut self.mutex.lock().await;
         let args = arguments!["git", "init"];
         self.spawn(guard, &args).await?;
 
@@ -259,7 +267,7 @@ impl RevisionStore {
         );
 
         check_normal!(slug);
-        let guard = &mut self.lock.write().await;
+        let guard = &mut self.mutex.lock().await;
 
         if let Some(content) = content {
             self.write_file(slug, content).await?;
@@ -290,7 +298,7 @@ impl RevisionStore {
     pub async fn empty_commit(&self, info: CommitInfo<'_>) -> Result<GitHash> {
         info!("Creating empty commit");
 
-        let guard = &mut self.lock.write().await;
+        let guard = &mut self.mutex.lock().await;
         let author = self.arg_author(info.username).await;
         let message = self.arg_message(info.message);
 
@@ -312,7 +320,7 @@ impl RevisionStore {
 
         check_normal!(old_slug);
         check_normal!(new_slug);
-        let guard = &mut self.lock.write().await;
+        let guard = &mut self.mutex.lock().await;
 
         let new_path = self.get_path(new_slug, true);
         if new_path.exists() {
@@ -339,7 +347,7 @@ impl RevisionStore {
         info!("Removing file for slug '{}' (info: {:?})", slug, info);
 
         check_normal!(slug);
-        let guard = &mut self.lock.write().await;
+        let guard = &mut self.mutex.lock().await;
 
         let removed = self.remove_file(slug).await?;
         if removed.is_none() {
@@ -363,7 +371,7 @@ impl RevisionStore {
         info!("Getting page content for slug '{}'", slug);
 
         check_normal!(slug);
-        let guard = &self.lock.read().await;
+        let guard = &mut self.mutex.lock().await;
 
         let contents = self.read_file(guard, slug).await?;
         Ok(contents)
@@ -378,7 +386,7 @@ impl RevisionStore {
         );
 
         check_normal!(slug);
-        let guard = &self.lock.read().await;
+        let guard = &mut self.mutex.lock().await;
 
         let path = self.get_path(slug, false);
         let spec = format!("{}:{}", hash, path.display());
@@ -405,7 +413,7 @@ impl RevisionStore {
         );
 
         check_normal!(slug);
-        let guard = &self.lock.read().await;
+        let guard = &mut self.mutex.lock().await;
         let path = self.get_path(slug, false);
 
         let args = arguments![
@@ -428,7 +436,7 @@ impl RevisionStore {
         info!("Getting blame for slug '{}'", slug);
 
         check_normal!(slug);
-        let guard = &self.lock.read().await;
+        let guard = &mut self.mutex.lock().await;
         let path = self.get_path(slug, false);
 
         let args = match hash {
