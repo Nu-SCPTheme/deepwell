@@ -282,7 +282,7 @@ impl PageService {
         title: Option<&str>,
         alt_title: Option<Nullable<&str>>,
     ) -> Result<RevisionId> {
-        info!("Committing change to page {:?}");
+        info!("Committing change to page {:?}", commit);
 
         let PageCommit {
             wiki_id,
@@ -350,7 +350,10 @@ impl PageService {
         message: &str,
         user: &User,
     ) -> Result<RevisionId> {
-        info!("Renaming page '{}' -> '{}' in wiki ID {}", old_slug, new_slug, wiki_id);
+        info!(
+            "Renaming page '{}' -> '{}' in wiki ID {}",
+            old_slug, new_slug, wiki_id
+        );
 
         self.transaction(async {
             let model = UpdatePage {
@@ -472,7 +475,11 @@ impl PageService {
         .await
     }
 
-    pub async fn restore(&self, commit: PageCommit<'_>, page_id: Option<PageId>) -> Result<RevisionId> {
+    pub async fn restore(
+        &self,
+        commit: PageCommit<'_>,
+        page_id: Option<PageId>,
+    ) -> Result<RevisionId> {
         info!("Restoring page {:?}", commit);
 
         let PageCommit {
@@ -483,10 +490,11 @@ impl PageService {
         } = commit;
 
         self.transaction(async {
-            if self.check_page().await? {
+            if self.check_page(wiki_id, slug).await? {
                 return Err(Error::PageExists);
             }
 
+            let user_id = user.id();
             let page_id = match page_id {
                 Some(id) => id,
                 None => {
@@ -498,6 +506,7 @@ impl PageService {
                         .filter(pages::slug.eq(slug))
                         .filter(pages::deleted_at.is_not_null())
                         .order_by(pages::created_at.desc())
+                        .select(pages::dsl::page_id)
                         .first::<PageId>(&*self.conn)
                         .optional()?;
 
@@ -511,15 +520,38 @@ impl PageService {
 
             trace!("Finding last extant commit for page");
 
-            let last_hash = self.get_last_hash(page_id).await?;
-            let (wiki_id, old_slug, hash) = match last_hash {
-                Some(result) => result,
-                None => {
-                    error!("Page ID {} found in table with no last revision", page_id);
-                    return Err(Error::PageNotFound);
-                }
+            let (wiki_id, page_id, old_slug, hash) = {
+                // Get wiki and slug
+                let id: i64 = page_id.into();
+                let result = pages::table
+                    .find(id)
+                    .select((pages::dsl::wiki_id, pages::dsl::slug))
+                    .first::<(WikiId, String)>(&*self.conn)
+                    .optional()?;
+
+                let (wiki_id, old_slug) = match result {
+                    Some(data) => data,
+                    None => {
+                        error!("Page ID {} found with no last revision", page_id);
+                        return Err(Error::PageNotFound);
+                    }
+                };
+
+                // Get last non-deletion commit
+                let change_type: &str = ChangeType::Delete.into();
+                let raw_hash = revisions::table
+                    .filter(revisions::dsl::page_id.eq(id))
+                    .filter(revisions::dsl::change_type.ne(change_type))
+                    .order_by(revisions::dsl::revision_id.desc())
+                    .select(revisions::dsl::git_commit)
+                    .first::<String>(&*self.conn)?;
+
+                let hash = GitHash::from_checked(raw_hash);
+
+                (wiki_id, page_id, old_slug, hash)
             };
 
+            let change_type = ChangeType::Restore;
             let commit = self.commit_data(wiki_id, page_id, user_id, change_type);
             let info = CommitInfo {
                 username: user.name(),
@@ -527,16 +559,10 @@ impl PageService {
             };
 
             trace!("Committing page restoration to repository");
+
             let guard = self.store(wiki_id).await;
             let store = guard.get()?;
-            let result = store.restore(&hash, &old_slug, slug, info).await?;
-            let hash = match result {
-                Some(hash) => hash,
-                None => {
-                    error!("Page ID {} (slug '{}') found in table and revisions but not in repository", page_id, old_slug);
-                    return Err(Error::PageNotFound);
-                }
-            };
+            let hash = store.restore(slug, &old_slug, &hash, info).await?;
 
             let model = NewRevision {
                 page_id: page_id.into(),
@@ -554,6 +580,7 @@ impl PageService {
 
             Ok(revision_id)
         })
+        .await
     }
 
     pub async fn tags(&self, commit: PageCommit<'_>, tags: &mut [&str]) -> Result<RevisionId> {

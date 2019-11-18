@@ -365,6 +365,67 @@ impl RevisionStore {
         Ok(commit)
     }
 
+    /// Restores the given page from the given hash.
+    /// This is performed by committing the page as it
+    /// existed at the time.
+    ///
+    /// This is equivalent to Wikidot's "revert" functionality,
+    /// but potentially across page boundaries. Not to be confused
+    /// with git's notion of a "revert".
+    pub async fn restore(
+        &self,
+        slug: &str,
+        old_slug: &str,
+        hash: &GitHash,
+        info: CommitInfo<'_>,
+    ) -> Result<GitHash> {
+        info!(
+            "Restoring file '{}' from {} onto '{}' (info: {:?})",
+            old_slug, hash, slug, info
+        );
+
+        check_normal!(slug);
+        check_normal!(old_slug);
+
+        let guard = &mut self.mutex.lock().await;
+
+        // Get old page content
+        let content = {
+            let path = self.get_path(old_slug, false);
+            let spec = format!("{}:{}", hash, path.display());
+            let args = arguments!["git", "show", "--format=%B", &spec];
+
+            match self.spawn_output(guard, &args).await {
+                Ok(bytes) => Ok(bytes),
+                Err(Error::CommandFailed(_)) => Err(Error::PageNotFound),
+                Err(error) => Err(error),
+            }
+        }?;
+
+        // Write and commit contents
+        self.write_file(slug, &content).await?;
+
+        let path = self.get_path(slug, false);
+        let args = arguments!["git", "add", &path];
+        self.spawn(guard, &args).await?;
+
+        let author = self.arg_author(info.username).await;
+        let message = self.arg_message(info.message);
+        let args = arguments![
+            "git",
+            "commit",
+            "--allow-empty",
+            &author,
+            &message,
+            "--",
+            &path,
+        ];
+        self.spawn(guard, &args).await?;
+
+        let commit = self.get_commit(guard).await?;
+        Ok(commit)
+    }
+
     /// Gets the current version of a page.
     /// Returns `None` if the page does not exist.
     pub async fn get_page(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
