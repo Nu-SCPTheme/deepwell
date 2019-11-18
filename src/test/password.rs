@@ -22,67 +22,72 @@ use super::prelude::*;
 
 #[test]
 fn password_service() {
-    run(|srv| {
-        macro_rules! good_password {
-            ($user_id:expr, $password:expr) => {
-                srv.validate_user_password($user_id, $password)
-                    .expect("Password doesn't match")
-            };
-        }
+    run(|server| task::block_on(password_service_impl(server)));
+}
 
-        macro_rules! bad_password {
-            ($user_id:expr, $password:expr) => {
-                match srv.validate_user_password($user_id, $password) {
-                    Err(Error::AuthenticationFailed) => (),
-                    Err(error) => panic!("Unexpected error: {}", error),
-                    Ok(_) => panic!("Password matched when it shouldn't have"),
-                }
-            };
-        }
+async fn password_service_impl(srv: &Server) {
+    macro_rules! good_password {
+        ($user_id:expr, $password:expr) => {
+            srv.validate_user_password($user_id, $password)
+                .expect("Password doesn't match")
+        };
+    }
 
-        let bad_user_id = UserId::from_raw(999);
-        bad_password!(bad_user_id, "blackmoonhowls");
-        bad_password!(bad_user_id, "rustybirb1");
-        bad_password!(bad_user_id, "letmein");
+    macro_rules! bad_password {
+        ($user_id:expr, $password:expr) => {
+            match srv.validate_user_password($user_id, $password) {
+                Err(Error::AuthenticationFailed) => (),
+                Err(error) => panic!("Unexpected error: {}", error),
+                Ok(_) => panic!("Password matched when it shouldn't have"),
+            }
+        };
+    }
 
-        let user_id = srv
-            .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
-            .expect("Unable to create user");
+    let bad_user_id = UserId::from_raw(999);
+    bad_password!(bad_user_id, "blackmoonhowls");
+    bad_password!(bad_user_id, "rustybirb1");
+    bad_password!(bad_user_id, "letmein");
 
-        good_password!(user_id, "blackmoonhowls");
-        bad_password!(user_id, "blackmonhowls");
-        bad_password!(user_id, "rustybirb1");
-        bad_password!(user_id, "letmein");
+    let user_id = srv
+        .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
+        .await
+        .expect("Unable to create user");
 
-        srv.set_user_password(user_id, "rustybirb1")
-            .expect("Unable to set new password");
+    good_password!(user_id, "blackmoonhowls");
+    bad_password!(user_id, "blackmonhowls");
+    bad_password!(user_id, "rustybirb1");
+    bad_password!(user_id, "letmein");
 
-        bad_password!(user_id, "blackmoonhowls");
-        good_password!(user_id, "rustybirb1");
-        bad_password!(user_id, "letmein");
-    });
+    srv.set_user_password(user_id, "rustybirb1")
+        .expect("Unable to set new password");
+
+    bad_password!(user_id, "blackmoonhowls");
+    good_password!(user_id, "rustybirb1");
+    bad_password!(user_id, "letmein");
 }
 
 #[test]
 fn password_default() {
-    run(|srv| {
-        macro_rules! bad_password {
-            ($user_id:expr, $password:expr) => {{
-                let user_id = UserId::from_raw($user_id);
+    run(|server| task::block_on(password_default_impl(server)));
+}
 
-                match srv.validate_user_password(user_id, $password) {
-                    Err(Error::AuthenticationFailed) => (),
-                    Err(error) => panic!("Unexpected error: {}", error),
-                    Ok(_) => panic!("Password matched when it shouldn't have"),
-                }
-            }};
-        }
+async fn password_default_impl(srv: &Server) {
+    macro_rules! bad_password {
+        ($user_id:expr, $password:expr) => {{
+            let user_id = UserId::from_raw($user_id);
 
-        bad_password!(0, "blackmoon");
-        bad_password!(1, "blackmoon");
-        bad_password!(2, "blackmoon");
-        bad_password!(3, "blackmoon");
-        bad_password!(4, "blackmoon");
-        bad_password!(5, "blackmoon");
-    });
+            match srv.validate_user_password(user_id, $password) {
+                Err(Error::AuthenticationFailed) => (),
+                Err(error) => panic!("Unexpected error: {}", error),
+                Ok(_) => panic!("Password matched when it shouldn't have"),
+            }
+        }};
+    }
+
+    bad_password!(0, "blackmoon");
+    bad_password!(1, "blackmoon");
+    bad_password!(2, "blackmoon");
+    bad_password!(3, "blackmoon");
+    bad_password!(4, "blackmoon");
+    bad_password!(5, "blackmoon");
 }

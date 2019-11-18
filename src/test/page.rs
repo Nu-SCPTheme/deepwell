@@ -22,69 +22,84 @@ use super::prelude::*;
 
 #[test]
 fn page_service() {
-    run(|srv| {
-        let user = srv
-            .get_user_from_name("unknown")
-            .expect("Unable to get user")
-            .expect("Default user not found");
+    run(|server| task::block_on(page_service_impl(server)));
+}
 
-        let wiki_id = srv
-            .create_wiki("Test", "test", "example.org")
-            .expect("Unable to create wiki");
+async fn page_service_impl(srv: &Server) {
+    let user = srv
+        .get_user_from_name("unknown")
+        .await
+        .expect("Unable to get user")
+        .expect("Default user not found");
 
-        assert_eq!(srv.check_page(wiki_id, "tale-here").unwrap(), false);
+    let wiki_id = srv
+        .create_wiki("Test", "test", "example.org")
+        .await
+        .expect("Unable to create wiki");
 
-        let commit = PageCommit {
-            wiki_id,
-            slug: &"tale-here",
-            message: "new tale!",
-            user: &user,
-        };
+    assert_eq!(srv.check_page(wiki_id, "tale-here").await.unwrap(), false);
 
-        let (_page_id, _revision_id) = srv
-            .create_page(commit, b"my great article here", &[], "Tale Thing", "")
-            .expect("Unable to create page");
+    let commit = PageCommit {
+        wiki_id,
+        slug: &"tale-here",
+        message: "new tale!",
+        user: &user,
+    };
 
-        assert_eq!(srv.check_page(wiki_id, "tale-here").unwrap(), true);
+    let (_page_id, _revision_id) = srv
+        .create_page(commit, b"my great article here", &[], "Tale Thing", "")
+        .await
+        .expect("Unable to create page");
 
-        srv.rename_page(
-            wiki_id,
-            "tale-here",
-            "amazing-battle",
-            "I like this name better",
-            &user,
-        )
-        .expect("Unable to rename page");
+    assert_eq!(srv.check_page(wiki_id, "tale-here").await.unwrap(), true);
 
-        let commit = PageCommit {
-            wiki_id,
-            slug: &"amazing-battle",
-            message: "changing title",
-            user: &user,
-        };
+    srv.rename_page(
+        wiki_id,
+        "tale-here",
+        "amazing-battle",
+        "I like this name better",
+        &user,
+    )
+    .await
+    .expect("Unable to rename page");
 
-        srv.edit_page(
-            commit,
-            None,
-            Some("Amazing Take-down of 682!"),
-            Some("049 appears too"),
-        )
-        .expect("Unable to edit page");
+    let commit = PageCommit {
+        wiki_id,
+        slug: &"amazing-battle",
+        message: "changing title",
+        user: &user,
+    };
 
-        assert_eq!(srv.check_page(wiki_id, "tale-here").unwrap(), false);
-        assert_eq!(srv.check_page(wiki_id, "amazing-battle").unwrap(), true);
+    srv.edit_page(
+        commit,
+        None,
+        Some("Amazing Take-down of 682!"),
+        Some("049 appears too"),
+    )
+    .await
+    .expect("Unable to edit page");
 
-        let commit = PageCommit {
-            wiki_id,
-            slug: &"amazing-battle",
-            message: "people keep downvoting :(",
-            user: &user,
-        };
+    assert_eq!(srv.check_page(wiki_id, "tale-here").await.unwrap(), false);
+    assert_eq!(
+        srv.check_page(wiki_id, "amazing-battle").await.unwrap(),
+        true
+    );
 
-        srv.remove_page(commit).expect("Unable to remove page");
+    let commit = PageCommit {
+        wiki_id,
+        slug: &"amazing-battle",
+        message: "people keep downvoting :(",
+        user: &user,
+    };
 
-        assert_eq!(srv.check_page(wiki_id, "nonexistent").unwrap(), false);
-        assert_eq!(srv.check_page(wiki_id, "tale-here").unwrap(), false);
-        assert_eq!(srv.check_page(wiki_id, "amazing-battle").unwrap(), false);
-    });
+    srv.remove_page(commit)
+        .await
+        .expect("Unable to remove page");
+
+    assert_eq!(srv.check_page(wiki_id, "nonexistent").await.unwrap(), false);
+    assert_eq!(srv.check_page(wiki_id, "tale-here").await.unwrap(), false);
+    assert_eq!(
+        srv.check_page(wiki_id, "amazing-battle").await.unwrap(),
+        false
+    );
 }

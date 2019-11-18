@@ -22,60 +22,75 @@ use super::prelude::*;
 
 #[test]
 fn user_service() {
-    run(|srv| {
-        let user_id = srv
-            .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
-            .expect("Unable to create user");
+    run(|server| task::block_on(user_service_impl(server)));
+}
 
-        let metadata = UserMetadata {
-            name: Some("Jenny Person"),
-            email: None,
-            author_page: Some("http://www.scp-wiki.net/authors-pages"),
-            website: None,
-            about: Some("A totally real person who writes"),
-            gender: Some("FEMALE"),
-            location: Some("Earth"),
-        };
+async fn user_service_impl(srv: &Server) {
+    let user_id = srv
+        .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
+        .await
+        .expect("Unable to create user");
 
-        srv.edit_user(user_id, metadata)
-            .expect("Unable to edit user");
+    let metadata = UserMetadata {
+        name: Some("Jenny Person"),
+        email: None,
+        author_page: Some("http://www.scp-wiki.net/authors-pages"),
+        website: None,
+        about: Some("A totally real person who writes"),
+        gender: Some("FEMALE"),
+        location: Some("Earth"),
+    };
 
-        srv.verify_user(user_id)
-            .expect("Unable to mark user as verified");
+    srv.edit_user(user_id, metadata)
+        .await
+        .expect("Unable to edit user");
 
-        srv.mark_user_inactive(user_id)
-            .expect("Unable to mark user as inactive");
-        srv.mark_user_active(user_id)
-            .expect("Unable to reactivate user");
+    srv.verify_user(user_id)
+        .await
+        .expect("Unable to mark user as verified");
 
-        let user_id_2 = srv
-            .create_user("otheruser", "jeremy@example.net", "superstrongpassword")
-            .expect("Unable to create second user");
+    srv.mark_user_inactive(user_id)
+        .await
+        .expect("Unable to mark user as inactive");
 
-        let metadata = UserMetadata {
-            name: None,
-            email: None,
-            author_page: None,
-            website: None,
-            about: Some("test user 2"),
-            gender: Some("non-binary"),
-            location: Some("Earth"),
-        };
+    srv.mark_user_active(user_id)
+        .await
+        .expect("Unable to reactivate user");
 
-        srv.edit_user(user_id_2, metadata)
-            .expect("Unable to edit second user");
+    let user_id_2 = srv
+        .create_user("otheruser", "jeremy@example.net", "superstrongpassword")
+        .await
+        .expect("Unable to create second user");
 
-        let user_1 = srv
-            .get_user_from_name("Jenny Person")
-            .expect("Unable to get user by username")
-            .expect("No such user with this name");
-        let user_2 = srv
-            .get_user_from_id(user_id_2)
-            .expect("Unable to get user from ID");
+    let metadata = UserMetadata {
+        name: None,
+        email: None,
+        author_page: None,
+        website: None,
+        about: Some("test user 2"),
+        gender: Some("non-binary"),
+        location: Some("Earth"),
+    };
 
-        let users = srv
-            .get_users_from_ids(&[user_id, UserId::from_raw(9999), user_id_2])
-            .expect("Unable to get multiple users");
-        assert_eq!(users, vec![Some(user_1), None, Some(user_2)]);
-    });
+    srv.edit_user(user_id_2, metadata)
+        .await
+        .expect("Unable to edit second user");
+
+    let user_1 = srv
+        .get_user_from_name("Jenny Person")
+        .await
+        .expect("Unable to get user by username")
+        .expect("No such user with this name");
+
+    let user_2 = srv
+        .get_user_from_id(user_id_2)
+        .await
+        .expect("Unable to get user from ID");
+
+    let users = srv
+        .get_users_from_ids(&[user_id, UserId::from_raw(9999), user_id_2])
+        .await
+        .expect("Unable to get multiple users");
+
+    assert_eq!(users, vec![Some(user_1), None, Some(user_2)]);
 }

@@ -22,28 +22,36 @@ use super::prelude::*;
 
 #[test]
 fn wiki_service() {
-    run(|srv| {
-        let wiki_id = srv
-            .create_wiki("Test Wiki", "test", "example.com")
-            .expect("Unable to create wiki");
+    run(|server| task::block_on(wiki_service_impl(server)));
+}
 
-        srv.rename_wiki(wiki_id, "NUTTEST")
-            .expect("Unable to rename wiki");
+async fn wiki_service_impl(srv: &Server) {
+    let wiki_id = srv
+        .create_wiki("Test Wiki", "test", "example.com")
+        .await
+        .expect("Unable to create wiki");
 
-        srv.set_wiki_domain(wiki_id, "example.org")
-            .expect("Unable to change domain");
+    srv.rename_wiki(wiki_id, "NUTTEST")
+        .await
+        .expect("Unable to rename wiki");
 
-        {
-            let id = srv.get_wiki_id("test").expect("Couldn't find wiki");
-            assert_eq!(id, wiki_id);
+    srv.set_wiki_domain(wiki_id, "example.org")
+        .await
+        .expect("Unable to change domain");
+
+    {
+        let id = srv.get_wiki_id("test").await.expect("Couldn't find wiki");
+        assert_eq!(id, wiki_id);
+    }
+
+    {
+        let err = srv
+            .get_wiki_id("nonexistent")
+            .await
+            .expect_err("Found wiki");
+        match err {
+            Error::WikiNotFound => (),
+            _ => panic!("Error doesn't match"),
         }
-
-        {
-            let err = srv.get_wiki_id("nonexistent").expect_err("Found wiki");
-            match err {
-                Error::WikiNotFound => (),
-                _ => panic!("Error doesn't match"),
-            }
-        }
-    });
+    }
 }

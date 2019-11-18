@@ -35,10 +35,11 @@ use tempfile::tempdir;
 mod prelude {
     pub use super::run;
     pub use crate::prelude::*;
+    pub use async_std::task;
     pub use either::*;
 }
 
-pub fn run<F: FnOnce(&Server)>(f: F) {
+pub fn run(f: fn(&Server)) {
     color_backtrace::install();
 
     let database_url = &env::var("DATABASE_URL").expect("No DATABASE_URL specified!");

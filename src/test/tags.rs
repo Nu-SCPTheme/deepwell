@@ -22,116 +22,129 @@ use super::prelude::*;
 
 #[test]
 fn tags() {
-    run(|srv| {
-        let user_1 = srv
-            .get_user_from_name("unknown")
+    run(|server| task::block_on(tags_impl(server)));
+}
+
+async fn tags_impl(srv: &Server) {
+    let user_1 = srv
+        .get_user_from_name("unknown")
+        .await
+        .expect("Unable to get user")
+        .expect("Default user not found");
+
+    let user_2 = {
+        let user_id = srv
+            .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
+            .await
+            .expect("Unable to create user");
+
+        srv.get_user_from_id(user_id)
+            .await
             .expect("Unable to get user")
-            .expect("Default user not found");
+    };
 
-        let user_2 = {
-            let user_id = srv
-                .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
-                .expect("Unable to create user");
+    let wiki_id = srv
+        .create_wiki("Test", "test", "example.org")
+        .await
+        .expect("Unable to create wiki");
 
-            srv.get_user_from_id(user_id).expect("Unable to get user")
-        };
+    let commit = PageCommit {
+        wiki_id,
+        slug: "scp-xxxx",
+        message: "New article!",
+        user: &user_1,
+    };
 
-        let wiki_id = srv
-            .create_wiki("Test", "test", "example.org")
-            .expect("Unable to create wiki");
-
-        let commit = PageCommit {
-            wiki_id,
-            slug: "scp-xxxx",
-            message: "New article!",
-            user: &user_1,
-        };
-
-        let (_page_id, _revision_id) = srv
-            .create_page(
-                commit,
-                b"**Item #:** SCP-XXXX\n\n**Object Class:** Keter\n",
-                &[],
-                "SCP-XXXX",
-                "The Monster Behind the Door",
-            )
-            .expect("Unable to create page");
-
-        let commit = PageCommit {
-            wiki_id,
-            slug: "scp-xxxx",
-            message: "has image",
-            user: &user_1,
-        };
-
-        srv.set_page_tags(commit, &["_image"])
-            .expect("Unable to set page tags");
-
-        let commit = PageCommit {
-            wiki_id,
-            slug: "scp-xxxx",
-            message: "initial tagging",
-            user: &user_2,
-        };
-
-        srv.set_page_tags(
+    let (_page_id, _revision_id) = srv
+        .create_page(
             commit,
-            &["scp", "keter", "_image", "ontokinetic", "artifact"],
+            b"**Item #:** SCP-XXXX\n\n**Object Class:** Keter\n",
+            &[],
+            "SCP-XXXX",
+            "The Monster Behind the Door",
         )
+        .await
+        .expect("Unable to create page");
+
+    let commit = PageCommit {
+        wiki_id,
+        slug: "scp-xxxx",
+        message: "has image",
+        user: &user_1,
+    };
+
+    srv.set_page_tags(commit, &["_image"])
+        .await
         .expect("Unable to set page tags");
 
-        let commit = PageCommit {
-            wiki_id,
-            slug: "scp-xxxx",
-            message: "good image",
-            user: &user_1,
-        };
+    let commit = PageCommit {
+        wiki_id,
+        slug: "scp-xxxx",
+        message: "initial tagging",
+        user: &user_2,
+    };
 
-        srv.set_page_tags(commit, &["scp", "keter", "artifact", "ontokinetic", "_cc"])
-            .expect("Unable to set page tags");
+    srv.set_page_tags(
+        commit,
+        &["scp", "keter", "_image", "ontokinetic", "artifact"],
+    )
+    .await
+    .expect("Unable to set page tags");
 
-        let commit = PageCommit {
-            wiki_id,
-            slug: "scp-xxxx",
-            message: "goi tags",
-            user: &user_2,
-        };
+    let commit = PageCommit {
+        wiki_id,
+        slug: "scp-xxxx",
+        message: "good image",
+        user: &user_1,
+    };
 
-        srv.set_page_tags(
-            commit,
-            &[
-                "scp",
-                "keter",
-                "artifact",
-                "ontokinetic",
-                "_cc",
-                "chaos-insurgency",
-                "ethics-committee",
-            ],
-        )
+    srv.set_page_tags(commit, &["scp", "keter", "artifact", "ontokinetic", "_cc"])
+        .await
         .expect("Unable to set page tags");
 
-        let (page, _) = srv
-            .get_page(wiki_id, "scp-xxxx")
-            .expect("Unable to get page")
-            .expect("No page found");
+    let commit = PageCommit {
+        wiki_id,
+        slug: "scp-xxxx",
+        message: "goi tags",
+        user: &user_2,
+    };
 
-        let actual_tags = page
-            .tags()
-            .into_iter()
-            .map(|tag| tag.as_str())
-            .collect::<Vec<&str>>();
-
-        let expected_tags = [
-            "_cc",
+    srv.set_page_tags(
+        commit,
+        &[
+            "scp",
+            "keter",
             "artifact",
+            "ontokinetic",
+            "_cc",
             "chaos-insurgency",
             "ethics-committee",
-            "keter",
-            "ontokinetic",
-            "scp",
-        ];
+        ],
+    )
+    .await
+    .expect("Unable to set page tags");
 
-        assert_eq!(&actual_tags, &expected_tags);
-    });
+    let (page, _) = srv
+        .get_page(wiki_id, "scp-xxxx")
+        .await
+        .expect("Unable to get page")
+        .expect("No page found");
+
+    let actual_tags = page
+        .tags()
+        .into_iter()
+        .map(|tag| tag.as_str())
+        .collect::<Vec<&str>>();
+
+    let expected_tags = [
+        "_cc",
+        "artifact",
+        "chaos-insurgency",
+        "ethics-committee",
+        "keter",
+        "ontokinetic",
+        "scp",
+    ];
+
+    assert_eq!(&actual_tags, &expected_tags);
 }

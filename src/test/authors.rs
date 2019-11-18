@@ -23,94 +23,108 @@ use crate::author::AuthorType;
 
 #[test]
 fn author_service() {
-    run(|srv| {
-        let wiki_id = srv
-            .create_wiki("Test", "test", "example.org")
-            .expect("Unable to create wiki");
+    run(|server| task::block_on(author_service_impl(server)));
+}
 
-        let user_1 = {
-            let user_id = srv
-                .create_user("superpersonyeah", "ralph@example.net", "blackmoonhowls")
-                .expect("Unable to create user");
+async fn author_service_impl(srv: &Server) {
+    let wiki_id = srv
+        .create_wiki("Test", "test", "example.org")
+        .await
+        .expect("Unable to create wiki");
 
-            srv.get_user_from_id(user_id).expect("Unable to get user")
-        };
+    let user_1 = {
+        let user_id = srv
+            .create_user("superpersonyeah", "ralph@example.net", "blackmoonhowls")
+            .await
+            .expect("Unable to create user");
 
-        let user_2 = {
-            let user_id = srv
-                .create_user(
-                    "so many forgotten accounts",
-                    "smfa@example.net",
-                    "ribbon-person",
-                )
-                .expect("Unable to create user");
-
-            srv.get_user_from_id(user_id).expect("Unable to get user")
-        };
-
-        let user_3 = srv
-            .get_user_from_name("unknown")
+        srv.get_user_from_id(user_id)
+            .await
             .expect("Unable to get user")
-            .expect("Default user not found");
+    };
 
-        let commit = PageCommit {
-            wiki_id,
-            slug: "scp-xxxx",
-            message: "new scp!!",
-            user: &user_1,
-        };
-
-        let (page_id, _revision_id) = srv
-            .create_page(
-                commit,
-                b"item number spc-xxx\nobject: SUPER KETER",
-                &[],
-                "SCP-XXXX",
-                "Super-Keter",
+    let user_2 = {
+        let user_id = srv
+            .create_user(
+                "so many forgotten accounts",
+                "smfa@example.net",
+                "ribbon-person",
             )
-            .expect("Unable to create page");
+            .await
+            .expect("Unable to create user");
 
-        let page = Left(page_id);
-        let authors = srv
-            .get_page_authors(page)
-            .expect("Unable to get page authors");
+        srv.get_user_from_id(user_id)
+            .await
+            .expect("Unable to get user")
+    };
 
-        assert_eq!(authors.len(), 1);
+    let user_3 = srv
+        .get_user_from_name("unknown")
+        .await
+        .expect("Unable to get user")
+        .expect("Default user not found");
 
-        assert_eq!(authors[0].user_id(), user_1.id());
-        assert_eq!(authors[0].page_id(), page_id);
-        assert_eq!(authors[0].author_type(), AuthorType::Author);
+    let commit = PageCommit {
+        wiki_id,
+        slug: "scp-xxxx",
+        message: "new scp!!",
+        user: &user_1,
+    };
 
-        srv.add_page_authors(
-            page,
-            &[
-                (user_1.id(), AuthorType::Rewrite, None),
-                (user_2.id(), AuthorType::Translator, None),
-                (user_3.id(), AuthorType::Author, None),
-            ],
+    let (page_id, _revision_id) = srv
+        .create_page(
+            commit,
+            b"item number spc-xxx\nobject: SUPER KETER",
+            &[],
+            "SCP-XXXX",
+            "Super-Keter",
         )
-        .expect("Unable to add authors");
+        .await
+        .expect("Unable to create page");
 
-        let authors = srv
-            .get_page_authors(page)
-            .expect("Unable to get page authors");
+    let page = Left(page_id);
+    let authors = srv
+        .get_page_authors(page)
+        .await
+        .expect("Unable to get page authors");
 
-        assert_eq!(authors.len(), 4);
+    assert_eq!(authors.len(), 1);
 
-        assert_eq!(authors[0].user_id(), user_3.id());
-        assert_eq!(authors[0].page_id(), page_id);
-        assert_eq!(authors[0].author_type(), AuthorType::Author);
+    assert_eq!(authors[0].user_id(), user_1.id());
+    assert_eq!(authors[0].page_id(), page_id);
+    assert_eq!(authors[0].author_type(), AuthorType::Author);
 
-        assert_eq!(authors[1].user_id(), user_1.id());
-        assert_eq!(authors[1].page_id(), page_id);
-        assert_eq!(authors[1].author_type(), AuthorType::Author);
+    srv.add_page_authors(
+        page,
+        &[
+            (user_1.id(), AuthorType::Rewrite, None),
+            (user_2.id(), AuthorType::Translator, None),
+            (user_3.id(), AuthorType::Author, None),
+        ],
+    )
+    .await
+    .expect("Unable to add authors");
 
-        assert_eq!(authors[2].user_id(), user_1.id());
-        assert_eq!(authors[2].page_id(), page_id);
-        assert_eq!(authors[2].author_type(), AuthorType::Rewrite);
+    let authors = srv
+        .get_page_authors(page)
+        .await
+        .expect("Unable to get page authors");
 
-        assert_eq!(authors[3].user_id(), user_2.id());
-        assert_eq!(authors[3].page_id(), page_id);
-        assert_eq!(authors[3].author_type(), AuthorType::Translator);
-    });
+    assert_eq!(authors.len(), 4);
+
+    assert_eq!(authors[0].user_id(), user_3.id());
+    assert_eq!(authors[0].page_id(), page_id);
+    assert_eq!(authors[0].author_type(), AuthorType::Author);
+
+    assert_eq!(authors[1].user_id(), user_1.id());
+    assert_eq!(authors[1].page_id(), page_id);
+    assert_eq!(authors[1].author_type(), AuthorType::Author);
+
+    assert_eq!(authors[2].user_id(), user_1.id());
+    assert_eq!(authors[2].page_id(), page_id);
+    assert_eq!(authors[2].author_type(), AuthorType::Rewrite);
+
+    assert_eq!(authors[3].user_id(), user_2.id());
+    assert_eq!(authors[3].page_id(), page_id);
+    assert_eq!(authors[3].author_type(), AuthorType::Translator);
 }
