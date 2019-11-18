@@ -23,68 +23,81 @@ use crate::author::{Author, AuthorType};
 use crate::service_prelude::*;
 
 impl Server {
-    fn get_page_id<S: Into<String>>(&self, page: Either<PageId, (WikiId, S)>) -> Result<PageId> {
+    async fn get_page_id<S: Into<String>>(
+        &self,
+        page: Either<PageId, (WikiId, S)>,
+    ) -> Result<PageId> {
         match page {
             Left(id) => Ok(id),
             Right((wiki_id, slug)) => {
                 let slug = normalize_slug(slug);
 
                 self.page
-                    .get_page_id(wiki_id, &slug)?
+                    .get_page_id(wiki_id, &slug)
+                    .await?
                     .ok_or(Error::PageNotFound)
             }
         }
     }
 
     /// Gets all authors for a given page.
-    pub fn get_page_authors(&self, page: Either<PageId, (WikiId, &str)>) -> Result<Vec<Author>> {
+    pub async fn get_page_authors(
+        &self,
+        page: Either<PageId, (WikiId, &str)>,
+    ) -> Result<Vec<Author>> {
         info!("Getting authors for page {:?}", page);
 
-        self.conn.transaction::<_, Error, _>(|| {
-            let page_id = self.get_page_id(page)?;
+        self.transaction(async {
+            let page_id = self.get_page_id(page).await?;
 
-            self.author.get_all(page_id)
+            self.author.get_all(page_id).await
         })
+        .await
     }
 
     /// Adds or sets a group of authors.
-    pub fn add_page_authors(
+    pub async fn add_page_authors(
         &self,
         page: Either<PageId, (WikiId, &str)>,
         authors: &[(UserId, AuthorType, Option<NaiveDate>)],
     ) -> Result<()> {
         info!("Adding authors to page {:?}: {:?}", page, authors);
 
-        self.conn.transaction::<_, Error, _>(|| {
-            let page_id = self.get_page_id(page)?;
+        self.transaction(async {
+            let page_id = self.get_page_id(page).await?;
 
             for &(user_id, author_type, written_at) in authors {
-                self.author.add(page_id, user_id, author_type, written_at)?;
+                self.author
+                    .add(page_id, user_id, author_type, written_at)
+                    .await?;
             }
 
             Ok(())
         })
+        .await
     }
 
     /// Removes a group of authors.
-    pub fn remove_page_authors(
+    pub async fn remove_page_authors(
         &self,
         page: Either<PageId, (WikiId, &str)>,
         authors: &[(UserId, AuthorType)],
     ) -> Result<usize> {
         info!("Removing authors from page {:?}: {:?}", page, authors);
 
-        self.conn.transaction::<_, Error, _>(|| {
-            let page_id = self.get_page_id(page)?;
+        self.transaction(async {
+            let page_id = self.get_page_id(page).await?;
             let mut count = 0;
 
             for (user_id, author_type) in authors.iter().copied() {
-                if self.author.remove(page_id, user_id, author_type)? {
+                let removed = self.author.remove(page_id, user_id, author_type).await?;
+                if removed {
                     count += 1;
                 }
             }
 
             Ok(count)
         })
+        .await
     }
 }

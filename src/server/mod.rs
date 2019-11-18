@@ -107,15 +107,9 @@ impl Server {
     pub fn test_transaction<F: FnOnce() -> Result<()>>(&self, f: F) {
         self.conn.test_transaction::<_, Error, _>(f);
     }
-
-    #[inline]
-    async fn transaction<F, T>(&self, f: F) -> Result<T>
-    where
-        F: Future<Output = Result<T>>,
-    {
-        self.conn.transaction(|| task::block_on(f))
-    }
 }
+
+impl_async_transaction!(Server);
 
 impl Debug for Server {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

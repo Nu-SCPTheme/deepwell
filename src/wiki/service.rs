@@ -21,6 +21,7 @@
 use super::models::{NewWiki, UpdateWiki};
 use crate::schema::wikis;
 use crate::service_prelude::*;
+use async_std::sync::RwLockWriteGuard;
 
 make_id_type!(WikiId);
 
@@ -82,7 +83,12 @@ impl WikiService {
         Ok(WikiService { conn, wikis })
     }
 
-    pub async fn create(&self, name: &str, slug: &str, domain: &str) -> Result<WikiId> {
+    pub async fn create(
+        &self,
+        name: &str,
+        slug: &str,
+        domain: &str,
+    ) -> Result<(WikiId, RwLockWriteGuard<'_, HashMap<WikiId, Wiki>>)> {
         info!("Creating new wiki with name '{}' ('{}')", name, slug);
 
         let model = NewWiki { name, slug, domain };
@@ -94,7 +100,7 @@ impl WikiService {
         let mut guard = self.wikis.write().await;
         guard.insert(wiki_id, wiki);
 
-        Ok(wiki_id)
+        Ok((wiki_id, guard))
     }
 
     pub async fn get_by_id<F, T>(&self, id: WikiId, f: F) -> Result<T>
@@ -125,7 +131,7 @@ impl WikiService {
         f(wiki)
     }
 
-    pub fn edit(&self, id: WikiId, model: UpdateWiki) -> Result<()> {
+    pub async fn edit(&self, id: WikiId, model: UpdateWiki<'_>) -> Result<()> {
         use self::wikis::dsl;
 
         info!("Editing wiki ID {}: {:?}", id, model);
@@ -139,6 +145,8 @@ impl WikiService {
         Ok(())
     }
 }
+
+impl_async_transaction!(WikiService);
 
 impl Debug for WikiService {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

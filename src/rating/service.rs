@@ -90,7 +90,7 @@ impl RatingService {
         RatingService { conn }
     }
 
-    pub fn get_rating(&self, page_id: PageId) -> Result<Rating> {
+    pub async fn get_rating(&self, page_id: PageId) -> Result<Rating> {
         use diesel::dsl::{count, sum};
         use std::convert::TryInto;
 
@@ -101,7 +101,7 @@ impl RatingService {
         //
         // Similarly, it might make sense to turn this into a raw query.
 
-        self.conn.transaction::<_, Error, _>(|| {
+        self.transaction(async {
             let id: i64 = page_id.into();
             let score = ratings::table
                 .filter(ratings::page_id.eq(id))
@@ -118,10 +118,11 @@ impl RatingService {
 
             Ok(Rating { score, votes })
         })
+        .await
     }
 
-    pub fn set(&self, page_id: PageId, user_id: UserId, rating: i16) -> Result<RatingId> {
-        self.conn.transaction::<_, Error, _>(|| {
+    pub async fn set(&self, page_id: PageId, user_id: UserId, rating: i16) -> Result<RatingId> {
+        self.transaction(async {
             let model = NewRating {
                 page_id: page_id.into(),
                 user_id: user_id.into(),
@@ -145,10 +146,11 @@ impl RatingService {
 
             Ok(rating_id)
         })
+        .await
     }
 
-    pub fn remove(&self, page_id: PageId, user_id: UserId) -> Result<Option<RatingId>> {
-        self.conn.transaction::<_, Error, _>(|| {
+    pub async fn remove(&self, page_id: PageId, user_id: UserId) -> Result<Option<RatingId>> {
+        self.transaction(async {
             let page_id: i64 = page_id.into();
             let user_id: i64 = user_id.into();
 
@@ -175,9 +177,14 @@ impl RatingService {
 
             Ok(Some(rating_id))
         })
+        .await
     }
 
-    pub fn get_history(&self, page_id: PageId, user_id: UserId) -> Result<Vec<RatingHistory>> {
+    pub async fn get_history(
+        &self,
+        page_id: PageId,
+        user_id: UserId,
+    ) -> Result<Vec<RatingHistory>> {
         debug!(
             "Getting rating history for page ID {} / user ID {}",
             page_id, user_id,
@@ -195,7 +202,7 @@ impl RatingService {
         Ok(result)
     }
 
-    pub fn get_history_latest(
+    pub async fn get_history_latest(
         &self,
         page_id: PageId,
         user_id: UserId,
@@ -218,7 +225,7 @@ impl RatingService {
         Ok(result)
     }
 
-    pub fn get_history_entry(&self, rating_id: RatingId) -> Result<Option<RatingHistory>> {
+    pub async fn get_history_entry(&self, rating_id: RatingId) -> Result<Option<RatingHistory>> {
         info!("Getting rating history entry for ID {}", rating_id);
 
         let id: i64 = rating_id.into();
@@ -228,5 +235,15 @@ impl RatingService {
             .optional()?;
 
         Ok(result)
+    }
+}
+
+impl_async_transaction!(RatingService);
+
+impl Debug for RatingService {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("PasswordService")
+            .field("conn", &"PgConnection { .. }")
+            .finish()
     }
 }

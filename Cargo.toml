@@ -11,6 +11,7 @@ async-std = "1"
 chrono = { version = "0.4", features = ["serde"] }
 diesel = { version = "1", features = ["chrono", "network-address", "postgres"] }
 either = "1"
+futures = "0.3"
 ipnetwork = "*"
 lazy_static = "1"
 log = "0.4"

@@ -24,9 +24,9 @@ use crate::service_prelude::*;
 
 impl Server {
     /// Creates a new page with the given contents and metadata.
-    pub fn create_page(
+    pub async fn create_page(
         &self,
-        commit: PageCommit,
+        commit: PageCommit<'_>,
         content: &[u8],
         other_authors: &[UserId],
         title: &str,
@@ -40,30 +40,34 @@ impl Server {
             _ => Some(alt_title),
         };
 
-        self.conn.transaction::<_, Error, _>(|| {
+        self.transaction(async {
             // Create page
-            let (page_id, revision_id) = self.page.create(commit, content, title, alt_title)?;
+            let (page_id, revision_id) =
+                self.page.create(commit, content, title, alt_title).await?;
 
             // Add committing user as author
             self.author
-                .add(page_id, user.id(), AuthorType::Author, None)?;
+                .add(page_id, user.id(), AuthorType::Author, None)
+                .await?;
 
             // Add other users
             for user_id in other_authors.iter().copied() {
                 self.author
-                    .add(page_id, user_id, AuthorType::Author, None)?;
+                    .add(page_id, user_id, AuthorType::Author, None)
+                    .await?;
             }
 
             Ok((page_id, revision_id))
         })
+        .await
     }
 
     /// Edits an existing page to have the given content.
     /// Optionally permits modifying the title or alternate title.
     /// (An empty alternate title signifies that none is used)
-    pub fn edit_page(
+    pub async fn edit_page(
         &self,
-        commit: PageCommit,
+        commit: PageCommit<'_>,
         content: Option<&[u8]>,
         title: Option<&str>,
         alt_title: Option<&str>,
@@ -75,12 +79,12 @@ impl Server {
             None => None,
         };
 
-        self.page.commit(commit, content, title, alt_title)
+        self.page.commit(commit, content, title, alt_title).await
     }
 
     /// Renames a page to use a different slug.
     #[inline]
-    pub fn rename_page<S1, S2>(
+    pub async fn rename_page<S1, S2>(
         &self,
         wiki_id: WikiId,
         old_slug: S1,
@@ -97,25 +101,26 @@ impl Server {
 
         self.page
             .rename(wiki_id, &old_slug, &new_slug, message, user)
+            .await
     }
 
     /// Removes the given page.
     #[inline]
-    pub fn remove_page(&self, commit: PageCommit) -> Result<RevisionId> {
-        self.page.remove(commit)
+    pub async fn remove_page(&self, commit: PageCommit<'_>) -> Result<RevisionId> {
+        self.page.remove(commit).await
     }
 
     /// Determines if a page with the given slug exists.
     #[inline]
-    pub fn check_page<S: Into<String>>(&self, wiki_id: WikiId, slug: S) -> Result<bool> {
+    pub async fn check_page<S: Into<String>>(&self, wiki_id: WikiId, slug: S) -> Result<bool> {
         let slug = normalize_slug(slug);
 
-        self.page.check_page(wiki_id, &slug)
+        self.page.check_page(wiki_id, &slug).await
     }
 
     /// Gets the metadata for a given page, as well as its rating information.
     /// Uses Wikidot's `ups - downs` formula for scoring.
-    pub fn get_page<S: Into<String>>(
+    pub async fn get_page<S: Into<String>>(
         &self,
         wiki_id: WikiId,
         slug: S,
@@ -124,65 +129,67 @@ impl Server {
 
         let slug = normalize_slug(slug);
 
-        self.conn.transaction::<_, Error, _>(|| {
-            let page = match self.page.get_page(wiki_id, &slug)? {
+        self.transaction(async {
+            let result = self.page.get_page(wiki_id, &slug).await?;
+            let page = match result {
                 Some(page) => page,
                 None => return Ok(None),
             };
 
-            let rating = self.rating.get_rating(page.id())?;
+            let page_id = page.id();
+            let rating = self.rating.get_rating(page_id).await?;
 
             Ok(Some((page, rating)))
         })
+        .await
     }
 
     /// Gets the metadata for a given page ID, as well as its rating information.
     /// Uses Wikidot's `ups - downs` formula for scoring.
-    pub fn get_page_by_id(&self, page_id: PageId) -> Result<Option<(Page, Rating)>> {
+    pub async fn get_page_by_id(&self, page_id: PageId) -> Result<Option<(Page, Rating)>> {
         debug!("Creating transaction for page ID and rating");
 
-        self.conn.transaction::<_, Error, _>(|| {
-            task::block_on(async {
-                let page = self.page.get_page_by_id(page_id).await?;
-                let page = match page {
-                    Some(page) => page,
-                    None => return Ok(None),
-                };
+        self.transaction(async {
+            let result = self.page.get_page_by_id(page_id).await?;
+            let page = match result {
+                Some(page) => page,
+                None => return Ok(None),
+            };
 
-                let rating = self.rating.get_rating(page_id)?;
+            let rating = self.rating.get_rating(page_id).await?;
 
-                Ok(Some((page, rating)))
-            })
+            Ok(Some((page, rating)))
         })
+        .await
     }
 
     /// Gets the contents for a given page.
     #[inline]
-    pub fn get_page_contents<S: Into<String>>(
+    pub async fn get_page_contents<S: Into<String>>(
         &self,
         wiki_id: WikiId,
         slug: S,
     ) -> Result<Option<Box<[u8]>>> {
         let slug = normalize_slug(slug);
 
-        task::block_on(self.page.get_page_contents(wiki_id, &slug))
+        self.page.get_page_contents(wiki_id, &slug).await
     }
 
     /// Gets the contents for a given page ID.
     #[inline]
-    pub fn get_page_contents_by_id(&self, page_id: PageId) -> Result<Option<Box<[u8]>>> {
-        task::block_on(self.page.get_page_contents_by_id(page_id))
+    pub async fn get_page_contents_by_id(&self, page_id: PageId) -> Result<Option<Box<[u8]>>> {
+        self.page.get_page_contents_by_id(page_id).await
     }
 
     /// Sets all the tags for a given page.
     #[inline]
-    pub fn set_page_tags<S: AsRef<str>>(
+    pub async fn set_page_tags<S: AsRef<str>>(
         &self,
-        commit: PageCommit,
+        commit: PageCommit<'_>,
         tags: &[S],
     ) -> Result<RevisionId> {
         let mut tags = tags.iter().map(|tag| tag.as_ref()).collect::<Vec<&str>>();
 
-        self.page.tags(commit, &mut tags)
+        self.page.tags(commit, &mut tags).await
     }
 }

@@ -67,7 +67,7 @@ impl AuthorService {
         AuthorService { conn }
     }
 
-    pub fn get_all(&self, page_id: PageId) -> Result<Vec<Author>> {
+    pub async fn get_all(&self, page_id: PageId) -> Result<Vec<Author>> {
         info!("Getting authors for page ID {}", page_id);
 
         let id: i64 = page_id.into();
@@ -80,7 +80,7 @@ impl AuthorService {
         Ok(result)
     }
 
-    pub fn add(
+    pub async fn add(
         &self,
         page_id: PageId,
         user_id: UserId,
@@ -113,7 +113,7 @@ impl AuthorService {
         Ok(())
     }
 
-    pub fn remove(
+    pub async fn remove(
         &self,
         page_id: PageId,
         user_id: UserId,
@@ -136,6 +136,8 @@ impl AuthorService {
         Ok(rows_to_result(rows))
     }
 }
+
+impl_async_transaction!(AuthorService);
 
 impl Debug for AuthorService {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

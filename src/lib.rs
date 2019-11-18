@@ -28,6 +28,9 @@ extern crate crypto;
 #[macro_use]
 extern crate diesel;
 extern crate either;
+
+#[macro_use]
+extern crate futures;
 extern crate ipnetwork;
 
 #[macro_use]
@@ -94,7 +97,6 @@ mod service_prelude {
     pub use crate::schema::*;
     pub use async_std::prelude::*;
     pub use async_std::sync::RwLock;
-    pub use async_std::task;
     pub use chrono::prelude::*;
     pub use diesel::prelude::*;
     pub use diesel::query_builder::debug_query;

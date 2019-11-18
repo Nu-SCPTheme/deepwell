@@ -130,7 +130,7 @@ impl UserService {
         UserService { conn }
     }
 
-    pub fn create(&self, name: &str, email: &str) -> Result<UserId> {
+    pub async fn create(&self, name: &str, email: &str) -> Result<UserId> {
         use self::users::dsl;
 
         info!(
@@ -140,7 +140,7 @@ impl UserService {
 
         let email = email.to_ascii_lowercase();
 
-        self.conn.transaction::<_, Error, _>(|| {
+        self.transaction(async {
             // Check if there any existing users
             let result = users::table
                 .filter(users::name.eq(name))
@@ -176,9 +176,10 @@ impl UserService {
 
             Ok(id)
         })
+        .await
     }
 
-    pub fn get_from_id(&self, id: UserId) -> Result<Option<User>> {
+    pub async fn get_from_id(&self, id: UserId) -> Result<Option<User>> {
         info!("Getting users for id: {}", id);
 
         let id: i64 = id.into();
@@ -190,7 +191,7 @@ impl UserService {
         Ok(result)
     }
 
-    pub fn get_from_ids(&self, ids: &[UserId]) -> Result<Vec<Option<User>>> {
+    pub async fn get_from_ids(&self, ids: &[UserId]) -> Result<Vec<Option<User>>> {
         info!("Getting users for ids: {:?}", ids);
 
         // Load
@@ -221,7 +222,7 @@ impl UserService {
         Ok(users)
     }
 
-    pub fn get_from_name(&self, name: &str) -> Result<Option<User>> {
+    pub async fn get_from_name(&self, name: &str) -> Result<Option<User>> {
         info!("Getting user for name '{}'", name);
 
         let result = users::table
@@ -232,7 +233,7 @@ impl UserService {
         Ok(result)
     }
 
-    pub fn get_from_email(&self, email: &str) -> Result<Option<User>> {
+    pub async fn get_from_email(&self, email: &str) -> Result<Option<User>> {
         info!("Getting user for email '{}'", email);
 
         let result = users::table
@@ -243,7 +244,7 @@ impl UserService {
         Ok(result)
     }
 
-    pub fn edit(&self, id: UserId, changes: UserMetadata) -> Result<()> {
+    pub async fn edit(&self, id: UserId, changes: UserMetadata<'_>) -> Result<()> {
         use self::users::dsl;
 
         // Extract fields from metadata struct
@@ -283,7 +284,7 @@ impl UserService {
         Ok(())
     }
 
-    pub fn verify(&self, id: UserId) -> Result<()> {
+    pub async fn verify(&self, id: UserId) -> Result<()> {
         use self::users::dsl;
 
         info!("Marking user ID {} as verified", id);
@@ -296,7 +297,7 @@ impl UserService {
         Ok(())
     }
 
-    pub fn mark_inactive(&self, id: UserId, value: bool) -> Result<()> {
+    pub async fn mark_inactive(&self, id: UserId, value: bool) -> Result<()> {
         use self::users::dsl;
         use diesel::dsl::now;
 
@@ -333,6 +334,8 @@ impl UserService {
         Ok(())
     }
 }
+
+impl_async_transaction!(UserService);
 
 impl Debug for UserService {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

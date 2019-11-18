@@ -73,7 +73,7 @@ impl SessionService {
         SessionService { conn }
     }
 
-    pub fn get_session(&self, user_id: UserId) -> Result<Option<Session>> {
+    pub async fn get_session(&self, user_id: UserId) -> Result<Option<Session>> {
         info!("Getting session information any for user ID {}", user_id);
 
         let id: i64 = user_id.into();
@@ -85,7 +85,7 @@ impl SessionService {
         Ok(session)
     }
 
-    pub fn get_token(&self, user_id: UserId) -> Result<Option<String>> {
+    pub async fn get_token(&self, user_id: UserId) -> Result<Option<String>> {
         debug!("Getting token (if any) for user ID {}", user_id);
 
         let id: i64 = user_id.into();
@@ -98,7 +98,7 @@ impl SessionService {
         Ok(token)
     }
 
-    pub fn check_token(&self, user_id: UserId, token: &str) -> Result<()> {
+    pub async fn check_token(&self, user_id: UserId, token: &str) -> Result<()> {
         debug!("Checking token for user ID {}", user_id);
 
         let id: i64 = user_id.into();
@@ -115,7 +115,7 @@ impl SessionService {
         }
     }
 
-    pub fn create_token(&self, user_id: UserId, ip_address: IpNetwork) -> Result<String> {
+    pub async fn create_token(&self, user_id: UserId, ip_address: IpNetwork) -> Result<String> {
         debug!("Creating token for user ID {}", user_id);
 
         let token = generate_token();
@@ -132,7 +132,7 @@ impl SessionService {
         Ok(token)
     }
 
-    pub fn revoke_token(&self, user_id: UserId) -> Result<bool> {
+    pub async fn revoke_token(&self, user_id: UserId) -> Result<bool> {
         debug!("Revoking token for user ID {}", user_id);
 
         let id: i64 = user_id.into();
@@ -143,6 +143,8 @@ impl SessionService {
         Ok(rows_to_result(rows))
     }
 }
+
+impl_async_transaction!(SessionService);
 
 fn generate_token() -> String {
     iter::repeat(())

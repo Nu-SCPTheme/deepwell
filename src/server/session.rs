@@ -20,17 +20,16 @@
 
 use crate::service_prelude::*;
 use crate::session::Session;
-use async_std::task;
 
 impl Server {
     /// Checks if a given token is valid for the given user.
     #[inline]
-    pub fn check_token(&self, user_id: UserId, token: &str) -> Result<()> {
-        self.session.check_token(user_id, token)
+    pub async fn check_token(&self, user_id: UserId, token: &str) -> Result<()> {
+        self.session.check_token(user_id, token).await
     }
 
     /// Creates a session by validating the password and creating a token.
-    pub fn create_session(
+    pub async fn create_session(
         &self,
         user_id: UserId,
         password: &str,
@@ -42,29 +41,29 @@ impl Server {
         );
 
         trace!("Password validated, getting or creating session token");
-        self.conn.transaction::<_, Error, _>(|| {
-            task::block_on(async {
-                self.password.check(user_id, password).await?;
+        self.transaction(async {
+            self.password.check(user_id, password).await?;
 
-                if let Some(token) = self.session.get_token(user_id)? {
-                    return Ok(token);
-                }
+            let result = self.session.get_token(user_id).await?;
+            if let Some(token) = result {
+                return Ok(token);
+            }
 
-                self.session.create_token(user_id, ip_address)
-            })
+            self.session.create_token(user_id, ip_address).await
         })
+        .await
     }
 
     /// Gets an existing session object for a given user.
     #[inline]
-    pub fn get_session(&self, user_id: UserId) -> Result<Option<Session>> {
-        self.session.get_session(user_id)
+    pub async fn get_session(&self, user_id: UserId) -> Result<Option<Session>> {
+        self.session.get_session(user_id).await
     }
 
     /// Invalidates a session object manually.
     /// Returns true if there was a session present.
     #[inline]
-    pub fn end_session(&self, user_id: UserId) -> Result<bool> {
-        self.session.revoke_token(user_id)
+    pub async fn end_session(&self, user_id: UserId) -> Result<bool> {
+        self.session.revoke_token(user_id).await
     }
 }

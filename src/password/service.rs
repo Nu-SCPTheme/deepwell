@@ -21,6 +21,7 @@
 use super::{build_blacklist, check_password, new_password};
 use crate::schema::passwords;
 use crate::service_prelude::*;
+use async_std::task;
 use std::collections::HashSet;
 use std::convert::TryInto;
 use std::path::Path;
@@ -177,6 +178,8 @@ impl PasswordService {
         }
     }
 }
+
+impl_async_transaction!(PasswordService);
 
 impl Debug for PasswordService {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

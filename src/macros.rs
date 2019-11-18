@@ -91,3 +91,19 @@ macro_rules! make_id_type {
         }
     };
 }
+
+macro_rules! impl_async_transaction {
+    ($name:tt) => {
+        impl $name {
+            #[inline]
+            async fn transaction<F, T>(&self, f: F) -> Result<T>
+            where
+                F: Future<Output = Result<T>>,
+            {
+                use async_std::task;
+
+                self.conn.transaction(|| task::block_on(f))
+            }
+        }
+    };
+}

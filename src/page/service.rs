@@ -24,8 +24,8 @@ use crate::schema::{pages, revisions, tag_history};
 use crate::service_prelude::*;
 use crate::user::{User, UserId};
 use crate::wiki::{Wiki, WikiId};
+use async_std::fs;
 use async_std::sync::RwLockReadGuard;
-use async_std::{fs, task};
 use either::*;
 use serde_json as json;
 use std::borrow::Cow;
@@ -111,12 +111,12 @@ impl Page {
 }
 
 #[derive(Debug)]
-struct WriteGuard<'a> {
+struct ReadGuard<'a> {
     guard: RwLockReadGuard<'a, HashMap<WikiId, RevisionStore>>,
     wiki_id: WikiId,
 }
 
-impl WriteGuard<'_> {
+impl ReadGuard<'_> {
     fn get(&self) -> Result<&RevisionStore> {
         match self.guard.get(&self.wiki_id) {
             Some(store) => Ok(store),
@@ -171,27 +171,25 @@ impl PageService {
         json::to_string(&message).map_err(Error::from)
     }
 
-    pub fn add_store(&self, wiki: &Wiki) -> Result<()> {
-        task::block_on(async {
-            let repo = self.directory.join(wiki.slug());
-            fs::create_dir(&repo).await?;
+    pub async fn add_store(&self, wiki: &Wiki) -> Result<()> {
+        let repo = self.directory.join(wiki.slug());
+        fs::create_dir(&repo).await?;
 
-            let store = RevisionStore::new(repo, wiki.domain());
-            store.initial_commit().await?;
+        let store = RevisionStore::new(repo, wiki.domain());
+        store.initial_commit().await?;
 
-            let mut guard = self.stores.write().await;
-            guard.insert(wiki.id(), store);
+        let mut guard = self.stores.write().await;
+        guard.insert(wiki.id(), store);
 
-            Ok(())
-        })
+        Ok(())
     }
 
-    async fn store<'a>(&'a self, wiki_id: WikiId) -> WriteGuard<'a> {
+    async fn store<'a>(&'a self, wiki_id: WikiId) -> ReadGuard<'a> {
         trace!("Getting revision store for wiki ID {}", wiki_id);
 
         let guard = self.stores.read().await;
 
-        WriteGuard { guard, wiki_id }
+        ReadGuard { guard, wiki_id }
     }
 
     async fn raw_commit(
@@ -209,7 +207,7 @@ impl PageService {
         Ok(hash)
     }
 
-    pub fn get_page_id(&self, wiki_id: WikiId, slug: &str) -> Result<Option<PageId>> {
+    pub async fn get_page_id(&self, wiki_id: WikiId, slug: &str) -> Result<Option<PageId>> {
         debug!("Getting page id in wiki ID {} for slug '{}'", wiki_id, slug);
 
         let wiki_id: i64 = wiki_id.into();
@@ -223,9 +221,9 @@ impl PageService {
         Ok(page_id)
     }
 
-    pub fn create(
+    pub async fn create(
         &self,
-        commit: PageCommit,
+        commit: PageCommit<'_>,
         content: &[u8],
         title: &str,
         alt_title: Option<&str>,
@@ -239,58 +237,57 @@ impl PageService {
             user,
         } = commit;
 
-        self.conn.transaction::<_, Error, _>(|| {
-            task::block_on(async {
-                let model = NewPage {
-                    wiki_id: wiki_id.into(),
-                    slug,
-                    title,
-                    alt_title,
-                };
+        self.transaction(async {
+            let model = NewPage {
+                wiki_id: wiki_id.into(),
+                slug,
+                title,
+                alt_title,
+            };
 
-                trace!("Checking for existing page");
-                if self.get_page_id(wiki_id, slug)?.is_some() {
-                    return Err(Error::PageExists);
-                }
+            trace!("Checking for existing page");
+            if self.get_page_id(wiki_id, slug).await?.is_some() {
+                return Err(Error::PageExists);
+            }
 
-                trace!("Inserting {:?} into pages table", &model);
-                let page_id = diesel::insert_into(pages::table)
-                    .values(&model)
-                    .returning(pages::dsl::page_id)
-                    .get_result::<PageId>(&*self.conn)?;
+            trace!("Inserting {:?} into pages table", &model);
+            let page_id = diesel::insert_into(pages::table)
+                .values(&model)
+                .returning(pages::dsl::page_id)
+                .get_result::<PageId>(&*self.conn)?;
 
-                let user_id = user.id();
-                let change_type = ChangeType::Create;
+            let user_id = user.id();
+            let change_type = ChangeType::Create;
 
-                let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
-                let info = CommitInfo {
-                    username: user.name(),
-                    message: &commit,
-                };
+            let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
+            let info = CommitInfo {
+                username: user.name(),
+                message: &commit,
+            };
 
-                let hash = self.raw_commit(wiki_id, slug, Some(content), info).await?;
-                let model = NewRevision {
-                    page_id: page_id.into(),
-                    user_id: user_id.into(),
-                    message,
-                    git_commit: hash.as_ref(),
-                    change_type: change_type.into(),
-                };
+            let hash = self.raw_commit(wiki_id, slug, Some(content), info).await?;
+            let model = NewRevision {
+                page_id: page_id.into(),
+                user_id: user_id.into(),
+                message,
+                git_commit: hash.as_ref(),
+                change_type: change_type.into(),
+            };
 
-                trace!("Inserting revision {:?} into revisions table", &model);
-                let revision_id = diesel::insert_into(revisions::table)
-                    .values(&model)
-                    .returning(revisions::dsl::revision_id)
-                    .get_result::<RevisionId>(&*self.conn)?;
+            trace!("Inserting revision {:?} into revisions table", &model);
+            let revision_id = diesel::insert_into(revisions::table)
+                .values(&model)
+                .returning(revisions::dsl::revision_id)
+                .get_result::<RevisionId>(&*self.conn)?;
 
-                Ok((page_id, revision_id))
-            })
+            Ok((page_id, revision_id))
         })
+        .await
     }
 
-    pub fn commit(
+    pub async fn commit(
         &self,
-        commit: PageCommit,
+        commit: PageCommit<'_>,
         content: Option<&[u8]>,
         title: Option<&str>,
         alt_title: Option<Nullable<&str>>,
@@ -304,58 +301,58 @@ impl PageService {
             user,
         } = commit;
 
-        self.conn.transaction::<_, Error, _>(|| {
-            task::block_on(async {
-                let model = UpdatePage {
-                    slug: None,
-                    title,
-                    alt_title,
-                };
+        self.transaction(async {
+            let model = UpdatePage {
+                slug: None,
+                title,
+                alt_title,
+            };
 
-                let page_id = self
-                    .get_page_id(wiki_id, slug)?
-                    .ok_or(Error::PageNotFound)?;
+            let page_id = self
+                .get_page_id(wiki_id, slug)
+                .await?
+                .ok_or(Error::PageNotFound)?;
 
-                trace!("Updating {:?} in pages table", &model);
-                {
-                    use self::pages::dsl;
+            trace!("Updating {:?} in pages table", &model);
+            {
+                use self::pages::dsl;
 
-                    let id: i64 = page_id.into();
-                    diesel::update(dsl::pages.filter(dsl::page_id.eq(id)))
-                        .set(&model)
-                        .execute(&*self.conn)?;
-                }
+                let id: i64 = page_id.into();
+                diesel::update(dsl::pages.filter(dsl::page_id.eq(id)))
+                    .set(&model)
+                    .execute(&*self.conn)?;
+            }
 
-                let user_id = user.id();
-                let change_type = ChangeType::Modify;
+            let user_id = user.id();
+            let change_type = ChangeType::Modify;
 
-                let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
-                let info = CommitInfo {
-                    username: user.name(),
-                    message: &commit,
-                };
+            let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
+            let info = CommitInfo {
+                username: user.name(),
+                message: &commit,
+            };
 
-                let hash = self.raw_commit(wiki_id, slug, content, info).await?;
-                let model = NewRevision {
-                    page_id: page_id.into(),
-                    user_id: user_id.into(),
-                    message,
-                    git_commit: hash.as_ref(),
-                    change_type: change_type.into(),
-                };
+            let hash = self.raw_commit(wiki_id, slug, content, info).await?;
+            let model = NewRevision {
+                page_id: page_id.into(),
+                user_id: user_id.into(),
+                message,
+                git_commit: hash.as_ref(),
+                change_type: change_type.into(),
+            };
 
-                trace!("Inserting revision {:?} into revisions table", &model);
-                let revision_id = diesel::insert_into(revisions::table)
-                    .values(&model)
-                    .returning(revisions::dsl::revision_id)
-                    .get_result::<RevisionId>(&*self.conn)?;
+            trace!("Inserting revision {:?} into revisions table", &model);
+            let revision_id = diesel::insert_into(revisions::table)
+                .values(&model)
+                .returning(revisions::dsl::revision_id)
+                .get_result::<RevisionId>(&*self.conn)?;
 
-                Ok(revision_id)
-            })
+            Ok(revision_id)
         })
+        .await
     }
 
-    pub fn rename(
+    pub async fn rename(
         &self,
         wiki_id: WikiId,
         old_slug: &str,
@@ -365,62 +362,62 @@ impl PageService {
     ) -> Result<RevisionId> {
         info!("Starting transaction for page rename");
 
-        self.conn.transaction::<_, Error, _>(|| {
-            task::block_on(async {
-                let model = UpdatePage {
-                    slug: Some(new_slug),
-                    title: None,
-                    alt_title: None,
-                };
+        self.transaction(async {
+            let model = UpdatePage {
+                slug: Some(new_slug),
+                title: None,
+                alt_title: None,
+            };
 
-                let page_id = self
-                    .get_page_id(wiki_id, old_slug)?
-                    .ok_or(Error::PageNotFound)?;
+            let page_id = self
+                .get_page_id(wiki_id, old_slug)
+                .await?
+                .ok_or(Error::PageNotFound)?;
 
-                trace!("Updating {:?} in pages table", &model);
-                {
-                    use self::pages::dsl;
+            trace!("Updating {:?} in pages table", &model);
+            {
+                use self::pages::dsl;
 
-                    let id: i64 = page_id.into();
-                    diesel::update(dsl::pages.filter(dsl::page_id.eq(id)))
-                        .set(&model)
-                        .execute(&*self.conn)?;
-                }
+                let id: i64 = page_id.into();
+                diesel::update(dsl::pages.filter(dsl::page_id.eq(id)))
+                    .set(&model)
+                    .execute(&*self.conn)?;
+            }
 
-                let user_id = user.id();
-                let change_type = ChangeType::Rename;
+            let user_id = user.id();
+            let change_type = ChangeType::Rename;
 
-                let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
-                let info = CommitInfo {
-                    username: user.name(),
-                    message: &commit,
-                };
+            let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
+            let info = CommitInfo {
+                username: user.name(),
+                message: &commit,
+            };
 
-                trace!("Committing rename to repository");
-                let guard = self.store(wiki_id).await;
-                let store = guard.get()?;
-                let hash = store.rename(old_slug, new_slug, info).await?;
+            trace!("Committing rename to repository");
+            let guard = self.store(wiki_id).await;
+            let store = guard.get()?;
+            let hash = store.rename(old_slug, new_slug, info).await?;
 
-                let model = NewRevision {
-                    page_id: page_id.into(),
-                    user_id: user_id.into(),
-                    message,
-                    git_commit: hash.as_ref(),
-                    change_type: change_type.into(),
-                };
+            let model = NewRevision {
+                page_id: page_id.into(),
+                user_id: user_id.into(),
+                message,
+                git_commit: hash.as_ref(),
+                change_type: change_type.into(),
+            };
 
-                trace!("Inserting revision {:?} into revisions table", &model);
-                let revision_id = diesel::insert_into(revisions::table)
-                    .values(&model)
-                    .returning(revisions::dsl::revision_id)
-                    .get_result::<RevisionId>(&*self.conn)?;
+            trace!("Inserting revision {:?} into revisions table", &model);
+            let revision_id = diesel::insert_into(revisions::table)
+                .values(&model)
+                .returning(revisions::dsl::revision_id)
+                .get_result::<RevisionId>(&*self.conn)?;
 
-                Ok(revision_id)
-            })
+            Ok(revision_id)
         })
+        .await
     }
 
-    pub fn remove(&self, commit: PageCommit) -> Result<RevisionId> {
+    pub async fn remove(&self, commit: PageCommit<'_>) -> Result<RevisionId> {
         info!("Starting transaction for page removal");
 
         let PageCommit {
@@ -430,62 +427,62 @@ impl PageService {
             user,
         } = commit;
 
-        self.conn.transaction::<_, Error, _>(|| {
-            task::block_on(async {
-                use diesel::dsl::now;
+        self.transaction(async {
+            use diesel::dsl::now;
 
-                let page_id = self
-                    .get_page_id(wiki_id, slug)?
-                    .ok_or(Error::PageNotFound)?;
+            let page_id = self
+                .get_page_id(wiki_id, slug)
+                .await?
+                .ok_or(Error::PageNotFound)?;
 
-                trace!("Marking page as deleted in table");
-                {
-                    use self::pages::dsl;
+            trace!("Marking page as deleted in table");
+            {
+                use self::pages::dsl;
 
-                    let id: i64 = page_id.into();
-                    diesel::update(dsl::pages.filter(dsl::page_id.eq(id)))
-                        .set(pages::dsl::deleted_at.eq(now))
-                        .execute(&*self.conn)?;
-                }
+                let id: i64 = page_id.into();
+                diesel::update(dsl::pages.filter(dsl::page_id.eq(id)))
+                    .set(pages::dsl::deleted_at.eq(now))
+                    .execute(&*self.conn)?;
+            }
 
-                let user_id = user.id();
-                let change_type = ChangeType::Delete;
+            let user_id = user.id();
+            let change_type = ChangeType::Delete;
 
-                let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
-                let info = CommitInfo {
-                    username: user.name(),
-                    message: &commit,
-                };
+            let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
+            let info = CommitInfo {
+                username: user.name(),
+                message: &commit,
+            };
 
-                trace!("Committing removal to repository");
-                let guard = self.store(wiki_id).await;
-                let store = guard.get()?;
-                let result = store.remove(slug, info).await?;
-                let hash = match result {
-                    Some(hash) => hash,
-                    None => return Err(Error::PageNotFound),
-                };
+            trace!("Committing removal to repository");
+            let guard = self.store(wiki_id).await;
+            let store = guard.get()?;
+            let result = store.remove(slug, info).await?;
+            let hash = match result {
+                Some(hash) => hash,
+                None => return Err(Error::PageNotFound),
+            };
 
-                let model = NewRevision {
-                    page_id: page_id.into(),
-                    user_id: user_id.into(),
-                    message,
-                    git_commit: hash.as_ref(),
-                    change_type: change_type.into(),
-                };
+            let model = NewRevision {
+                page_id: page_id.into(),
+                user_id: user_id.into(),
+                message,
+                git_commit: hash.as_ref(),
+                change_type: change_type.into(),
+            };
 
-                trace!("Inserting revision {:?} into revisions table", &model);
-                let revision_id = diesel::insert_into(revisions::table)
-                    .values(&model)
-                    .returning(revisions::dsl::revision_id)
-                    .get_result::<RevisionId>(&*self.conn)?;
+            trace!("Inserting revision {:?} into revisions table", &model);
+            let revision_id = diesel::insert_into(revisions::table)
+                .values(&model)
+                .returning(revisions::dsl::revision_id)
+                .get_result::<RevisionId>(&*self.conn)?;
 
-                Ok(revision_id)
-            })
+            Ok(revision_id)
         })
+        .await
     }
 
-    pub fn tags(&self, commit: PageCommit, tags: &mut [&str]) -> Result<RevisionId> {
+    pub async fn tags(&self, commit: PageCommit<'_>, tags: &mut [&str]) -> Result<RevisionId> {
         info!("Starting transaction for page tags");
 
         let PageCommit {
@@ -495,75 +492,75 @@ impl PageService {
             user,
         } = commit;
 
-        self.conn.transaction::<_, Error, _>(|| {
-            task::block_on(async {
-                let page_id = self
-                    .get_page_id(wiki_id, slug)?
-                    .ok_or(Error::PageNotFound)?;
+        self.transaction(async {
+            let page_id = self
+                .get_page_id(wiki_id, slug)
+                .await?
+                .ok_or(Error::PageNotFound)?;
 
-                trace!("Getting tag difference");
-                let current_tags = {
-                    let id: i64 = page_id.into();
-                    pages::table
-                        .find(id)
-                        .select(pages::dsl::tags)
-                        .first::<Vec<String>>(&*self.conn)?
-                };
+            trace!("Getting tag difference");
+            let current_tags = {
+                let id: i64 = page_id.into();
+                pages::table
+                    .find(id)
+                    .select(pages::dsl::tags)
+                    .first::<Vec<String>>(&*self.conn)?
+            };
 
-                let (added_tags, removed_tags) = tag_diff(&current_tags, tags);
+            let (added_tags, removed_tags) = tag_diff(&current_tags, tags);
 
-                // Create commit
-                let user_id = user.id();
-                let change_type = ChangeType::Tags;
+            // Create commit
+            let user_id = user.id();
+            let change_type = ChangeType::Tags;
 
-                let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
-                let info = CommitInfo {
-                    username: user.name(),
-                    message: &commit,
-                };
+            let commit = self.commit_data(wiki_id, page_id, user_id, change_type)?;
+            let info = CommitInfo {
+                username: user.name(),
+                message: &commit,
+            };
 
-                let guard = self.store(wiki_id).await;
-                let store = guard.get()?;
-                let hash = store.empty_commit(info).await?;
+            let guard = self.store(wiki_id).await;
+            let store = guard.get()?;
+            let hash = store.empty_commit(info).await?;
 
-                let model = NewRevision {
-                    page_id: page_id.into(),
-                    user_id: user_id.into(),
-                    message,
-                    git_commit: hash.as_ref(),
-                    change_type: change_type.into(),
-                };
+            let model = NewRevision {
+                page_id: page_id.into(),
+                user_id: user_id.into(),
+                message,
+                git_commit: hash.as_ref(),
+                change_type: change_type.into(),
+            };
 
-                trace!("Inserting revision {:?} into revisions table", &model);
-                let revision_id = diesel::insert_into(revisions::table)
-                    .values(&model)
-                    .returning(revisions::dsl::revision_id)
-                    .get_result::<RevisionId>(&*self.conn)?;
+            trace!("Inserting revision {:?} into revisions table", &model);
+            let revision_id = diesel::insert_into(revisions::table)
+                .values(&model)
+                .returning(revisions::dsl::revision_id)
+                .get_result::<RevisionId>(&*self.conn)?;
 
-                let model = NewTagChange {
-                    revision_id: revision_id.into(),
-                    added_tags: &added_tags,
-                    removed_tags: &removed_tags,
-                };
+            let model = NewTagChange {
+                revision_id: revision_id.into(),
+                added_tags: &added_tags,
+                removed_tags: &removed_tags,
+            };
 
-                trace!("Inserting tag change {:?} into tag history table", &model);
-                diesel::insert_into(tag_history::table)
-                    .values(&model)
-                    .execute(&*self.conn)?;
+            trace!("Inserting tag change {:?} into tag history table", &model);
+            diesel::insert_into(tag_history::table)
+                .values(&model)
+                .execute(&*self.conn)?;
 
-                tags.sort();
+            tags.sort();
 
-                trace!("Updating tags for page");
-                diesel::update(pages::table)
-                    .set(pages::dsl::tags.eq(&*tags))
-                    .execute(&*self.conn)?;
+            trace!("Updating tags for page");
+            diesel::update(pages::table)
+                .set(pages::dsl::tags.eq(&*tags))
+                .execute(&*self.conn)?;
 
-                Ok(revision_id)
-            })
+            Ok(revision_id)
         })
+        .await
     }
 
-    pub fn check_page(&self, wiki_id: WikiId, slug: &str) -> Result<bool> {
+    pub async fn check_page(&self, wiki_id: WikiId, slug: &str) -> Result<bool> {
         info!(
             "Checking if page for exists in wiki ID {}, slug {} exists",
             wiki_id, slug,
@@ -579,7 +576,7 @@ impl PageService {
         Ok(result.is_some())
     }
 
-    pub fn get_page(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Page>> {
+    pub async fn get_page(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Page>> {
         info!("Getting page for wiki ID {}, slug {}", wiki_id, slug);
 
         let wiki_id: i64 = wiki_id.into();
@@ -612,16 +609,14 @@ impl PageService {
     ) -> Result<Option<Box<[u8]>>> {
         info!("Getting contents for wiki ID {}, slug {}", wiki_id, slug);
 
-        task::block_on(async {
-            let guard = self.store(wiki_id).await;
-            let store = guard.get()?;
-            let contents = store.get_page(slug).await?;
+        let guard = self.store(wiki_id).await;
+        let store = guard.get()?;
+        let contents = store.get_page(slug).await?;
 
-            Ok(contents)
-        })
+        Ok(contents)
     }
 
-    fn get_last_hash(&self, page_id: PageId) -> Result<Option<(WikiId, String, GitHash)>> {
+    async fn get_last_hash(&self, page_id: PageId) -> Result<Option<(WikiId, String, GitHash)>> {
         debug!("Getting last commit for page ID {}", page_id);
 
         let id: i64 = page_id.into();
@@ -650,51 +645,49 @@ impl PageService {
     pub async fn get_page_contents_by_id(&self, page_id: PageId) -> Result<Option<Box<[u8]>>> {
         info!("Getting contents for page ID {}", page_id);
 
-        self.conn.transaction::<_, Error, _>(|| {
-            task::block_on(async {
-                let (wiki_id, slug, hash) = match self.get_last_hash(page_id)? {
-                    Some(result) => result,
-                    None => return Ok(None),
-                };
+        self.transaction(async {
+            let last_hash = self.get_last_hash(page_id).await?;
+            let (wiki_id, slug, hash) = match last_hash {
+                Some(result) => result,
+                None => return Ok(None),
+            };
 
-                let guard = self.store(wiki_id).await;
-                let store = guard.get()?;
-                let contents = store.get_page_version(&slug, &hash).await?;
-                Ok(contents)
-            })
-        })
-    }
-
-    pub fn get_blame(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Blame>> {
-        info!("Getting blame for wiki ID {}, slug {}", wiki_id, slug);
-
-        task::block_on(async {
             let guard = self.store(wiki_id).await;
             let store = guard.get()?;
-            let blame = store.get_blame(slug, None).await?;
-            Ok(blame)
+            let contents = store.get_page_version(&slug, &hash).await?;
+            Ok(contents)
         })
+        .await
     }
 
-    pub fn get_blame_by_id(&self, page_id: PageId) -> Result<Option<Blame>> {
+    pub async fn get_blame(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Blame>> {
+        info!("Getting blame for wiki ID {}, slug {}", wiki_id, slug);
+
+        let guard = self.store(wiki_id).await;
+        let store = guard.get()?;
+        let blame = store.get_blame(slug, None).await?;
+        Ok(blame)
+    }
+
+    pub async fn get_blame_by_id(&self, page_id: PageId) -> Result<Option<Blame>> {
         info!("Getting blame for page ID {}", page_id);
 
-        self.conn.transaction::<_, Error, _>(|| {
-            task::block_on(async {
-                let (wiki_id, slug, hash) = match self.get_last_hash(page_id)? {
-                    Some(result) => result,
-                    None => return Ok(None),
-                };
+        self.transaction(async {
+            let last_hash = self.get_last_hash(page_id).await?;
+            let (wiki_id, slug, hash) = match last_hash {
+                Some(result) => result,
+                None => return Ok(None),
+            };
 
-                let guard = self.store(wiki_id).await;
-                let store = guard.get()?;
-                let blame = store.get_blame(&slug, Some(&hash)).await?;
-                Ok(blame)
-            })
+            let guard = self.store(wiki_id).await;
+            let store = guard.get()?;
+            let blame = store.get_blame(&slug, Some(&hash)).await?;
+            Ok(blame)
         })
+        .await
     }
 
-    fn revision_commit(&self, revision_id: RevisionId) -> Result<GitHash> {
+    async fn revision_commit(&self, revision_id: RevisionId) -> Result<GitHash> {
         debug!("Getting commit hash for revision ID {}", revision_id);
 
         let id: i64 = revision_id.into();
@@ -710,20 +703,20 @@ impl PageService {
         }
     }
 
-    fn commit_hash<'a>(
+    async fn commit_hash<'a>(
         &self,
         revision: Either<RevisionId, &'a GitHash>,
     ) -> Result<Cow<'a, GitHash>> {
         match revision {
             Left(id) => {
-                let hash = self.revision_commit(id)?;
+                let hash = self.revision_commit(id).await?;
                 Ok(Cow::Owned(hash))
             }
             Right(hash) => Ok(Cow::Borrowed(hash)),
         }
     }
 
-    pub fn get_page_version(
+    pub async fn get_page_version(
         &self,
         wiki_id: WikiId,
         slug: &str,
@@ -734,17 +727,15 @@ impl PageService {
             wiki_id, slug
         );
 
-        task::block_on(async {
-            let hash = self.commit_hash(revision)?;
+        let hash = self.commit_hash(revision).await?;
 
-            let guard = self.store(wiki_id).await;
-            let store = guard.get()?;
-            let contents = store.get_page_version(slug, &hash).await?;
-            Ok(contents)
-        })
+        let guard = self.store(wiki_id).await;
+        let store = guard.get()?;
+        let contents = store.get_page_version(slug, &hash).await?;
+        Ok(contents)
     }
 
-    pub fn get_diff(
+    pub async fn get_diff(
         &self,
         wiki_id: WikiId,
         slug: &str,
@@ -753,18 +744,19 @@ impl PageService {
     ) -> Result<Box<[u8]>> {
         info!("Getting diff for wiki ID {}, slug {}", wiki_id, slug);
 
-        task::block_on(async {
-            let first = self.commit_hash(first)?;
-            let second = self.commit_hash(second)?;
+        // Get both commits
+        let (first, second) = join!(self.commit_hash(first), self.commit_hash(second),);
 
-            let guard = self.store(wiki_id).await;
-            let store = guard.get()?;
-            let diff = store.get_diff(slug, &first, &second).await?;
-            Ok(diff)
-        })
+        let (first, second) = (first?, second?);
+
+        // Actually get the diff from the RevisionStore
+        let guard = self.store(wiki_id).await;
+        let store = guard.get()?;
+        let diff = store.get_diff(slug, &first, &second).await?;
+        Ok(diff)
     }
 
-    pub fn edit_revision(&self, revision_id: RevisionId, message: &str) -> Result<()> {
+    pub async fn edit_revision(&self, revision_id: RevisionId, message: &str) -> Result<()> {
         use self::revisions::dsl;
 
         info!("Editing revision message for ID {}", revision_id);
@@ -777,15 +769,15 @@ impl PageService {
         Ok(())
     }
 
-    pub fn set_domain(&self, wiki_id: WikiId, new_domain: &str) -> Result<()> {
-        task::block_on(async {
-            let guard = self.store(wiki_id).await;
-            let store = guard.get()?;
-            store.set_domain(new_domain).await;
-            Ok(())
-        })
+    pub async fn set_domain(&self, wiki_id: WikiId, new_domain: &str) -> Result<()> {
+        let guard = self.store(wiki_id).await;
+        let store = guard.get()?;
+        store.set_domain(new_domain).await;
+        Ok(())
     }
 }
+
+impl_async_transaction!(PageService);
 
 impl Debug for PageService {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

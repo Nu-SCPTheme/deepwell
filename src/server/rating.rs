@@ -24,54 +24,63 @@ use crate::service_prelude::*;
 impl Server {
     /// Sets the rating for a given page and user.
     #[inline]
-    pub fn set_rating(&self, page_id: PageId, user_id: UserId, rating: i16) -> Result<RatingId> {
+    pub async fn set_rating(
+        &self,
+        page_id: PageId,
+        user_id: UserId,
+        rating: i16,
+    ) -> Result<RatingId> {
         info!(
             "Setting rating for page ID {} / user ID {}: {}",
             page_id, user_id, rating,
         );
 
-        self.rating.set(page_id, user_id, rating)
+        self.rating.set(page_id, user_id, rating).await
     }
 
     /// Removes the rating for a given page and user.
     /// Returns `None` if the rating is already deleted.
     #[inline]
-    pub fn remove_rating(&self, page_id: PageId, user_id: UserId) -> Result<Option<RatingId>> {
+    pub async fn remove_rating(
+        &self,
+        page_id: PageId,
+        user_id: UserId,
+    ) -> Result<Option<RatingId>> {
         info!(
             "Removing rating for page ID {} / user ID {}",
             page_id, user_id,
         );
 
-        self.rating.remove(page_id, user_id)
+        self.rating.remove(page_id, user_id).await
     }
 
     /// Gets all changes in the rating for a given page and user.
     /// Earliest entries appear near the beginning.
     #[inline]
-    pub fn get_rating_history(
+    pub async fn get_rating_history(
         &self,
         page_id: PageId,
         user_id: UserId,
     ) -> Result<Vec<RatingHistory>> {
-        self.rating.get_history(page_id, user_id)
+        self.rating.get_history(page_id, user_id).await
     }
 
     /// Gets the latest rating history entry for the given page and user.
     #[inline]
-    pub fn get_rating_history_entry_last(
+    pub async fn get_rating_history_entry_last(
         &self,
         page_id: PageId,
         user_id: UserId,
     ) -> Result<Option<RatingHistory>> {
-        self.rating.get_history_latest(page_id, user_id)
+        self.rating.get_history_latest(page_id, user_id).await
     }
 
     /// Gets the rating history entry with the given ID, if it exists.
     #[inline]
-    pub fn get_rating_history_entry_from_id(
+    pub async fn get_rating_history_entry_from_id(
         &self,
         rating_id: RatingId,
     ) -> Result<Option<RatingHistory>> {
-        self.rating.get_history_entry(rating_id)
+        self.rating.get_history_entry(rating_id).await
     }
 }
