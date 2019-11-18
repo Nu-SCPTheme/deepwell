@@ -21,7 +21,6 @@
 use super::{build_blacklist, check_password, new_password};
 use crate::schema::passwords;
 use crate::service_prelude::*;
-use async_std::task;
 use std::collections::HashSet;
 use std::convert::TryInto;
 use std::path::Path;
@@ -195,6 +194,7 @@ async fn password_pause() {}
 
 #[cfg(not(test))]
 async fn password_pause() {
+    use async_std::task;
     use std::time::Duration;
 
     const PAUSE: Duration = Duration::from_millis(500);
