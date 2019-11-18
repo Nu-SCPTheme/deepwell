@@ -22,10 +22,10 @@ use super::prelude::*;
 
 #[test]
 fn password_service() {
-    run(|server| task::block_on(password_service_impl(server)));
+    run(|server| task::block_on(password_service_internal(server)));
 }
 
-async fn password_service_impl(srv: &Server) {
+async fn password_service_internal(srv: &Server) {
     macro_rules! good_password {
         ($user_id:expr, $password:expr) => {
             srv.validate_user_password($user_id, $password)
@@ -68,10 +68,10 @@ async fn password_service_impl(srv: &Server) {
 
 #[test]
 fn password_default() {
-    run(|server| task::block_on(password_default_impl(server)));
+    run(|server| task::block_on(password_default_internal(server)));
 }
 
-async fn password_default_impl(srv: &Server) {
+async fn password_default_internal(srv: &Server) {
     macro_rules! bad_password {
         ($user_id:expr, $password:expr) => {{
             let user_id = UserId::from_raw($user_id);

@@ -22,10 +22,10 @@ use super::prelude::*;
 
 #[test]
 fn tags() {
-    run(|server| task::block_on(tags_impl(server)));
+    run(|server| task::block_on(tags_internal(server)));
 }
 
-async fn tags_impl(srv: &Server) {
+async fn tags_internal(srv: &Server) {
     let user_1 = srv
         .get_user_from_name("unknown")
         .await

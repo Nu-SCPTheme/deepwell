@@ -23,10 +23,10 @@ use crate::author::AuthorType;
 
 #[test]
 fn author_service() {
-    run(|server| task::block_on(author_service_impl(server)));
+    run(|server| task::block_on(author_service_internal(server)));
 }
 
-async fn author_service_impl(srv: &Server) {
+async fn author_service_internal(srv: &Server) {
     let wiki_id = srv
         .create_wiki("Test", "test", "example.org")
         .await

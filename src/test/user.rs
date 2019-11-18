@@ -22,10 +22,10 @@ use super::prelude::*;
 
 #[test]
 fn user_service() {
-    run(|server| task::block_on(user_service_impl(server)));
+    run(|server| task::block_on(user_service_internal(server)));
 }
 
-async fn user_service_impl(srv: &Server) {
+async fn user_service_internal(srv: &Server) {
     let user_id = srv
         .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
         .await

@@ -22,10 +22,10 @@ use super::prelude::*;
 
 #[test]
 fn page_service() {
-    run(|server| task::block_on(page_service_impl(server)));
+    run(|server| task::block_on(page_service_internal(server)));
 }
 
-async fn page_service_impl(srv: &Server) {
+async fn page_service_internal(srv: &Server) {
     let user = srv
         .get_user_from_name("unknown")
         .await

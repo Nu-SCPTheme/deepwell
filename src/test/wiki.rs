@@ -22,10 +22,10 @@ use super::prelude::*;
 
 #[test]
 fn wiki_service() {
-    run(|server| task::block_on(wiki_service_impl(server)));
+    run(|server| task::block_on(wiki_service_internal(server)));
 }
 
-async fn wiki_service_impl(srv: &Server) {
+async fn wiki_service_internal(srv: &Server) {
     let wiki_id = srv
         .create_wiki("Test Wiki", "test", "example.com")
         .await
