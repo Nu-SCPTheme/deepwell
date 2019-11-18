@@ -29,6 +29,7 @@ pub enum ChangeType {
     Create,
     Modify,
     Delete,
+    Restore,
     Rename,
     Tags,
 }
@@ -41,6 +42,7 @@ impl ChangeType {
             Create => "created",
             Modify => "modified",
             Delete => "deleted",
+            Restore => "restored",
             Rename => "renamed",
             Tags => "tags",
         }
@@ -55,6 +57,7 @@ impl Into<&'static str> for ChangeType {
             Create => "create",
             Modify => "modify",
             Delete => "delete",
+            Restore => "restore",
             Rename => "rename",
             Tags => "tags",
         }
@@ -69,6 +72,7 @@ impl TryFrom<&'_ str> for ChangeType {
             "create" => ChangeType::Create,
             "modify" => ChangeType::Modify,
             "delete" => ChangeType::Delete,
+            "restore" => ChangeType::Restore,
             "rename" => ChangeType::Rename,
             "tags" => ChangeType::Tags,
             _ => return Err(()),

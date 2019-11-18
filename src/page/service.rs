@@ -218,7 +218,7 @@ impl PageService {
         title: &str,
         alt_title: Option<&str>,
     ) -> Result<(PageId, RevisionId)> {
-        info!("Starting transaction for page creation");
+        info!("Creating page {:?} with title '{}'", commit, title);
 
         let PageCommit {
             wiki_id,
@@ -282,7 +282,7 @@ impl PageService {
         title: Option<&str>,
         alt_title: Option<Nullable<&str>>,
     ) -> Result<RevisionId> {
-        info!("Starting transaction for page commit");
+        info!("Committing change to page {:?}");
 
         let PageCommit {
             wiki_id,
@@ -350,7 +350,7 @@ impl PageService {
         message: &str,
         user: &User,
     ) -> Result<RevisionId> {
-        info!("Starting transaction for page rename");
+        info!("Renaming page '{}' -> '{}' in wiki ID {}", old_slug, new_slug, wiki_id);
 
         self.transaction(async {
             let model = UpdatePage {
@@ -408,7 +408,7 @@ impl PageService {
     }
 
     pub async fn remove(&self, commit: PageCommit<'_>) -> Result<RevisionId> {
-        info!("Starting transaction for page removal");
+        info!("Removing page {:?}", commit);
 
         let PageCommit {
             wiki_id,
@@ -472,8 +472,92 @@ impl PageService {
         .await
     }
 
+    pub async fn restore(&self, commit: PageCommit<'_>, page_id: Option<PageId>) -> Result<RevisionId> {
+        info!("Restoring page {:?}", commit);
+
+        let PageCommit {
+            wiki_id,
+            slug,
+            message,
+            user,
+        } = commit;
+
+        self.transaction(async {
+            if self.check_page().await? {
+                return Err(Error::PageExists);
+            }
+
+            let page_id = match page_id {
+                Some(id) => id,
+                None => {
+                    trace!("Finding last page ID for slug");
+
+                    let wiki_id: i64 = wiki_id.into();
+                    let page_id = pages::table
+                        .filter(pages::wiki_id.eq(wiki_id))
+                        .filter(pages::slug.eq(slug))
+                        .filter(pages::deleted_at.is_not_null())
+                        .order_by(pages::created_at.desc())
+                        .first::<PageId>(&*self.conn)
+                        .optional()?;
+
+                    // If none, found nothing to restore
+                    match page_id {
+                        Some(id) => id,
+                        None => return Err(Error::PageNotFound),
+                    }
+                }
+            };
+
+            trace!("Finding last extant commit for page");
+
+            let last_hash = self.get_last_hash(page_id).await?;
+            let (wiki_id, old_slug, hash) = match last_hash {
+                Some(result) => result,
+                None => {
+                    error!("Page ID {} found in table with no last revision", page_id);
+                    return Err(Error::PageNotFound);
+                }
+            };
+
+            let commit = self.commit_data(wiki_id, page_id, user_id, change_type);
+            let info = CommitInfo {
+                username: user.name(),
+                message: &commit,
+            };
+
+            trace!("Committing page restoration to repository");
+            let guard = self.store(wiki_id).await;
+            let store = guard.get()?;
+            let result = store.restore(&hash, &old_slug, slug, info).await?;
+            let hash = match result {
+                Some(hash) => hash,
+                None => {
+                    error!("Page ID {} (slug '{}') found in table and revisions but not in repository", page_id, old_slug);
+                    return Err(Error::PageNotFound);
+                }
+            };
+
+            let model = NewRevision {
+                page_id: page_id.into(),
+                user_id: user_id.into(),
+                message,
+                git_commit: hash.as_ref(),
+                change_type: change_type.into(),
+            };
+
+            trace!("Inserting revision {:?} into revisions table", &model);
+            let revision_id = diesel::insert_into(revisions::table)
+                .values(&model)
+                .returning(revisions::dsl::revision_id)
+                .get_result::<RevisionId>(&*self.conn)?;
+
+            Ok(revision_id)
+        })
+    }
+
     pub async fn tags(&self, commit: PageCommit<'_>, tags: &mut [&str]) -> Result<RevisionId> {
-        info!("Starting transaction for page tags");
+        info!("Modifying tags for {:?}: {:?}", commit, tags);
 
         let PageCommit {
             wiki_id,
