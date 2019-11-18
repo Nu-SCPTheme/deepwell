@@ -258,8 +258,8 @@ impl RevisionStore {
             content.map(|b| b.len()).unwrap_or(0),
         );
 
-        let _guard = self.lock.write();
         check_normal!(slug);
+        let _guard = self.lock.write();
 
         if let Some(content) = content {
             self.write_file(slug, content).await?;
@@ -310,9 +310,9 @@ impl RevisionStore {
     ) -> Result<GitHash> {
         info!("Renaming file for slug '{}' -> '{}'", old_slug, new_slug);
 
-        let _guard = self.lock.write();
         check_normal!(old_slug);
         check_normal!(new_slug);
+        let _guard = self.lock.write();
 
         let new_path = self.get_path(new_slug, true);
         if new_path.exists() {
@@ -338,8 +338,8 @@ impl RevisionStore {
     pub async fn remove(&self, slug: &str, info: CommitInfo<'_>) -> Result<Option<GitHash>> {
         info!("Removing file for slug '{}' (info: {:?})", slug, info);
 
-        let _guard = self.lock.write();
         check_normal!(slug);
+        let _guard = self.lock.write();
 
         let removed = self.remove_file(slug).await?;
         if removed.is_none() {
@@ -362,8 +362,8 @@ impl RevisionStore {
     pub async fn get_page(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
         info!("Getting page content for slug '{}'", slug);
 
-        let _guard = self.lock.read();
         check_normal!(slug);
+        let _guard = self.lock.read();
 
         let contents = self.read_file(slug).await?;
         Ok(contents)
@@ -377,8 +377,8 @@ impl RevisionStore {
             slug, hash,
         );
 
-        let _guard = self.lock.read();
         check_normal!(slug);
+        let _guard = self.lock.read();
 
         let path = self.get_path(slug, false);
         let spec = format!("{}:{}", hash, path.display());
@@ -404,8 +404,8 @@ impl RevisionStore {
             slug, first, second,
         );
 
-        let _guard = self.lock.read();
         check_normal!(slug);
+        let _guard = self.lock.read();
         let path = self.get_path(slug, false);
 
         let args = arguments![
@@ -427,8 +427,8 @@ impl RevisionStore {
     pub async fn get_blame(&self, slug: &str, hash: Option<&GitHash>) -> Result<Option<Blame>> {
         info!("Getting blame for slug '{}'", slug);
 
-        let _guard = self.lock.read();
         check_normal!(slug);
+        let _guard = self.lock.read();
         let path = self.get_path(slug, false);
 
         let args = match hash {

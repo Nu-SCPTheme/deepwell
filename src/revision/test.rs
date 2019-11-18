@@ -399,6 +399,7 @@ async fn thread_internal() {
     let rc2 = Arc::clone(&rc);
     thread::spawn(move || {
         let (_, store) = &*rc2;
+
         task::block_on(async {
             store.commit("test-1", Some(b"abc"), info).await.unwrap();
         });
@@ -407,6 +408,7 @@ async fn thread_internal() {
     let rc2 = Arc::clone(&rc);
     thread::spawn(move || {
         let (_, store) = &*rc2;
+
         task::block_on(async {
             store.commit("test-2", Some(b"def"), info).await.unwrap();
         });
@@ -415,6 +417,7 @@ async fn thread_internal() {
     let rc2 = Arc::clone(&rc);
     thread::spawn(move || {
         let (_, store) = &*rc2;
+
         task::block_on(async {
             store.commit("test-3", Some(b"ghi"), info).await.unwrap();
         });
