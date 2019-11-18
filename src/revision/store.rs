@@ -159,7 +159,12 @@ impl RevisionStore {
         Ok(Some(bytes))
     }
 
-    async fn write_file(&self, _guard: &mut RevisionBlock, slug: &str, content: &[u8]) -> Result<()> {
+    async fn write_file(
+        &self,
+        _guard: &mut RevisionBlock,
+        slug: &str,
+        content: &[u8],
+    ) -> Result<()> {
         let path = self.get_path(slug, true);
 
         debug!("Writing {} bytes to {}", content.len(), path.display());
