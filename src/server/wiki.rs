@@ -74,6 +74,16 @@ impl Server {
         .await
     }
 
+    /// Gets information about the wiki with the given ID
+    pub async fn get_wiki(&self, id: WikiId) -> Result<Wiki> {
+        self.wiki
+            .get_by_id(id, |wiki| match wiki {
+                Some(wiki) => Ok(wiki.clone()),
+                None => Err(Error::WikiNotFound),
+            })
+            .await
+    }
+
     /// Gets the wiki ID with the given slug.
     /// Returns an error if the wiki doesn't exist.
     pub async fn get_wiki_id<S: Into<String>>(&self, slug: S) -> Result<WikiId> {

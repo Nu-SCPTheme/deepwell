@@ -96,6 +96,7 @@ macro_rules! impl_async_transaction {
     ($name:tt) => {
         impl $name {
             #[inline]
+            #[allow(dead_code)]
             async fn transaction<F, T>(&self, f: F) -> Result<T>
             where
                 F: Future<Output = Result<T>>,
