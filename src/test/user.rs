@@ -41,19 +41,23 @@ async fn user_service_internal(handle: &Handle) {
         location: Some("Earth"),
     };
 
-    handle.edit_user(user_id, metadata)
+    handle
+        .edit_user(user_id, metadata)
         .await
         .expect("Unable to edit user");
 
-    handle.verify_user(user_id)
+    handle
+        .verify_user(user_id)
         .await
         .expect("Unable to mark user as verified");
 
-    handle.mark_user_inactive(user_id)
+    handle
+        .mark_user_inactive(user_id)
         .await
         .expect("Unable to mark user as inactive");
 
-    handle.mark_user_active(user_id)
+    handle
+        .mark_user_active(user_id)
         .await
         .expect("Unable to reactivate user");
 
@@ -72,7 +76,8 @@ async fn user_service_internal(handle: &Handle) {
         location: Some("Earth"),
     };
 
-    handle.edit_user(user_id_2, metadata)
+    handle
+        .edit_user(user_id_2, metadata)
         .await
         .expect("Unable to edit second user");
 

@@ -38,7 +38,8 @@ async fn author_service_internal(handle: &Handle) {
             .await
             .expect("Unable to create user");
 
-        handle.get_user_from_id(user_id)
+        handle
+            .get_user_from_id(user_id)
             .await
             .expect("Unable to get user")
     };
@@ -53,7 +54,8 @@ async fn author_service_internal(handle: &Handle) {
             .await
             .expect("Unable to create user");
 
-        handle.get_user_from_id(user_id)
+        handle
+            .get_user_from_id(user_id)
             .await
             .expect("Unable to get user")
     };
@@ -94,16 +96,17 @@ async fn author_service_internal(handle: &Handle) {
     assert_eq!(authors[0].page_id(), page_id);
     assert_eq!(authors[0].author_type(), AuthorType::Author);
 
-    handle.add_page_authors(
-        page,
-        &[
-            (user_1.id(), AuthorType::Rewrite, None),
-            (user_2.id(), AuthorType::Translator, None),
-            (user_3.id(), AuthorType::Author, None),
-        ],
-    )
-    .await
-    .expect("Unable to add authors");
+    handle
+        .add_page_authors(
+            page,
+            &[
+                (user_1.id(), AuthorType::Rewrite, None),
+                (user_2.id(), AuthorType::Translator, None),
+                (user_3.id(), AuthorType::Author, None),
+            ],
+        )
+        .await
+        .expect("Unable to add authors");
 
     let authors = handle
         .get_page_authors(page)

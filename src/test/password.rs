@@ -28,7 +28,8 @@ fn password_service() {
 async fn password_service_internal(handle: &Handle) {
     macro_rules! good_password {
         ($user_id:expr, $password:expr) => {
-            handle.validate_user_password($user_id, $password)
+            handle
+                .validate_user_password($user_id, $password)
                 .expect("Password doesn't match")
         };
     }
@@ -58,7 +59,8 @@ async fn password_service_internal(handle: &Handle) {
     bad_password!(user_id, "rustybirb1");
     bad_password!(user_id, "letmein");
 
-    handle.set_user_password(user_id, "rustybirb1")
+    handle
+        .set_user_password(user_id, "rustybirb1")
         .expect("Unable to set new password");
 
     bad_password!(user_id, "blackmoonhowls");

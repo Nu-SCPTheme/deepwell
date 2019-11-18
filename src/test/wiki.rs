@@ -31,16 +31,21 @@ async fn wiki_service_internal(handle: &Handle) {
         .await
         .expect("Unable to create wiki");
 
-    handle.rename_wiki(wiki_id, "NUTTEST")
+    handle
+        .rename_wiki(wiki_id, "NUTTEST")
         .await
         .expect("Unable to rename wiki");
 
-    handle.set_wiki_domain(wiki_id, "example.org")
+    handle
+        .set_wiki_domain(wiki_id, "example.org")
         .await
         .expect("Unable to change domain");
 
     {
-        let id = handle.get_wiki_id("test").await.expect("Couldn't find wiki");
+        let id = handle
+            .get_wiki_id("test")
+            .await
+            .expect("Couldn't find wiki");
         assert_eq!(id, wiki_id);
     }
 

@@ -37,7 +37,10 @@ async fn page_service_internal(handle: &Handle) {
         .await
         .expect("Unable to create wiki");
 
-    assert_eq!(handle.check_page(wiki_id, "tale-here").await.unwrap(), false);
+    assert_eq!(
+        handle.check_page(wiki_id, "tale-here").await.unwrap(),
+        false
+    );
 
     let commit = PageCommit {
         wiki_id,
@@ -53,15 +56,16 @@ async fn page_service_internal(handle: &Handle) {
 
     assert_eq!(handle.check_page(wiki_id, "tale-here").await.unwrap(), true);
 
-    handle.rename_page(
-        wiki_id,
-        "tale-here",
-        "amazing-battle",
-        "I like this name better",
-        &user,
-    )
-    .await
-    .expect("Unable to rename page");
+    handle
+        .rename_page(
+            wiki_id,
+            "tale-here",
+            "amazing-battle",
+            "I like this name better",
+            &user,
+        )
+        .await
+        .expect("Unable to rename page");
 
     let commit = PageCommit {
         wiki_id,
@@ -70,16 +74,20 @@ async fn page_service_internal(handle: &Handle) {
         user: &user,
     };
 
-    handle.edit_page(
-        commit,
-        None,
-        Some("Amazing Take-down of 682!"),
-        Some("049 appears too"),
-    )
-    .await
-    .expect("Unable to edit page");
+    handle
+        .edit_page(
+            commit,
+            None,
+            Some("Amazing Take-down of 682!"),
+            Some("049 appears too"),
+        )
+        .await
+        .expect("Unable to edit page");
 
-    assert_eq!(handle.check_page(wiki_id, "tale-here").await.unwrap(), false);
+    assert_eq!(
+        handle.check_page(wiki_id, "tale-here").await.unwrap(),
+        false
+    );
     assert_eq!(
         handle.check_page(wiki_id, "amazing-battle").await.unwrap(),
         true
@@ -92,12 +100,19 @@ async fn page_service_internal(handle: &Handle) {
         user: &user,
     };
 
-    handle.remove_page(commit)
+    handle
+        .remove_page(commit)
         .await
         .expect("Unable to remove page");
 
-    assert_eq!(handle.check_page(wiki_id, "nonexistent").await.unwrap(), false);
-    assert_eq!(handle.check_page(wiki_id, "tale-here").await.unwrap(), false);
+    assert_eq!(
+        handle.check_page(wiki_id, "nonexistent").await.unwrap(),
+        false
+    );
+    assert_eq!(
+        handle.check_page(wiki_id, "tale-here").await.unwrap(),
+        false
+    );
     assert_eq!(
         handle.check_page(wiki_id, "amazing-battle").await.unwrap(),
         false

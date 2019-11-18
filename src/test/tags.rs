@@ -38,7 +38,8 @@ async fn tags_internal(handle: &Handle) {
             .await
             .expect("Unable to create user");
 
-        handle.get_user_from_id(user_id)
+        handle
+            .get_user_from_id(user_id)
             .await
             .expect("Unable to get user")
     };
@@ -73,7 +74,8 @@ async fn tags_internal(handle: &Handle) {
         user: &user_1,
     };
 
-    handle.set_page_tags(commit, &["_image"])
+    handle
+        .set_page_tags(commit, &["_image"])
         .await
         .expect("Unable to set page tags");
 
@@ -84,12 +86,13 @@ async fn tags_internal(handle: &Handle) {
         user: &user_2,
     };
 
-    handle.set_page_tags(
-        commit,
-        &["scp", "keter", "_image", "ontokinetic", "artifact"],
-    )
-    .await
-    .expect("Unable to set page tags");
+    handle
+        .set_page_tags(
+            commit,
+            &["scp", "keter", "_image", "ontokinetic", "artifact"],
+        )
+        .await
+        .expect("Unable to set page tags");
 
     let commit = PageCommit {
         wiki_id,
@@ -98,7 +101,8 @@ async fn tags_internal(handle: &Handle) {
         user: &user_1,
     };
 
-    handle.set_page_tags(commit, &["scp", "keter", "artifact", "ontokinetic", "_cc"])
+    handle
+        .set_page_tags(commit, &["scp", "keter", "artifact", "ontokinetic", "_cc"])
         .await
         .expect("Unable to set page tags");
 
@@ -109,20 +113,21 @@ async fn tags_internal(handle: &Handle) {
         user: &user_2,
     };
 
-    handle.set_page_tags(
-        commit,
-        &[
-            "scp",
-            "keter",
-            "artifact",
-            "ontokinetic",
-            "_cc",
-            "chaos-insurgency",
-            "ethics-committee",
-        ],
-    )
-    .await
-    .expect("Unable to set page tags");
+    handle
+        .set_page_tags(
+            commit,
+            &[
+                "scp",
+                "keter",
+                "artifact",
+                "ontokinetic",
+                "_cc",
+                "chaos-insurgency",
+                "ethics-committee",
+            ],
+        )
+        .await
+        .expect("Unable to set page tags");
 
     let (page, _) = handle
         .get_page(wiki_id, "scp-xxxx")
