@@ -22,11 +22,11 @@ use super::prelude::*;
 
 #[test]
 fn user_service() {
-    run(|handle| task::block_on(user_service_internal(handle)));
+    run(|server| task::block_on(user_service_internal(server)));
 }
 
-async fn user_service_internal(handle: &Server) {
-    let user_id = handle
+async fn user_service_internal(server: &Server) {
+    let user_id = server
         .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
         .await
         .expect("Unable to create user");
@@ -41,27 +41,27 @@ async fn user_service_internal(handle: &Server) {
         location: Some("Earth"),
     };
 
-    handle
+    server
         .edit_user(user_id, metadata)
         .await
         .expect("Unable to edit user");
 
-    handle
+    server
         .verify_user(user_id)
         .await
         .expect("Unable to mark user as verified");
 
-    handle
+    server
         .mark_user_inactive(user_id)
         .await
         .expect("Unable to mark user as inactive");
 
-    handle
+    server
         .mark_user_active(user_id)
         .await
         .expect("Unable to reactivate user");
 
-    let user_id_2 = handle
+    let user_id_2 = server
         .create_user("otheruser", "jeremy@example.net", "superstrongpassword")
         .await
         .expect("Unable to create second user");
@@ -76,23 +76,23 @@ async fn user_service_internal(handle: &Server) {
         location: Some("Earth"),
     };
 
-    handle
+    server
         .edit_user(user_id_2, metadata)
         .await
         .expect("Unable to edit second user");
 
-    let user_1 = handle
+    let user_1 = server
         .get_user_from_name("Jenny Person")
         .await
         .expect("Unable to get user by username")
         .expect("No such user with this name");
 
-    let user_2 = handle
+    let user_2 = server
         .get_user_from_id(user_id_2)
         .await
         .expect("Unable to get user from ID");
 
-    let users = handle
+    let users = server
         .get_users_from_ids(&[user_id, UserId::from_raw(9999), user_id_2])
         .await
         .expect("Unable to get multiple users");

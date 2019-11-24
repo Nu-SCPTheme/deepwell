@@ -22,29 +22,29 @@ use super::prelude::*;
 
 #[test]
 fn tags() {
-    run(|handle| task::block_on(tags_internal(handle)));
+    run(|server| task::block_on(tags_internal(server)));
 }
 
-async fn tags_internal(handle: &Server) {
-    let user_1 = handle
+async fn tags_internal(server: &Server) {
+    let user_1 = server
         .get_user_from_name("unknown")
         .await
         .expect("Unable to get user")
         .expect("Default user not found");
 
     let user_2 = {
-        let user_id = handle
+        let user_id = server
             .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
             .await
             .expect("Unable to create user");
 
-        handle
+        server
             .get_user_from_id(user_id)
             .await
             .expect("Unable to get user")
     };
 
-    let wiki_id = handle
+    let wiki_id = server
         .create_wiki("Test", "test", "example.org")
         .await
         .expect("Unable to create wiki");
@@ -56,7 +56,7 @@ async fn tags_internal(handle: &Server) {
         user: &user_1,
     };
 
-    let (_page_id, _revision_id) = handle
+    let (_page_id, _revision_id) = server
         .create_page(
             commit,
             b"**Item #:** SCP-XXXX\n\n**Object Class:** Keter\n",
@@ -74,7 +74,7 @@ async fn tags_internal(handle: &Server) {
         user: &user_1,
     };
 
-    handle
+    server
         .set_page_tags(commit, &["_image"])
         .await
         .expect("Unable to set page tags");
@@ -86,7 +86,7 @@ async fn tags_internal(handle: &Server) {
         user: &user_2,
     };
 
-    handle
+    server
         .set_page_tags(
             commit,
             &["scp", "keter", "_image", "ontokinetic", "artifact"],
@@ -101,7 +101,7 @@ async fn tags_internal(handle: &Server) {
         user: &user_1,
     };
 
-    handle
+    server
         .set_page_tags(commit, &["scp", "keter", "artifact", "ontokinetic", "_cc"])
         .await
         .expect("Unable to set page tags");
@@ -113,7 +113,7 @@ async fn tags_internal(handle: &Server) {
         user: &user_2,
     };
 
-    handle
+    server
         .set_page_tags(
             commit,
             &[
@@ -129,7 +129,7 @@ async fn tags_internal(handle: &Server) {
         .await
         .expect("Unable to set page tags");
 
-    let (page, _) = handle
+    let (page, _) = server
         .get_page(wiki_id, "scp-xxxx")
         .await
         .expect("Unable to get page")
@@ -155,14 +155,14 @@ async fn tags_internal(handle: &Server) {
 
     // Query by page tags
 
-    let pages = handle
+    let pages = server
         .get_pages_with_tags(wiki_id, &[])
         .await
         .expect("Unable to get pages from tags");
 
     assert!(pages.is_empty());
 
-    let pages = handle
+    let pages = server
         .get_pages_with_tags(wiki_id, &["keter"])
         .await
         .expect("Unable to get pages from tags");
@@ -170,7 +170,7 @@ async fn tags_internal(handle: &Server) {
     assert_eq!(pages.len(), 1);
     assert_eq!(pages[0].id(), page.id());
 
-    let pages = handle
+    let pages = server
         .get_pages_with_tags(wiki_id, &["keter", "ontokinetic"])
         .await
         .expect("Unable to get pages from tags");
@@ -178,7 +178,7 @@ async fn tags_internal(handle: &Server) {
     assert_eq!(pages.len(), 1);
     assert_eq!(pages[0].id(), page.id());
 
-    let pages = handle
+    let pages = server
         .get_pages_with_tags(wiki_id, &["ontokinetic", "keter"])
         .await
         .expect("Unable to get pages from tags");
@@ -186,7 +186,7 @@ async fn tags_internal(handle: &Server) {
     assert_eq!(pages.len(), 1);
     assert_eq!(pages[0].id(), page.id());
 
-    let pages = handle
+    let pages = server
         .get_pages_with_tags(wiki_id, &["esoteric-class", "ontokinetic"])
         .await
         .expect("Unable to get pages from tags");

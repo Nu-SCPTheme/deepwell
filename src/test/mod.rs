@@ -52,10 +52,10 @@ pub fn run(f: fn(&Server)) {
         password_blacklist: None,
     };
 
-    let handle = Server::new(config).expect("Unable to create deepwell handle");
+    let server = Server::new(config).expect("Unable to create deepwell server");
 
-    handle.test_transaction(|| {
-        f(&handle);
+    server.test_transaction(|| {
+        f(&server);
         Ok(())
     });
 }

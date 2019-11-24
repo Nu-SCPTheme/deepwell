@@ -22,24 +22,24 @@ use super::prelude::*;
 
 #[test]
 fn page_service() {
-    run(|handle| task::block_on(page_service_internal(handle)));
+    run(|server| task::block_on(page_service_internal(server)));
 }
 
-async fn page_service_internal(handle: &Server) {
+async fn page_service_internal(server: &Server) {
     // Setup
-    let user = handle
+    let user = server
         .get_user_from_name("unknown")
         .await
         .expect("Unable to get user")
         .expect("Default user not found");
 
-    let wiki_id = handle
+    let wiki_id = server
         .create_wiki("Test", "test", "example.org")
         .await
         .expect("Unable to create wiki");
 
     assert_eq!(
-        handle.check_page(wiki_id, "tale-here").await.unwrap(),
+        server.check_page(wiki_id, "tale-here").await.unwrap(),
         false
     );
 
@@ -51,15 +51,15 @@ async fn page_service_internal(handle: &Server) {
         user: &user,
     };
 
-    let (page_id, _revision_id) = handle
+    let (page_id, _revision_id) = server
         .create_page(commit, b"my great article here", &[], "Tale Thing", "")
         .await
         .expect("Unable to create page");
 
-    assert_eq!(handle.check_page(wiki_id, "tale-here").await.unwrap(), true);
+    assert_eq!(server.check_page(wiki_id, "tale-here").await.unwrap(), true);
 
     // Rename and edits
-    handle
+    server
         .rename_page(
             wiki_id,
             "tale-here",
@@ -77,7 +77,7 @@ async fn page_service_internal(handle: &Server) {
         user: &user,
     };
 
-    handle
+    server
         .edit_page(
             commit,
             None,
@@ -88,11 +88,11 @@ async fn page_service_internal(handle: &Server) {
         .expect("Unable to edit page");
 
     assert_eq!(
-        handle.check_page(wiki_id, "tale-here").await.unwrap(),
+        server.check_page(wiki_id, "tale-here").await.unwrap(),
         false
     );
     assert_eq!(
-        handle.check_page(wiki_id, "amazing-battle").await.unwrap(),
+        server.check_page(wiki_id, "amazing-battle").await.unwrap(),
         true
     );
 
@@ -103,7 +103,7 @@ async fn page_service_internal(handle: &Server) {
         user: &user,
     };
 
-    let revision_id = handle
+    let revision_id = server
         .edit_page(
             commit,
             Some(b"and then 049 cured him!! it was epic"),
@@ -120,7 +120,7 @@ async fn page_service_internal(handle: &Server) {
         user: &user,
     };
 
-    handle
+    server
         .undo_revision(commit, Left(revision_id))
         .await
         .expect("Unable to undo page revision");
@@ -133,21 +133,21 @@ async fn page_service_internal(handle: &Server) {
         user: &user,
     };
 
-    handle
+    server
         .remove_page(commit)
         .await
         .expect("Unable to remove page");
 
     assert_eq!(
-        handle.check_page(wiki_id, "nonexistent").await.unwrap(),
+        server.check_page(wiki_id, "nonexistent").await.unwrap(),
         false
     );
     assert_eq!(
-        handle.check_page(wiki_id, "tale-here").await.unwrap(),
+        server.check_page(wiki_id, "tale-here").await.unwrap(),
         false
     );
     assert_eq!(
-        handle.check_page(wiki_id, "amazing-battle").await.unwrap(),
+        server.check_page(wiki_id, "amazing-battle").await.unwrap(),
         false
     );
 
@@ -159,17 +159,17 @@ async fn page_service_internal(handle: &Server) {
     };
 
     // Restore page
-    handle
+    server
         .restore_page(commit, Some(page_id))
         .await
         .expect("Unable to restore page");
 
     assert_eq!(
-        handle.check_page(wiki_id, "tale-here").await.unwrap(),
+        server.check_page(wiki_id, "tale-here").await.unwrap(),
         false
     );
     assert_eq!(
-        handle.check_page(wiki_id, "amazing-battle").await.unwrap(),
+        server.check_page(wiki_id, "amazing-battle").await.unwrap(),
         true
     );
 }
