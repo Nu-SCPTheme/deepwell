@@ -22,11 +22,11 @@ use super::prelude::*;
 use crate::author::AuthorType;
 
 #[test]
-fn author_service() {
-    run(|server| task::block_on(author_service_internal(server)));
+fn author_manager() {
+    run(|server| task::block_on(author_manager_internal(server)));
 }
 
-async fn author_service_internal(server: &Server) {
+async fn author_manager_internal(server: &Server) {
     let wiki_id = server
         .create_wiki("Test", "test", "example.org")
         .await

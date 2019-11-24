@@ -21,11 +21,11 @@
 use super::prelude::*;
 
 #[test]
-fn page_service() {
-    run(|server| task::block_on(page_service_internal(server)));
+fn page_manager() {
+    run(|server| task::block_on(page_manager_internal(server)));
 }
 
-async fn page_service_internal(server: &Server) {
+async fn page_manager_internal(server: &Server) {
     // Setup
     let user = server
         .get_user_from_name("unknown")

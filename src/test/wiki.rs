@@ -21,11 +21,11 @@
 use super::prelude::*;
 
 #[test]
-fn wiki_service() {
-    run(|server| task::block_on(wiki_service_internal(server)));
+fn wiki_manager() {
+    run(|server| task::block_on(wiki_manager_internal(server)));
 }
 
-async fn wiki_service_internal(server: &Server) {
+async fn wiki_manager_internal(server: &Server) {
     let wiki_id = server
         .create_wiki("Test Wiki", "test", "example.com")
         .await

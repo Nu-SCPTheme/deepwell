@@ -21,11 +21,11 @@
 use super::prelude::*;
 
 #[test]
-fn password_service() {
-    run(|server| task::block_on(password_service_internal(server)));
+fn password_manager() {
+    run(|server| task::block_on(password_manager_internal(server)));
 }
 
-async fn password_service_internal(server: &Server) {
+async fn password_manager_internal(server: &Server) {
     macro_rules! good_password {
         ($user_id:expr, $password:expr) => {
             server

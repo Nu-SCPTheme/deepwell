@@ -21,11 +21,11 @@
 use super::prelude::*;
 
 #[test]
-fn user_service() {
-    run(|server| task::block_on(user_service_internal(server)));
+fn user_manager() {
+    run(|server| task::block_on(user_manager_internal(server)));
 }
 
-async fn user_service_internal(server: &Server) {
+async fn user_manager_internal(server: &Server) {
     let user_id = server
         .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
         .await
