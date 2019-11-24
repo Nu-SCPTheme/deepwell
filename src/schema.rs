@@ -22,6 +22,7 @@ table! {
         attempted_at -> Timestamptz,
         user_id -> Int8,
         ip_address -> Inet,
+        success -> Bool,
     }
 }
 

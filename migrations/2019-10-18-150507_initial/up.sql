@@ -34,7 +34,8 @@ CREATE TABLE sessions (
 CREATE TABLE login_attempts (
     attempted_at TIMESTAMP WITH TIME ZONE PRIMARY KEY DEFAULT NOW(),
     user_id BIGSERIAL REFERENCES users(user_id),
-    ip_address INET NOT NULL
+    ip_address INET NOT NULL,
+    success BOOLEAN NOT NULL
 );
 
 -- Wikis and wiki settings
