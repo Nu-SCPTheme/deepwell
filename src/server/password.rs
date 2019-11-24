@@ -1,5 +1,5 @@
 /*
- * handle/password.rs
+ * server/password.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -21,7 +21,7 @@
 use crate::service_prelude::*;
 use async_std::task;
 
-impl Handle {
+impl Server {
     /// Sets or overwrites the given user's password.
     #[inline]
     pub fn set_user_password(&self, user_id: UserId, password: &str) -> Result<()> {

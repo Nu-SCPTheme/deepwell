@@ -1,5 +1,5 @@
 /*
- * handle/revision.rs
+ * server/revision.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -21,7 +21,7 @@
 use super::utils::normalize_slug;
 use crate::service_prelude::*;
 
-impl Handle {
+impl Server {
     /// Get the version of a page at the specified revision.
     #[inline]
     pub async fn get_page_version(

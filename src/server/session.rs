@@ -1,5 +1,5 @@
 /*
- * handle/session.rs
+ * server/session.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -21,7 +21,7 @@
 use crate::service_prelude::*;
 use crate::session::Session;
 
-impl Handle {
+impl Server {
     /// Checks if a given token is valid for the given user.
     #[inline]
     pub async fn check_token(&self, user_id: UserId, token: &str) -> Result<()> {

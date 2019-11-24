@@ -1,5 +1,5 @@
 /*
- * handle/mod.rs
+ * server/mod.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -47,7 +47,7 @@ pub struct Config<'a> {
     pub password_blacklist: Option<&'a Path>,
 }
 
-pub struct Handle {
+pub struct Server {
     conn: Arc<PgConnection>,
     author: AuthorService,
     page: PageService,
@@ -58,9 +58,9 @@ pub struct Handle {
     wiki: WikiService,
 }
 
-impl Handle {
+impl Server {
     pub fn new(config: Config) -> Result<Self> {
-        info!("Creating diesel::Handle, establishing connection to Postgres");
+        info!("Creating deepwell::Server, establishing connection to Postgres");
 
         let Config {
             database_url,
@@ -85,7 +85,7 @@ impl Handle {
         let user = UserService::new(&conn);
         let wiki = WikiService::new(&conn)?;
 
-        Ok(Handle {
+        Ok(Server {
             author,
             conn,
             page,
@@ -106,11 +106,11 @@ impl Handle {
     }
 }
 
-impl_async_transaction!(Handle);
+impl_async_transaction!(Server);
 
-impl Debug for Handle {
+impl Debug for Server {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("diesel::Handle")
+        f.debug_struct("deepwell::Server")
             .field("conn", &"PgConnection { .. }")
             .field("page", &self.page)
             .field("user", &self.user)

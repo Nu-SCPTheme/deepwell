@@ -1,5 +1,5 @@
 /*
- * handle/utils.rs
+ * server/utils.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith

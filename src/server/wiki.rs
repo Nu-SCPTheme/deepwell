@@ -1,5 +1,5 @@
 /*
- * handle/wiki.rs
+ * server/wiki.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -22,7 +22,7 @@ use super::utils::{normalize_slug, to_lowercase};
 use crate::service_prelude::*;
 use crate::wiki::UpdateWiki;
 
-impl Handle {
+impl Server {
     /// Creates a new wiki with the given parameters. Returns its ID.
     pub async fn create_wiki<S1, S2>(&self, name: &str, slug: S1, domain: S2) -> Result<WikiId>
     where

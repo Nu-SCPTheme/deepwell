@@ -1,5 +1,5 @@
 /*
- * handle/rating.rs
+ * server/rating.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -21,7 +21,7 @@
 use crate::rating::{RatingHistory, RatingId};
 use crate::service_prelude::*;
 
-impl Handle {
+impl Server {
     /// Sets the rating for a given page and user.
     #[inline]
     pub async fn set_rating(

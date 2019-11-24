@@ -1,5 +1,5 @@
 /*
- * handle/author.rs
+ * server/author.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -22,7 +22,7 @@ use super::utils::normalize_slug;
 use crate::author::{Author, AuthorType};
 use crate::service_prelude::*;
 
-impl Handle {
+impl Server {
     async fn get_page_id<S: Into<String>>(
         &self,
         page: Either<PageId, (WikiId, S)>,
