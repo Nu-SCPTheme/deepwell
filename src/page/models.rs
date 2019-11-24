@@ -31,10 +31,12 @@ pub enum ChangeType {
     Delete,
     Restore,
     Rename,
+    Undo,
     Tags,
 }
 
 impl ChangeType {
+    // For git commit messages
     pub fn verb(&self) -> &'static str {
         use self::ChangeType::*;
 
@@ -44,12 +46,15 @@ impl ChangeType {
             Delete => "deleted",
             Restore => "restored",
             Rename => "renamed",
+            Undo => "reverted",
             Tags => "tags",
         }
     }
 }
 
 impl Into<&'static str> for ChangeType {
+    // The "enum name" used to store in the database
+    // Cannot change without a migration
     fn into(self) -> &'static str {
         use self::ChangeType::*;
 
@@ -59,6 +64,7 @@ impl Into<&'static str> for ChangeType {
             Delete => "delete",
             Restore => "restore",
             Rename => "rename",
+            Undo => "undo",
             Tags => "tags",
         }
     }

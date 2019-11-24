@@ -103,6 +103,7 @@ CREATE TABLE revisions (
             'delete',
             'restore',
             'rename',
+            'undo',
             'tags'
         )
     )

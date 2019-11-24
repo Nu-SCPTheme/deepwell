@@ -72,4 +72,7 @@ pub enum Error {
 
     #[error("the given revision was not found")]
     RevisionNotFound,
+
+    #[error("the given revision does not correspond to the specified page")]
+    RevisionPageMismatch,
 }

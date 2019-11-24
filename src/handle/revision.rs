@@ -76,4 +76,13 @@ impl Handle {
         self.page.edit_revision(revision_id, message).await
     }
 
+    /// Undoes the given revision for a page.
+    #[inline]
+    pub async fn undo_revision(
+        &self,
+        commit: PageCommit<'_>,
+        revision: Either<RevisionId, &GitHash>,
+    ) -> Result<RevisionId> {
+        self.page.undo(commit, revision).await
+    }
 }

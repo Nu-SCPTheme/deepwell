@@ -386,7 +386,7 @@ impl RevisionStore {
     ) -> Result<GitHash> {
         info!(
             "Restoring file '{}' from {} onto '{}' (info: {:?})",
-            old_slug, hash, slug, info
+            old_slug, hash, slug, info,
         );
 
         check_normal!(slug);
@@ -425,6 +425,30 @@ impl RevisionStore {
             "--",
             &path,
         ];
+        self.spawn(guard, &args).await?;
+
+        let commit = self.get_commit(guard).await?;
+        Ok(commit)
+    }
+
+    /// Reverts the given commit.
+    /// This performs a standard `git revert` but edits the message.
+    ///
+    /// This is distinct from Wikidot's notion of a "revert", which is
+    /// why it is called "undo" throughout the code.
+    pub async fn undo(&self, hash: &GitHash, info: CommitInfo<'_>) -> Result<GitHash> {
+        info!("Undoing commit {} (info: {:?})", hash, info);
+
+        let guard = &mut self.mutex.lock().await;
+
+        // Perform the revert
+        let args = arguments!["git", "revert", "--no-edit", hash];
+        self.spawn(guard, &args).await?;
+
+        // Edit the commit message
+        let author = self.arg_author(info.username).await;
+        let message = self.arg_message(info.message);
+        let args = arguments!["git", "commit", "--amend", &author, &message,];
         self.spawn(guard, &args).await?;
 
         let commit = self.get_commit(guard).await?;

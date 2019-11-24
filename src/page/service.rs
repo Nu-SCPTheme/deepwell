@@ -595,6 +595,79 @@ impl PageService {
         .await
     }
 
+    pub async fn undo(
+        &self,
+        commit: PageCommit<'_>,
+        revision: Either<RevisionId, &GitHash>,
+    ) -> Result<RevisionId> {
+        info!("Undoing revision {:?} for {:?}", revision, commit);
+
+        let PageCommit {
+            wiki_id,
+            slug,
+            message,
+            user,
+        } = commit;
+
+        self.transaction(async {
+            // Get page ID and revision ID
+            let page_id = self
+                .get_page_id(wiki_id, slug)
+                .await?
+                .ok_or(Error::PageNotFound)?;
+
+            let hash = self.commit_hash(revision).await?;
+            let user_id = user.id();
+
+            // Verify the revision is for the specified page
+            {
+                let hash: &str = hash.as_ref().as_ref();
+                let result = revisions::table
+                    .filter(revisions::dsl::git_commit.eq(hash))
+                    .select(revisions::dsl::page_id)
+                    .first::<i64>(&*self.conn)
+                    .optional()?;
+
+                let page_id: i64 = page_id.into();
+                match result {
+                    Some(id) if id == page_id => (),
+                    Some(_) => return Err(Error::RevisionPageMismatch),
+                    None => return Err(Error::PageNotFound),
+                }
+            }
+
+            // Run undo method in RevisionStore
+            let change_type = ChangeType::Undo;
+            let commit = self.commit_data(wiki_id, page_id, user_id, change_type);
+            let info = CommitInfo {
+                username: user.name(),
+                message: &commit,
+            };
+
+            let guard = self.store(wiki_id).await;
+            let store = guard.get()?;
+            let hash = store.undo(&hash, info).await?;
+
+            // Insert new revision into database
+            let model = NewRevision {
+                page_id: page_id.into(),
+                user_id: user_id.into(),
+                message,
+                git_commit: hash.as_ref(),
+                change_type: change_type.into(),
+            };
+
+            trace!("Inserting revision {:?} into revisions table", &model);
+            let revision_id = diesel::insert_into(revisions::table)
+                .values(&model)
+                .returning(revisions::dsl::revision_id)
+                .get_result::<RevisionId>(&*self.conn)?;
+
+            Ok(revision_id)
+        })
+        .await
+    }
+
     pub async fn tags(&self, commit: PageCommit<'_>, tags: &mut [&str]) -> Result<RevisionId> {
         info!("Modifying tags for {:?}: {:?}", commit, tags);
 
@@ -858,8 +931,7 @@ impl PageService {
         info!("Getting diff for wiki ID {}, slug {}", wiki_id, slug);
 
         // Get both commits
-        let (first, second) = join!(self.commit_hash(first), self.commit_hash(second),);
-
+        let (first, second) = join!(self.commit_hash(first), self.commit_hash(second));
         let (first, second) = (first?, second?);
 
         // Actually get the diff from the RevisionStore

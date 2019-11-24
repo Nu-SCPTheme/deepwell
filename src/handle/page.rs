@@ -110,7 +110,6 @@ impl Handle {
         self.page.remove(commit).await
     }
 
-
     /// Determines if a page with the given slug exists.
     #[inline]
     pub async fn check_page<S: Into<String>>(&self, wiki_id: WikiId, slug: S) -> Result<bool> {
