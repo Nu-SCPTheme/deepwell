@@ -67,4 +67,14 @@ impl Server {
     pub async fn end_session(&self, user_id: UserId) -> Result<bool> {
         self.session.revoke_token(user_id).await
     }
+
+    /// Returns all login attempts for a user since the given date.
+    #[inline]
+    pub async fn get_login_attempts(
+        &self,
+        user_id: UserId,
+        since: DateTime<Utc>,
+    ) -> Result<Vec<LoginAttempt>> {
+        self.session.get_login_attempts(user_id, since).await
+    }
 }

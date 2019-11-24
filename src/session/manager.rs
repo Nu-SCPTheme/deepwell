@@ -62,6 +62,30 @@ impl Session {
     }
 }
 
+#[derive(Debug, Queryable)]
+pub struct LoginAttempt {
+    attempted_at: DateTime<Utc>,
+    user_id: UserId,
+    ip_address: IpNetwork,
+}
+
+impl LoginAttempt {
+    #[inline]
+    pub fn attempted_at(&self) -> DateTime<Utc> {
+        self.attempted_at
+    }
+
+    #[inline]
+    pub fn user_id(&self) -> UserId {
+        self.user_id
+    }
+
+    #[inline]
+    pub fn ip_address(&self) -> IpNetwork {
+        self.ip_address
+    }
+}
+
 pub struct SessionManager {
     conn: Arc<PgConnection>,
 }
@@ -146,7 +170,7 @@ impl SessionManager {
     pub async fn add_login_attempt(&self, user_id: UserId, ip_address: IpNetwork) -> Result<()> {
         debug!(
             "Adding login attempt for user ID {} from {}",
-            user_id, ip_address
+            user_id, ip_address,
         );
 
         let model = NewLoginAttempt {
@@ -159,6 +183,26 @@ impl SessionManager {
             .execute(&*self.conn)?;
 
         Ok(())
+    }
+
+    pub async fn get_login_attempts(
+        &self,
+        user_id: UserId,
+        since: DateTime<Utc>,
+    ) -> Result<Vec<LoginAttempt>> {
+        debug!(
+            "Getting login attempts for user ID {} since {}",
+            user_id, since,
+        );
+
+        let id: i64 = user_id.into();
+        let attempts = login_attempts::table
+            .filter(login_attempts::attempted_at.gt(since))
+            .filter(login_attempts::user_id.eq(id))
+            .order_by(login_attempts::attempted_at.desc())
+            .get_results::<LoginAttempt>(&*self.conn)?;
+
+        Ok(attempts)
     }
 }
 
