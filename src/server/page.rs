@@ -188,8 +188,17 @@ impl Server {
         commit: PageCommit<'_>,
         tags: &[S],
     ) -> Result<RevisionId> {
+        // Allow tags to be sorted before insertion
         let mut tags = tags.iter().map(|tag| tag.as_ref()).collect::<Vec<&str>>();
 
         self.page.tags(commit, &mut tags).await
+    }
+
+    /// Gets all pages which have at least the given tags.
+    ///
+    /// Returns an empty set if no tags are passed in.
+    #[inline]
+    pub async fn get_pages_with_tags(&self, wiki_id: WikiId, tags: &[&str]) -> Result<Vec<Page>> {
+        self.page.get_pages_with_tags(wiki_id, tags).await
     }
 }

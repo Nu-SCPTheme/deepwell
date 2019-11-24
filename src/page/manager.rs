@@ -747,6 +747,24 @@ impl PageManager {
         .await
     }
 
+    pub async fn get_pages_with_tags(&self, wiki_id: WikiId, tags: &[&str]) -> Result<Vec<Page>> {
+        info!("Getting all pages which contain tags: {:?}", tags);
+
+        if tags.is_empty() {
+            warn!("Tag list was empty, returning nothing");
+            return Ok(Vec::new());
+        }
+
+        let id: i64 = wiki_id.into();
+        let pages = pages::table
+            .filter(pages::tags.is_contained_by(tags))
+            .filter(pages::wiki_id.eq(id))
+            .filter(pages::deleted_at.is_null())
+            .get_results::<Page>(&*self.conn)?;
+
+        Ok(pages)
+    }
+
     pub async fn check_page(&self, wiki_id: WikiId, slug: &str) -> Result<bool> {
         info!(
             "Checking if page for exists in wiki ID {}, slug {} exists",
