@@ -101,6 +101,7 @@ CREATE TABLE revisions (
             'create',
             'modify',
             'delete',
+            'restore',
             'rename',
             'tags'
         )

@@ -49,7 +49,7 @@ async fn page_service_internal(handle: &Handle) {
         user: &user,
     };
 
-    let (_page_id, _revision_id) = handle
+    let (page_id, _revision_id) = handle
         .create_page(commit, b"my great article here", &[], "Tale Thing", "")
         .await
         .expect("Unable to create page");
@@ -116,5 +116,26 @@ async fn page_service_internal(handle: &Handle) {
     assert_eq!(
         handle.check_page(wiki_id, "amazing-battle").await.unwrap(),
         false
+    );
+
+    let commit = PageCommit {
+        wiki_id,
+        slug: &"amazing-battle",
+        message: "Un-delete by moderator order",
+        user: &user,
+    };
+
+    handle
+        .restore_page(commit, Some(page_id))
+        .await
+        .expect("Unable to restore page");
+
+    assert_eq!(
+        handle.check_page(wiki_id, "tale-here").await.unwrap(),
+        false
+    );
+    assert_eq!(
+        handle.check_page(wiki_id, "amazing-battle").await.unwrap(),
+        true
     );
 }

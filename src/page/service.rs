@@ -578,6 +578,18 @@ impl PageService {
                 .returning(revisions::dsl::revision_id)
                 .get_result::<RevisionId>(&*self.conn)?;
 
+            trace!("Removing deletion marker from pages table");
+            {
+                use self::pages::dsl;
+
+                let id: i64 = page_id.into();
+                let null: Option<DateTime<Utc>> = None;
+
+                diesel::update(dsl::pages.filter(dsl::page_id.eq(id)))
+                    .set(dsl::deleted_at.eq(null))
+                    .execute(&*self.conn)?;
+            }
+
             Ok(revision_id)
         })
         .await
