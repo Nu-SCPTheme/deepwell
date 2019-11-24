@@ -366,7 +366,7 @@ impl RevisionStore {
 
         let author = self.arg_author(info.username).await;
         let message = self.arg_message(info.message);
-        let args = arguments!["git", "commit", &author, &message, "--", &new_path];
+        let args = arguments!["git", "commit", &author, &message, "--", &old_path, &new_path];
         self.spawn(guard, &args).await?;
 
         let commit = self.get_commit(guard).await?;
