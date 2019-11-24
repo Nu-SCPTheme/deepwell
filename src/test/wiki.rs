@@ -25,7 +25,7 @@ fn wiki_service() {
     run(|handle| task::block_on(wiki_service_internal(handle)));
 }
 
-async fn wiki_service_internal(handle: &Handle) {
+async fn wiki_service_internal(handle: &Server) {
     let wiki_id = handle
         .create_wiki("Test Wiki", "test", "example.com")
         .await

@@ -25,7 +25,7 @@ fn page_service() {
     run(|handle| task::block_on(page_service_internal(handle)));
 }
 
-async fn page_service_internal(handle: &Handle) {
+async fn page_service_internal(handle: &Server) {
     // Setup
     let user = handle
         .get_user_from_name("unknown")

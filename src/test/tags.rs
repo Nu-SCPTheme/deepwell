@@ -25,7 +25,7 @@ fn tags() {
     run(|handle| task::block_on(tags_internal(handle)));
 }
 
-async fn tags_internal(handle: &Handle) {
+async fn tags_internal(handle: &Server) {
     let user_1 = handle
         .get_user_from_name("unknown")
         .await

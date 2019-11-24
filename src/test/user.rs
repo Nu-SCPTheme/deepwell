@@ -25,7 +25,7 @@ fn user_service() {
     run(|handle| task::block_on(user_service_internal(handle)));
 }
 
-async fn user_service_internal(handle: &Handle) {
+async fn user_service_internal(handle: &Server) {
     let user_id = handle
         .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
         .await

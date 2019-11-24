@@ -39,7 +39,7 @@ mod prelude {
     pub use either::*;
 }
 
-pub fn run(f: fn(&Handle)) {
+pub fn run(f: fn(&Server)) {
     color_backtrace::install();
 
     let database_url = &env::var("DATABASE_URL").expect("No DATABASE_URL specified!");
@@ -52,7 +52,7 @@ pub fn run(f: fn(&Handle)) {
         password_blacklist: None,
     };
 
-    let handle = Handle::new(config).expect("Unable to create deepwell handle");
+    let handle = Server::new(config).expect("Unable to create deepwell handle");
 
     handle.test_transaction(|| {
         f(&handle);

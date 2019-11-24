@@ -25,7 +25,7 @@ fn password_service() {
     run(|handle| task::block_on(password_service_internal(handle)));
 }
 
-async fn password_service_internal(handle: &Handle) {
+async fn password_service_internal(handle: &Server) {
     macro_rules! good_password {
         ($user_id:expr, $password:expr) => {
             handle
@@ -73,7 +73,7 @@ fn password_default() {
     run(|handle| task::block_on(password_default_internal(handle)));
 }
 
-async fn password_default_internal(handle: &Handle) {
+async fn password_default_internal(handle: &Server) {
     macro_rules! bad_password {
         ($user_id:expr, $password:expr) => {{
             let user_id = UserId::from_raw($user_id);
