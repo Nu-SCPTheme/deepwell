@@ -226,9 +226,9 @@ impl RevisionStore {
 
     // Git helpers
     async fn get_commit(&self, guard: &mut RevisionBlock) -> Result<GitHash> {
-        let args = arguments!["git", "rev-parse", "--verify", "HEAD"];
-
         debug!("Getting current HEAD commit");
+
+        let args = arguments!["git", "rev-parse", "--verify", "HEAD"];
 
         let digest_bytes = self.spawn_output(guard, &args).await?;
         let digest = str::from_utf8(&digest_bytes)
@@ -239,6 +239,27 @@ impl RevisionStore {
 
         Ok(hash)
     }
+
+    #[cfg(test)]
+    async fn check_clean(&self, guard: &mut RevisionBlock) {
+        debug!("Checking if repository is clean");
+
+        let args = arguments!["git", "status", "--porcelain"];
+        let output = self
+            .spawn_output(guard, &args)
+            .await
+            .expect("Unable to get git status");
+
+        if !output.is_empty() {
+            panic!(
+                "Git repository is not clean:\n{}",
+                String::from_utf8_lossy(&output),
+            );
+        }
+    }
+
+    #[cfg(not(test))]
+    async fn check_clean(&self, _guard: &mut RevisionBlock) {}
 
     /// Create the first commit of the repo.
     /// Should only be called on empty repositories.
@@ -255,6 +276,8 @@ impl RevisionStore {
         let args = arguments!["git", "commit", "--allow-empty", &author, &message];
 
         self.spawn(guard, &args).await?;
+        self.check_clean(guard).await;
+
         Ok(())
     }
 
@@ -296,6 +319,8 @@ impl RevisionStore {
         self.spawn(guard, &args).await?;
 
         let commit = self.get_commit(guard).await?;
+        self.check_clean(guard).await;
+
         Ok(commit)
     }
 
@@ -311,6 +336,8 @@ impl RevisionStore {
         self.spawn(guard, &args).await?;
 
         let commit = self.get_commit(guard).await?;
+        self.check_clean(guard).await;
+
         Ok(commit)
     }
 
@@ -343,6 +370,8 @@ impl RevisionStore {
         self.spawn(guard, &args).await?;
 
         let commit = self.get_commit(guard).await?;
+        self.check_clean(guard).await;
+
         Ok(commit)
     }
 
@@ -367,6 +396,8 @@ impl RevisionStore {
         self.spawn(guard, &args).await?;
 
         let commit = self.get_commit(guard).await.map(Some)?;
+        self.check_clean(guard).await;
+
         Ok(commit)
     }
 
@@ -428,6 +459,8 @@ impl RevisionStore {
         self.spawn(guard, &args).await?;
 
         let commit = self.get_commit(guard).await?;
+        self.check_clean(guard).await;
+
         Ok(commit)
     }
 
@@ -452,6 +485,8 @@ impl RevisionStore {
         self.spawn(guard, &args).await?;
 
         let commit = self.get_commit(guard).await?;
+        self.check_clean(guard).await;
+
         Ok(commit)
     }
 
@@ -464,6 +499,8 @@ impl RevisionStore {
         let guard = &mut self.mutex.lock().await;
 
         let contents = self.read_file(guard, slug).await?;
+        self.check_clean(guard).await;
+
         Ok(contents)
     }
 
@@ -482,11 +519,14 @@ impl RevisionStore {
         let spec = format!("{}:{}", hash, path.display());
         let args = arguments!["git", "show", "--format=%B", &spec];
 
-        match self.spawn_output(guard, &args).await {
+        let result = match self.spawn_output(guard, &args).await {
             Ok(bytes) => Ok(Some(bytes)),
             Err(Error::CommandFailed(_)) => Ok(None),
             Err(error) => Err(error),
-        }
+        };
+
+        self.check_clean(guard).await;
+        result
     }
 
     /// Gets the diff between commits of a particular page.
@@ -517,6 +557,8 @@ impl RevisionStore {
         ];
 
         let diff = self.spawn_output(guard, &args).await?;
+        self.check_clean(guard).await;
+
         Ok(diff)
     }
 
@@ -541,6 +583,8 @@ impl RevisionStore {
         };
 
         let blame = Blame::from_porcelain(&raw_blame)?;
+        self.check_clean(guard).await;
+
         Ok(Some(blame))
     }
 
