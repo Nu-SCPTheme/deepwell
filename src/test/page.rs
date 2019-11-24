@@ -96,6 +96,35 @@ async fn page_service_internal(handle: &Handle) {
         true
     );
 
+    let commit = PageCommit {
+        wiki_id,
+        slug: &"amazing-battle",
+        message: "rewrite main battle",
+        user: &user,
+    };
+
+    let revision_id = handle
+        .edit_page(
+            commit,
+            Some(b"and then 049 cured him!! it was epic"),
+            None,
+            None,
+        )
+        .await
+        .expect("Unable to edit page");
+
+    let commit = PageCommit {
+        wiki_id,
+        slug: &"amazing-battle",
+        message: "switching back to previous story",
+        user: &user,
+    };
+
+    handle
+        .undo_revision(commit, Left(revision_id))
+        .await
+        .expect("Unable to undo page revision");
+
     // Remove page
     let commit = PageCommit {
         wiki_id,
