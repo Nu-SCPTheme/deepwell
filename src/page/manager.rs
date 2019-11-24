@@ -757,7 +757,7 @@ impl PageManager {
 
         let id: i64 = wiki_id.into();
         let pages = pages::table
-            .filter(pages::tags.is_contained_by(tags))
+            .filter(pages::tags.contains(tags))
             .filter(pages::wiki_id.eq(id))
             .filter(pages::deleted_at.is_null())
             .get_results::<Page>(&*self.conn)?;

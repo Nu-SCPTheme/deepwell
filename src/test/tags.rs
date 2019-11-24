@@ -152,4 +152,44 @@ async fn tags_internal(handle: &Server) {
     ];
 
     assert_eq!(&actual_tags, &expected_tags);
+
+    // Query by page tags
+
+    let pages = handle
+        .get_pages_with_tags(wiki_id, &[])
+        .await
+        .expect("Unable to get pages from tags");
+
+    assert!(pages.is_empty());
+
+    let pages = handle
+        .get_pages_with_tags(wiki_id, &["keter"])
+        .await
+        .expect("Unable to get pages from tags");
+
+    assert_eq!(pages.len(), 1);
+    assert_eq!(pages[0].id(), page.id());
+
+    let pages = handle
+        .get_pages_with_tags(wiki_id, &["keter", "ontokinetic"])
+        .await
+        .expect("Unable to get pages from tags");
+
+    assert_eq!(pages.len(), 1);
+    assert_eq!(pages[0].id(), page.id());
+
+    let pages = handle
+        .get_pages_with_tags(wiki_id, &["ontokinetic", "keter"])
+        .await
+        .expect("Unable to get pages from tags");
+
+    assert_eq!(pages.len(), 1);
+    assert_eq!(pages[0].id(), page.id());
+
+    let pages = handle
+        .get_pages_with_tags(wiki_id, &["esoteric-class", "ontokinetic"])
+        .await
+        .expect("Unable to get pages from tags");
+
+    assert!(pages.is_empty());
 }
