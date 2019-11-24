@@ -24,6 +24,7 @@ extern crate tempfile;
 mod authors;
 mod page;
 mod password;
+mod session;
 mod tags;
 mod user;
 mod wiki;

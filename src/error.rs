@@ -22,7 +22,6 @@ use diesel::result::{ConnectionError, Error as DieselError};
 use std::io;
 use subprocess::PopenError;
 
-#[must_use = "should handle errors"]
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("uncommon error: {0}")]
