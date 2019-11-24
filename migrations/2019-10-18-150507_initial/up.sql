@@ -89,6 +89,12 @@ CREATE TABLE pages (
     UNIQUE (deleted_at, slug)
 );
 
+CREATE TABLE page_locks (
+    page_id BIGSERIAL PRIMARY KEY REFERENCES pages(page_id),
+    user_id BIGSERIAL REFERENCES users(user_id),
+    locked_until TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
 CREATE TABLE parents (
     page_id BIGSERIAL NOT NULL REFERENCES pages(page_id),
     parent_page_id BIGSERIAL NOT NULL REFERENCES pages(page_id),

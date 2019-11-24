@@ -7,6 +7,7 @@ DROP TABLE authors;
 DROP TABLE files;
 DROP TABLE role_membership;
 DROP TABLE roles;
+DROP TABLE page_locks;
 DROP TABLE pages;
 DROP TABLE wiki_membership;
 DROP TABLE wikis;

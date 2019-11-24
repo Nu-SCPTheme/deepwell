@@ -28,6 +28,14 @@ table! {
 }
 
 table! {
+    page_locks (page_id) {
+        page_id -> Int8,
+        user_id -> Int8,
+        locked_until -> Timestamptz,
+    }
+}
+
+table! {
     pages (page_id) {
         page_id -> Int8,
         wiki_id -> Int8,
@@ -167,6 +175,8 @@ joinable!(authors -> pages (page_id));
 joinable!(authors -> users (user_id));
 joinable!(files -> pages (page_id));
 joinable!(login_attempts -> users (user_id));
+joinable!(page_locks -> pages (page_id));
+joinable!(page_locks -> users (user_id));
 joinable!(pages -> wikis (wiki_id));
 joinable!(parents -> users (parented_by));
 joinable!(passwords -> users (user_id));
@@ -187,6 +197,7 @@ allow_tables_to_appear_in_same_query!(
     authors,
     files,
     login_attempts,
+    page_locks,
     pages,
     parents,
     passwords,
