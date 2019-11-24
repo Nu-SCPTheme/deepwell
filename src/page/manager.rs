@@ -987,6 +987,7 @@ impl Debug for PageManager {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.debug_struct("PageManager")
             .field("conn", &"PgConnection { .. }")
+            .field("directory", &self.directory)
             .field("stores", &self.stores)
             .finish()
     }

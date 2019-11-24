@@ -19,6 +19,7 @@
  */
 
 mod author;
+mod lock;
 mod page;
 mod password;
 mod rating;
@@ -29,6 +30,7 @@ mod utils;
 mod wiki;
 
 use crate::author::AuthorManager;
+use crate::lock::LockManager;
 use crate::manager_prelude::*;
 use crate::page::PageManager;
 use crate::password::PasswordManager;
@@ -50,6 +52,7 @@ pub struct Config<'a> {
 pub struct Server {
     conn: Arc<PgConnection>,
     author: AuthorManager,
+    lock: LockManager,
     page: PageManager,
     password: PasswordManager,
     rating: RatingManager,
@@ -78,6 +81,7 @@ impl Server {
         };
 
         let author = AuthorManager::new(&conn);
+        let lock = LockManager::new(&conn);
         let page = PageManager::new(&conn, revisions_dir);
         let password = PasswordManager::new(&conn, password_blacklist)?;
         let rating = RatingManager::new(&conn);
@@ -86,8 +90,9 @@ impl Server {
         let wiki = WikiManager::new(&conn)?;
 
         Ok(Server {
-            author,
             conn,
+            author,
+            lock,
             page,
             password,
             rating,

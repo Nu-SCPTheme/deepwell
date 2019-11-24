@@ -54,6 +54,7 @@ mod macros;
 
 mod author;
 mod error;
+mod lock;
 mod page;
 mod password;
 mod rating;
