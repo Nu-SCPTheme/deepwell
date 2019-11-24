@@ -33,6 +33,17 @@ impl Handle {
         self.page.get_page_version(wiki_id, slug, revision).await
     }
 
+    /// Restores the given deleted page.
+    /// If an ID is not specified, then the last page occupying the given slug is used.
+    #[inline]
+    pub async fn restore_page(
+        &self,
+        commit: PageCommit<'_>,
+        page_id: Option<PageId>,
+    ) -> Result<RevisionId> {
+        self.page.restore(commit, page_id).await
+    }
+
     /// Get the blame for a given page, if it exists.
     #[inline]
     pub async fn get_page_blame(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Blame>> {
@@ -64,4 +75,5 @@ impl Handle {
     pub async fn edit_revision(&self, revision_id: RevisionId, message: &str) -> Result<()> {
         self.page.edit_revision(revision_id, message).await
     }
+
 }

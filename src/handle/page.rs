@@ -110,16 +110,6 @@ impl Handle {
         self.page.remove(commit).await
     }
 
-    /// Restores the given deleted page.
-    /// If an ID is not specified, then the last page occupying the given slug is used.
-    #[inline]
-    pub async fn restore_page(
-        &self,
-        commit: PageCommit<'_>,
-        page_id: Option<PageId>,
-    ) -> Result<RevisionId> {
-        self.page.restore(commit, page_id).await
-    }
 
     /// Determines if a page with the given slug exists.
     #[inline]
