@@ -18,11 +18,12 @@ table! {
 }
 
 table! {
-    login_attempts (attempted_at) {
-        attempted_at -> Timestamptz,
+    login_attempts (login_attempt_id) {
+        login_attempt_id -> Int8,
         user_id -> Int8,
         ip_address -> Inet,
         success -> Bool,
+        attempted_at -> Nullable<Timestamptz>,
     }
 }
 
