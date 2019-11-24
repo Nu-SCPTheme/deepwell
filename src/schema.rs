@@ -18,6 +18,14 @@ table! {
 }
 
 table! {
+    login_attempts (attempted_at) {
+        attempted_at -> Timestamptz,
+        user_id -> Int8,
+        ip_address -> Inet,
+    }
+}
+
+table! {
     pages (page_id) {
         page_id -> Int8,
         wiki_id -> Int8,
@@ -156,6 +164,7 @@ table! {
 joinable!(authors -> pages (page_id));
 joinable!(authors -> users (user_id));
 joinable!(files -> pages (page_id));
+joinable!(login_attempts -> users (user_id));
 joinable!(pages -> wikis (wiki_id));
 joinable!(parents -> users (parented_by));
 joinable!(passwords -> users (user_id));
@@ -175,6 +184,7 @@ joinable!(wiki_membership -> wikis (wiki_id));
 allow_tables_to_appear_in_same_query!(
     authors,
     files,
+    login_attempts,
     pages,
     parents,
     passwords,
