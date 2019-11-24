@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::service_prelude::*;
+use crate::manager_prelude::*;
 use async_std::task;
 
 impl Server {

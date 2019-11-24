@@ -1,5 +1,5 @@
 /*
- * rating/service.rs
+ * rating/manager.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -19,7 +19,7 @@
  */
 
 use super::{NewRating, NewRatingHistory};
-use crate::service_prelude::*;
+use crate::manager_prelude::*;
 use crate::utils::rows_to_result;
 
 make_id_type!(RatingId);
@@ -78,16 +78,16 @@ impl RatingHistory {
     }
 }
 
-pub struct RatingService {
+pub struct RatingManager {
     conn: Arc<PgConnection>,
 }
 
-impl RatingService {
+impl RatingManager {
     #[inline]
     pub fn new(conn: &Arc<PgConnection>) -> Self {
         let conn = Arc::clone(conn);
 
-        RatingService { conn }
+        RatingManager { conn }
     }
 
     pub async fn get_rating(&self, page_id: PageId) -> Result<Rating> {
@@ -238,11 +238,11 @@ impl RatingService {
     }
 }
 
-impl_async_transaction!(RatingService);
+impl_async_transaction!(RatingManager);
 
-impl Debug for RatingService {
+impl Debug for RatingManager {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("PasswordService")
+        f.debug_struct("PasswordManager")
             .field("conn", &"PgConnection { .. }")
             .finish()
     }

@@ -1,5 +1,5 @@
 /*
- * session/service.rs
+ * session/manager.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -19,8 +19,8 @@
  */
 
 use super::NewSession;
+use crate::manager_prelude::*;
 use crate::schema::sessions;
-use crate::service_prelude::*;
 use crate::utils::rows_to_result;
 use chrono::prelude::*;
 use ipnetwork::IpNetwork;
@@ -62,15 +62,15 @@ impl Session {
     }
 }
 
-pub struct SessionService {
+pub struct SessionManager {
     conn: Arc<PgConnection>,
 }
 
-impl SessionService {
+impl SessionManager {
     #[inline]
     pub fn new(conn: &Arc<PgConnection>) -> Self {
         let conn = Arc::clone(conn);
-        SessionService { conn }
+        SessionManager { conn }
     }
 
     pub async fn get_session(&self, user_id: UserId) -> Result<Option<Session>> {
@@ -144,7 +144,7 @@ impl SessionService {
     }
 }
 
-impl_async_transaction!(SessionService);
+impl_async_transaction!(SessionManager);
 
 fn generate_token() -> String {
     iter::repeat(())

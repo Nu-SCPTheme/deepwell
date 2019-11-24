@@ -19,7 +19,7 @@
  */
 
 use super::utils::normalize_slug;
-use crate::service_prelude::*;
+use crate::manager_prelude::*;
 
 impl Server {
     /// Get the version of a page at the specified revision.

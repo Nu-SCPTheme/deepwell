@@ -1,5 +1,5 @@
 /*
- * wiki/service.rs
+ * wiki/manager.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -19,8 +19,8 @@
  */
 
 use super::models::{NewWiki, UpdateWiki};
+use crate::manager_prelude::*;
 use crate::schema::wikis;
-use crate::service_prelude::*;
 use async_std::sync::RwLockWriteGuard;
 
 make_id_type!(WikiId);
@@ -61,12 +61,12 @@ impl Wiki {
     }
 }
 
-pub struct WikiService {
+pub struct WikiManager {
     conn: Arc<PgConnection>,
     wikis: RwLock<HashMap<WikiId, Wiki>>,
 }
 
-impl WikiService {
+impl WikiManager {
     pub fn new(conn: &Arc<PgConnection>) -> Result<Self> {
         let conn = Arc::clone(conn);
         let values = wikis::table.load::<Wiki>(&*conn)?;
@@ -80,7 +80,7 @@ impl WikiService {
             RwLock::new(map)
         };
 
-        Ok(WikiService { conn, wikis })
+        Ok(WikiManager { conn, wikis })
     }
 
     pub async fn create(
@@ -146,11 +146,11 @@ impl WikiService {
     }
 }
 
-impl_async_transaction!(WikiService);
+impl_async_transaction!(WikiManager);
 
-impl Debug for WikiService {
+impl Debug for WikiManager {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("WikiService")
+        f.debug_struct("WikiManager")
             .field("conn", &"PgConnection { .. }")
             .field("wikis", &self.wikis)
             .finish()

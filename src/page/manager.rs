@@ -1,5 +1,5 @@
 /*
- * page/service.rs
+ * page/manager.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -19,9 +19,9 @@
  */
 
 use super::{ChangeType, NewPage, NewRevision, NewTagChange, UpdatePage};
+use crate::manager_prelude::*;
 use crate::revision::{CommitInfo, GitHash, RevisionStore};
 use crate::schema::{pages, revisions, tag_history};
-use crate::service_prelude::*;
 use crate::user::{User, UserId};
 use crate::wiki::{Wiki, WikiId};
 use async_std::fs;
@@ -127,18 +127,18 @@ impl ReadGuard<'_> {
     }
 }
 
-pub struct PageService {
+pub struct PageManager {
     conn: Arc<PgConnection>,
     directory: PathBuf,
     stores: RwLock<HashMap<WikiId, RevisionStore>>,
 }
 
-impl PageService {
+impl PageManager {
     #[inline]
     pub fn new(conn: &Arc<PgConnection>, directory: PathBuf) -> Self {
         let conn = Arc::clone(conn);
 
-        PageService {
+        PageManager {
             conn,
             directory,
             stores: RwLock::new(HashMap::new()),
@@ -963,11 +963,11 @@ impl PageService {
     }
 }
 
-impl_async_transaction!(PageService);
+impl_async_transaction!(PageManager);
 
-impl Debug for PageService {
+impl Debug for PageManager {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("PageService")
+        f.debug_struct("PageManager")
             .field("conn", &"PgConnection { .. }")
             .field("stores", &self.stores)
             .finish()

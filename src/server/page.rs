@@ -20,7 +20,7 @@
 
 use super::utils::normalize_slug;
 use crate::author::AuthorType;
-use crate::service_prelude::*;
+use crate::manager_prelude::*;
 
 impl Server {
     /// Creates a new page with the given contents and metadata.

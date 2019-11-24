@@ -28,14 +28,14 @@ mod user;
 mod utils;
 mod wiki;
 
-use crate::author::AuthorService;
-use crate::page::PageService;
-use crate::password::PasswordService;
-use crate::rating::RatingService;
-use crate::service_prelude::*;
-use crate::session::SessionService;
-use crate::user::UserService;
-use crate::wiki::WikiService;
+use crate::author::AuthorManager;
+use crate::manager_prelude::*;
+use crate::page::PageManager;
+use crate::password::PasswordManager;
+use crate::rating::RatingManager;
+use crate::session::SessionManager;
+use crate::user::UserManager;
+use crate::wiki::WikiManager;
 use std::fmt::{self, Debug};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -49,13 +49,13 @@ pub struct Config<'a> {
 
 pub struct Server {
     conn: Arc<PgConnection>,
-    author: AuthorService,
-    page: PageService,
-    password: PasswordService,
-    rating: RatingService,
-    session: SessionService,
-    user: UserService,
-    wiki: WikiService,
+    author: AuthorManager,
+    page: PageManager,
+    password: PasswordManager,
+    rating: RatingManager,
+    session: SessionManager,
+    user: UserManager,
+    wiki: WikiManager,
 }
 
 impl Server {
@@ -77,13 +77,13 @@ impl Server {
             }
         };
 
-        let author = AuthorService::new(&conn);
-        let page = PageService::new(&conn, revisions_dir);
-        let password = PasswordService::new(&conn, password_blacklist)?;
-        let rating = RatingService::new(&conn);
-        let session = SessionService::new(&conn);
-        let user = UserService::new(&conn);
-        let wiki = WikiService::new(&conn)?;
+        let author = AuthorManager::new(&conn);
+        let page = PageManager::new(&conn, revisions_dir);
+        let password = PasswordManager::new(&conn, password_blacklist)?;
+        let rating = RatingManager::new(&conn);
+        let session = SessionManager::new(&conn);
+        let user = UserManager::new(&conn);
+        let wiki = WikiManager::new(&conn)?;
 
         Ok(Server {
             author,

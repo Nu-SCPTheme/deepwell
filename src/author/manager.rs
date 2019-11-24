@@ -1,5 +1,5 @@
 /*
- * author/service.rs
+ * author/manager.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -19,8 +19,8 @@
  */
 
 use super::{AuthorType, NewAuthor};
+use crate::manager_prelude::*;
 use crate::schema::authors;
-use crate::service_prelude::*;
 use crate::utils::rows_to_result;
 use std::convert::TryFrom;
 
@@ -56,15 +56,15 @@ impl Author {
     }
 }
 
-pub struct AuthorService {
+pub struct AuthorManager {
     conn: Arc<PgConnection>,
 }
 
-impl AuthorService {
+impl AuthorManager {
     pub fn new(conn: &Arc<PgConnection>) -> Self {
         let conn = Arc::clone(conn);
 
-        AuthorService { conn }
+        AuthorManager { conn }
     }
 
     pub async fn get_all(&self, page_id: PageId) -> Result<Vec<Author>> {
@@ -137,11 +137,11 @@ impl AuthorService {
     }
 }
 
-impl_async_transaction!(AuthorService);
+impl_async_transaction!(AuthorManager);
 
-impl Debug for AuthorService {
+impl Debug for AuthorManager {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("AuthorService")
+        f.debug_struct("AuthorManager")
             .field("conn", &"PgConnection { .. }")
             .finish()
     }

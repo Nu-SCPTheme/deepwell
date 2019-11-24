@@ -20,14 +20,13 @@
 
 mod blacklist;
 mod crypto;
+mod manager;
 mod models;
-mod service;
 
 #[cfg(test)]
 mod test;
 
-pub use self::service::PasswordService;
+pub use self::manager::*;
 
 use self::blacklist::build_blacklist;
 use self::crypto::*;
-use self::service::Password;

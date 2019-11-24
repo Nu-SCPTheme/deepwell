@@ -19,7 +19,7 @@
  */
 
 use super::utils::{normalize_slug, to_lowercase};
-use crate::service_prelude::*;
+use crate::manager_prelude::*;
 use crate::wiki::UpdateWiki;
 
 impl Server {

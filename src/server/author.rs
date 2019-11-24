@@ -20,7 +20,7 @@
 
 use super::utils::normalize_slug;
 use crate::author::{Author, AuthorType};
-use crate::service_prelude::*;
+use crate::manager_prelude::*;
 
 impl Server {
     async fn get_page_id<S: Into<String>>(

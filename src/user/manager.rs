@@ -1,5 +1,5 @@
 /*
- * user/service.rs
+ * user/manager.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -19,8 +19,8 @@
  */
 
 use super::models::{NewUser, UpdateUser};
+use crate::manager_prelude::*;
 use crate::schema::users;
-use crate::service_prelude::*;
 use diesel::pg::expression::dsl::any;
 
 make_id_type!(UserId);
@@ -119,15 +119,15 @@ pub struct UserMetadata<'a> {
     pub location: Option<&'a str>,
 }
 
-pub struct UserService {
+pub struct UserManager {
     conn: Arc<PgConnection>,
 }
 
-impl UserService {
+impl UserManager {
     #[inline]
     pub fn new(conn: &Arc<PgConnection>) -> Self {
         let conn = Arc::clone(conn);
-        UserService { conn }
+        UserManager { conn }
     }
 
     pub async fn create(&self, name: &str, email: &str) -> Result<UserId> {
@@ -335,11 +335,11 @@ impl UserService {
     }
 }
 
-impl_async_transaction!(UserService);
+impl_async_transaction!(UserManager);
 
-impl Debug for UserService {
+impl Debug for UserManager {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("UserService")
+        f.debug_struct("UserManager")
             .field("conn", &"PgConnection { .. }")
             .finish()
     }

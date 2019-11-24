@@ -91,7 +91,7 @@ pub mod model {
     pub use crate::wiki::Wiki;
 }
 
-mod service_prelude {
+mod manager_prelude {
     pub use crate::prelude::*;
     pub use crate::schema::*;
     pub use async_std::prelude::*;

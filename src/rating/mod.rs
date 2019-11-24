@@ -18,9 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+mod manager;
 mod models;
-mod service;
 
-pub use self::service::{Rating, RatingHistory, RatingId, RatingService};
+pub use self::manager::*;
 
 use self::models::*;

@@ -1,5 +1,5 @@
 /*
- * password/service.rs
+ * password/manager.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -19,8 +19,8 @@
  */
 
 use super::{build_blacklist, check_password, new_password};
+use crate::manager_prelude::*;
 use crate::schema::passwords;
-use crate::service_prelude::*;
 use std::collections::HashSet;
 use std::convert::TryInto;
 use std::path::Path;
@@ -90,12 +90,12 @@ impl Password {
     }
 }
 
-pub struct PasswordService {
+pub struct PasswordManager {
     conn: Arc<PgConnection>,
     blacklist: HashSet<String>,
 }
 
-impl PasswordService {
+impl PasswordManager {
     pub fn new(conn: &Arc<PgConnection>, blacklist: Option<&Path>) -> Result<Self> {
         let conn = Arc::clone(conn);
 
@@ -104,7 +104,7 @@ impl PasswordService {
             None => HashSet::new(),
         };
 
-        Ok(PasswordService { conn, blacklist })
+        Ok(PasswordManager { conn, blacklist })
     }
 
     fn verify_password(&self, password: &str) -> Result<()> {
@@ -178,11 +178,11 @@ impl PasswordService {
     }
 }
 
-impl_async_transaction!(PasswordService);
+impl_async_transaction!(PasswordManager);
 
-impl Debug for PasswordService {
+impl Debug for PasswordManager {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.debug_struct("PasswordService")
+        f.debug_struct("PasswordManager")
             .field("conn", &"PgConnection { .. }")
             .finish()
     }

@@ -18,8 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+mod manager;
 mod models;
-mod service;
 
+pub use self::manager::*;
 pub use self::models::*;
-pub use self::service::*;
