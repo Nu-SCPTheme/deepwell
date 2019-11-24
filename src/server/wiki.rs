@@ -20,7 +20,6 @@
 
 use super::utils::{normalize_slug, to_lowercase};
 use crate::manager_prelude::*;
-use crate::wiki::UpdateWiki;
 
 impl Server {
     /// Creates a new wiki with the given parameters. Returns its ID.
@@ -45,28 +44,18 @@ impl Server {
     /// Renames the given wiki.
     /// Changing a wiki's slug is not supported.
     pub async fn rename_wiki(&self, id: WikiId, new_name: &str) -> Result<()> {
-        let model = UpdateWiki {
-            name: Some(new_name),
-            domain: None,
-        };
-
         info!("Renaming wiki ID {} to '{}'", id, new_name);
 
-        self.wiki.edit(id, model).await?;
+        self.wiki.edit(id, Some(new_name), None).await?;
         Ok(())
     }
 
     /// Changes the associated domain for the given wiki.
     pub async fn set_wiki_domain(&self, id: WikiId, new_domain: &str) -> Result<()> {
-        let model = UpdateWiki {
-            name: None,
-            domain: Some(new_domain),
-        };
-
         info!("Changing domain for wiki ID {} to '{}'", id, new_domain);
 
         self.transaction(async {
-            self.wiki.edit(id, model).await?;
+            self.wiki.edit(id, None, Some(new_domain)).await?;
             self.page.set_domain(id, new_domain).await?;
 
             Ok(())

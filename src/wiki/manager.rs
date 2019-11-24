@@ -131,16 +131,19 @@ impl WikiManager {
         f(wiki)
     }
 
-    pub async fn edit(&self, id: WikiId, model: UpdateWiki<'_>) -> Result<()> {
+    pub async fn edit(&self, id: WikiId, name: Option<&str>, domain: Option<&str>) -> Result<()> {
         use self::wikis::dsl;
 
-        info!("Editing wiki ID {}: {:?}", id, model);
-        model.check();
+        let model = UpdateWiki { name, domain };
 
-        let id: i64 = id.into();
-        diesel::update(dsl::wikis.filter(dsl::wiki_id.eq(id)))
-            .set(&model)
-            .execute(&*self.conn)?;
+        info!("Editing wiki ID {}: {:?}", id, model);
+
+        if model.has_changes() {
+            let id: i64 = id.into();
+            diesel::update(dsl::wikis.filter(dsl::wiki_id.eq(id)))
+                .set(&model)
+                .execute(&*self.conn)?;
+        }
 
         Ok(())
     }

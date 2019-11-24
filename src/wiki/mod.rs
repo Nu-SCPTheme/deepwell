@@ -22,4 +22,3 @@ mod manager;
 mod models;
 
 pub use self::manager::*;
-pub use self::models::*;

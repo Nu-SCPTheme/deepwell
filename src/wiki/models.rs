@@ -36,10 +36,7 @@ pub struct UpdateWiki<'a> {
 }
 
 impl UpdateWiki<'_> {
-    pub fn check(&self) {
-        let all_none = self.name.is_none() || self.domain.is_none();
-        if all_none {
-            warn!("Empty wiki metadata update");
-        }
+    pub fn has_changes(&self) -> bool {
+        self.name.is_some() || self.domain.is_some()
     }
 }

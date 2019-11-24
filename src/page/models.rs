@@ -107,7 +107,7 @@ pub struct UpdatePage<'a> {
 
 impl UpdatePage<'_> {
     pub fn has_changes(&self) -> bool {
-        self.slug.is_some() && self.title.is_some() && self.alt_title.is_some()
+        self.slug.is_some() || self.title.is_some() || self.alt_title.is_some()
     }
 }
 
