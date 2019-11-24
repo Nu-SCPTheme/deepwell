@@ -42,6 +42,7 @@ impl Server {
 
         trace!("Password validated, getting or creating session token");
         self.transaction(async {
+            self.session.add_login_attempt(user_id, ip_address).await?;
             self.password.check(user_id, password).await?;
 
             let result = self.session.get_token(user_id).await?;

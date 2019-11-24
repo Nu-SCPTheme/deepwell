@@ -18,9 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::NewSession;
+use super::{NewLoginAttempt, NewSession};
 use crate::manager_prelude::*;
-use crate::schema::sessions;
+use crate::schema::{login_attempts, sessions};
 use crate::utils::rows_to_result;
 use chrono::prelude::*;
 use ipnetwork::IpNetwork;
@@ -141,6 +141,24 @@ impl SessionManager {
             .execute(&*self.conn)?;
 
         Ok(rows_to_result(rows))
+    }
+
+    pub async fn add_login_attempt(&self, user_id: UserId, ip_address: IpNetwork) -> Result<()> {
+        debug!(
+            "Adding login attempt for user ID {} from {}",
+            user_id, ip_address
+        );
+
+        let model = NewLoginAttempt {
+            user_id: user_id.into(),
+            ip_address,
+        };
+
+        diesel::insert_into(login_attempts::table)
+            .values(&model)
+            .execute(&*self.conn)?;
+
+        Ok(())
     }
 }
 
