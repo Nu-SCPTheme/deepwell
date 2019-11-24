@@ -29,6 +29,8 @@ use std::iter;
 
 const TOKEN_LENGTH: usize = 64;
 
+make_id_type!(LoginAttemptId);
+
 // This implementation is extremely primitive -- it just stores a securely-generated
 // random string as the token and then matches it when the user makes calls.
 //
@@ -64,15 +66,17 @@ impl Session {
 
 #[derive(Debug, Queryable)]
 pub struct LoginAttempt {
-    attempted_at: DateTime<Utc>,
+    login_attempt_id: LoginAttemptId,
     user_id: UserId,
     ip_address: IpNetwork,
+    success: bool,
+    attempted_at: DateTime<Utc>,
 }
 
 impl LoginAttempt {
     #[inline]
-    pub fn attempted_at(&self) -> DateTime<Utc> {
-        self.attempted_at
+    pub fn login_attempt_id(&self) -> LoginAttemptId {
+        self.login_attempt_id
     }
 
     #[inline]
@@ -83,6 +87,16 @@ impl LoginAttempt {
     #[inline]
     pub fn ip_address(&self) -> IpNetwork {
         self.ip_address
+    }
+
+    #[inline]
+    pub fn success(&self) -> bool {
+        self.success
+    }
+
+    #[inline]
+    pub fn attempted_at(&self) -> DateTime<Utc> {
+        self.attempted_at
     }
 }
 
@@ -167,7 +181,12 @@ impl SessionManager {
         Ok(rows_to_result(rows))
     }
 
-    pub async fn add_login_attempt(&self, user_id: UserId, ip_address: IpNetwork) -> Result<()> {
+    pub async fn add_login_attempt(
+        &self,
+        user_id: UserId,
+        ip_address: IpNetwork,
+        success: bool,
+    ) -> Result<LoginAttemptId> {
         debug!(
             "Adding login attempt for user ID {} from {}",
             user_id, ip_address,
@@ -176,10 +195,28 @@ impl SessionManager {
         let model = NewLoginAttempt {
             user_id: user_id.into(),
             ip_address,
+            success,
         };
 
-        diesel::insert_into(login_attempts::table)
+        let id = diesel::insert_into(login_attempts::table)
             .values(&model)
+            .returning(login_attempts::dsl::login_attempt_id)
+            .get_result::<LoginAttemptId>(&*self.conn)?;
+
+        Ok(id)
+    }
+
+    pub async fn set_login_success(&self, login_attempt_id: LoginAttemptId) -> Result<()> {
+        use login_attempts::dsl;
+
+        debug!(
+            "Setting login attempt ID {} as successful",
+            login_attempt_id,
+        );
+
+        let id: i64 = login_attempt_id.into();
+        diesel::update(dsl::login_attempts.filter(dsl::login_attempt_id.eq(id)))
+            .set(dsl::success.eq(true))
             .execute(&*self.conn)?;
 
         Ok(())

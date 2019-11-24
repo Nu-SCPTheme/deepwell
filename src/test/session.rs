@@ -19,6 +19,7 @@
  */
 
 use super::prelude::*;
+use chrono::prelude::*;
 use ipnetwork::IpNetwork;
 
 lazy_static! {
@@ -111,4 +112,24 @@ async fn session_manager_internal(server: &Server) {
         .expect("Unable to end session");
 
     assert_eq!(deleted, false);
+
+    // Check all login attempts
+    let date = NaiveDate::from_ymd(2001, 1, 1).and_hms(6, 0, 0);
+    let attempts = server
+        .get_login_attempts(user_id, DateTime::from_utc(date, Utc))
+        .await
+        .expect("Unable to get login attempts");
+
+    assert_eq!(attempts.len(), 2);
+
+    let first = &attempts[0];
+    let second = &attempts[1];
+
+    assert_eq!(first.user_id(), user_id);
+    assert_eq!(first.ip_address(), *IP_ADDRESS);
+    assert_eq!(first.success(), false);
+
+    assert_eq!(second.user_id(), user_id);
+    assert_eq!(second.ip_address(), *IP_ADDRESS);
+    assert_eq!(second.success(), true);
 }

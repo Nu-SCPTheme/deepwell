@@ -34,4 +34,5 @@ pub struct NewSession<'a> {
 pub struct NewLoginAttempt {
     pub user_id: i64,
     pub ip_address: IpNetwork,
+    pub success: bool,
 }

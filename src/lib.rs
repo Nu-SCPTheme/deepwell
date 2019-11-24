@@ -79,6 +79,7 @@ pub mod prelude {
 
 pub mod id {
     pub use crate::page::{PageId, RevisionId};
+    pub use crate::session::LoginAttemptId;
     pub use crate::user::UserId;
     pub use crate::wiki::WikiId;
 }

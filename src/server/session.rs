@@ -40,10 +40,16 @@ impl Server {
             user_id, ip_address,
         );
 
+        // Is outside of the transaction so it doesn't get rolled back on failure
+        let login_attempt_id = self
+            .session
+            .add_login_attempt(user_id, ip_address, false)
+            .await?;
+
         trace!("Password validated, getting or creating session token");
         self.transaction(async {
-            self.session.add_login_attempt(user_id, ip_address).await?;
             self.password.check(user_id, password).await?;
+            self.session.set_login_success(login_attempt_id).await?;
 
             let result = self.session.get_token(user_id).await?;
             if let Some(token) = result {
