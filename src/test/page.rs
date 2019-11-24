@@ -26,6 +26,7 @@ fn page_service() {
 }
 
 async fn page_service_internal(handle: &Handle) {
+    // Setup
     let user = handle
         .get_user_from_name("unknown")
         .await
@@ -42,6 +43,7 @@ async fn page_service_internal(handle: &Handle) {
         false
     );
 
+    // Create page
     let commit = PageCommit {
         wiki_id,
         slug: &"tale-here",
@@ -56,6 +58,7 @@ async fn page_service_internal(handle: &Handle) {
 
     assert_eq!(handle.check_page(wiki_id, "tale-here").await.unwrap(), true);
 
+    // Rename and edits
     handle
         .rename_page(
             wiki_id,
@@ -93,6 +96,7 @@ async fn page_service_internal(handle: &Handle) {
         true
     );
 
+    // Remove page
     let commit = PageCommit {
         wiki_id,
         slug: &"amazing-battle",
@@ -125,6 +129,7 @@ async fn page_service_internal(handle: &Handle) {
         user: &user,
     };
 
+    // Restore page
     handle
         .restore_page(commit, Some(page_id))
         .await
