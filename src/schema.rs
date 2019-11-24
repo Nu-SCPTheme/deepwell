@@ -23,7 +23,7 @@ table! {
         user_id -> Int8,
         ip_address -> Inet,
         success -> Bool,
-        attempted_at -> Nullable<Timestamptz>,
+        attempted_at -> Timestamptz,
     }
 }
 
