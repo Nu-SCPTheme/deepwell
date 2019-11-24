@@ -303,9 +303,10 @@ impl PageService {
                 .await?
                 .ok_or(Error::PageNotFound)?;
 
-            trace!("Updating {:?} in pages table", &model);
-            {
+            if model.has_changes() {
                 use self::pages::dsl;
+
+                trace!("Updating {:?} in pages table", &model);
 
                 let id: i64 = page_id.into();
                 diesel::update(dsl::pages.filter(dsl::page_id.eq(id)))

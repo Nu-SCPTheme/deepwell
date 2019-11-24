@@ -105,6 +105,12 @@ pub struct UpdatePage<'a> {
     pub alt_title: Option<Nullable<&'a str>>,
 }
 
+impl UpdatePage<'_> {
+    pub fn has_changes(&self) -> bool {
+        self.slug.is_some() && self.title.is_some() && self.alt_title.is_some()
+    }
+}
+
 #[derive(Debug, Insertable)]
 #[table_name = "revisions"]
 pub struct NewRevision<'a> {
