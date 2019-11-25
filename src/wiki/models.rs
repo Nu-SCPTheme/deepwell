@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::schema::wikis;
+use crate::schema::{wikis, wiki_settings};
 
 #[derive(Debug, Insertable)]
 #[table_name = "wikis"]
@@ -39,4 +39,11 @@ impl UpdateWiki<'_> {
     pub fn has_changes(&self) -> bool {
         self.name.is_some() || self.domain.is_some()
     }
+}
+
+#[derive(Debug, Insertable)]
+#[table_name = "wiki_settings"]
+pub struct NewWikiSettings {
+    pub wiki_id: i64,
+    pub page_lock_duration: i16,
 }

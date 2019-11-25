@@ -20,8 +20,9 @@
 
 use super::models::{NewWiki, UpdateWiki};
 use crate::manager_prelude::*;
-use crate::schema::wikis;
+use crate::schema::{wikis, wiki_settings};
 use async_std::sync::RwLockWriteGuard;
+use std::time::Duration;
 
 make_id_type!(WikiId);
 
@@ -58,6 +59,26 @@ impl Wiki {
     #[inline]
     pub fn created_at(&self) -> DateTime<Utc> {
         self.created_at
+    }
+}
+
+#[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
+pub struct WikiSettings {
+    id: WikiId,
+    page_lock_duration: i16,
+}
+
+impl WikiSettings {
+    #[inline]
+    pub fn id(&self) -> WikiId {
+        self.id
+    }
+
+    #[inline]
+    pub fn page_lock_duration(&self) -> Duration {
+        let minutes = self.page_lock_duration as u64;
+
+        Duration::from_secs(minutes * 60)
     }
 }
 
@@ -129,6 +150,21 @@ impl WikiManager {
         let guard = self.wikis.read().await;
         let wiki = get(&*guard, slug);
         f(wiki)
+    }
+
+    pub async fn get_settings(&self, wiki_id: WikiId) -> Result<WikiSettings> {
+        info!("Getting settings for wiki ID {}", wiki_id);
+
+        let id: i64 = wiki_id.into();
+        let result = wiki_settings::table
+            .find(id)
+            .first::<WikiSettings>(&*self.conn)
+            .optional()?;
+
+        match result {
+            Some(settings) => Ok(settings),
+            None => Err(Error::WikiNotFound),
+        }
     }
 
     pub async fn edit(&self, id: WikiId, name: Option<&str>, domain: Option<&str>) -> Result<()> {
