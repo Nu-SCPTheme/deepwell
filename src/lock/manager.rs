@@ -33,6 +33,18 @@ impl LockManager {
 
         LockManager { conn }
     }
+
+    pub async fn invalidate_expired(&self) -> Result<usize> {
+        use diesel::dsl::now;
+
+        info!("Invalidating all expired page locks");
+
+        let rows = diesel::delete(page_locks::table)
+            .filter(page_locks::dsl::locked_until.lt(now))
+            .execute(&*self.conn)?;
+
+        Ok(rows)
+    }
 }
 
 impl_async_transaction!(LockManager);

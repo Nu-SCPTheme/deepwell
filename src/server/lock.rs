@@ -20,4 +20,8 @@
 
 use crate::manager_prelude::*;
 
-impl Server {}
+impl Server {
+    pub async fn invalidate_expired_locks(&self) -> Result<usize> {
+        self.lock.invalidate_expired().await
+    }
+}
