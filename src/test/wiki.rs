@@ -42,19 +42,21 @@ async fn wiki_manager_internal(server: &Server) {
         .expect("Unable to change domain");
 
     {
-        let id = server
-            .get_wiki_id("test")
+        let (wiki, _) = server
+            .get_wiki_by_slug("test")
             .await
             .expect("Couldn't find wiki");
-        assert_eq!(id, wiki_id);
+
+        assert_eq!(wiki_id, wiki.id());
     }
 
     {
-        let err = server
-            .get_wiki_id("nonexistent")
+        let error = server
+            .get_wiki_by_slug("nonexistent")
             .await
             .expect_err("Found wiki");
-        match err {
+
+        match error {
             Error::WikiNotFound => (),
             _ => panic!("Error doesn't match"),
         }
