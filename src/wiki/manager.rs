@@ -22,7 +22,7 @@ use super::models::{NewWiki, NewWikiSettings, UpdateWiki};
 use crate::manager_prelude::*;
 use crate::schema::{wiki_settings, wikis};
 use async_std::sync::RwLockWriteGuard;
-use std::time::Duration;
+use chrono::Duration;
 
 make_id_type!(WikiId);
 
@@ -76,7 +76,7 @@ impl WikiSettings {
 
     #[inline]
     pub fn page_lock_duration(&self) -> Duration {
-        Duration::from_secs(self.page_lock_duration as u64)
+        Duration::seconds(self.page_lock_duration as i64)
     }
 }
 

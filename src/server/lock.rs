@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use super::utils::normalize_slug;
 use crate::manager_prelude::*;
 
 impl Server {
@@ -26,18 +27,46 @@ impl Server {
         self.lock.invalidate_expired().await
     }
 
+    async fn lock_page_id(&self, wiki_id: WikiId, slug: &str) -> Result<PageId> {
+        self.page
+            .get_page_id(wiki_id, &slug)
+            .await?
+            .ok_or(Error::PageNotFound)
+    }
+
+    async fn lock_duration(&self, wiki_id: WikiId) -> Result<chrono::Duration> {
+        let settings = self.wiki.get_settings(wiki_id).await?;
+        let duration = settings.page_lock_duration();
+
+        Ok(duration)
+    }
+
     /// Creates a page lock for the given user.
     ///
     /// The amount of time to acquire the lock for is dependent on the wiki's settings.
     /// This will fail if a lock is already held for this page.
-    pub async fn create_page_lock(
+    pub async fn create_page_lock<S: Into<String>>(
         &self,
         wiki_id: WikiId,
-        page_id: PageId,
+        slug: S,
         user_id: UserId,
     ) -> Result<()> {
+        let slug = normalize_slug(slug);
+
+        info!(
+            "Creating page lock for wiki ID {} / slug '{}' for user ID {}",
+            wiki_id, &slug, user_id,
+        );
+
         self.transaction(async {
-            unimplemented!()
+            let page_id = self.lock_page_id(wiki_id, &slug).await?;
+
+            self.lock.check(page_id).await?;
+
+            let lock_duration = self.lock_duration(wiki_id).await?;
+            self.lock.add(page_id, user_id, lock_duration).await?;
+
+            Ok(())
         })
         .await
     }
@@ -48,17 +77,42 @@ impl Server {
     pub async fn update_page_lock(
         &self,
         wiki_id: WikiId,
-        page_id: PageId,
+        slug: &str,
         user_id: UserId,
     ) -> Result<()> {
-        unimplemented!()
+        let slug = normalize_slug(slug);
+
+        info!(
+            "Updating page lock for wiki ID {} / slug '{}' for user ID {}",
+            wiki_id, &slug, user_id,
+        );
+
+        self.transaction(async {
+            let page_id = self.lock_page_id(wiki_id, &slug).await?;
+
+            self.lock.check(page_id).await?;
+
+            let lock_duration = self.lock_duration(wiki_id).await?;
+            self.lock.update(page_id, user_id, lock_duration).await?;
+
+            Ok(())
+        })
+        .await
     }
 
     /// Lifts the page lock for a particular page.
     ///
     /// This will fail if there is no page lock present.
-    #[inline]
-    pub async fn remove_page_lock(&self, page_id: PageId) -> Result<()> {
+    pub async fn remove_page_lock<S: Into<String>>(&self, wiki_id: WikiId, slug: S) -> Result<()> {
+        let slug = normalize_slug(slug);
+
+        info!(
+            "Removing page lock for wiki ID {} / slug '{}'",
+            wiki_id, &slug,
+        );
+
+        let page_id = self.lock_page_id(wiki_id, &slug).await?;
+
         self.lock.remove(page_id).await
     }
 }
