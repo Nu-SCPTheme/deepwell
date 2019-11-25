@@ -39,7 +39,7 @@ make_id_type!(LoginAttemptId);
 //
 // This also might want to be in-memory instead of persisted.
 
-#[derive(Debug, Queryable)]
+#[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
 pub struct Session {
     user_id: UserId,
     token: String,
@@ -66,7 +66,7 @@ impl Session {
 
 #[derive(Debug, Queryable)]
 pub struct LoginAttempt {
-    login_attempt_id: LoginAttemptId,
+    id: LoginAttemptId,
     user_id: UserId,
     ip_address: IpNetwork,
     success: bool,
@@ -76,7 +76,7 @@ pub struct LoginAttempt {
 impl LoginAttempt {
     #[inline]
     pub fn login_attempt_id(&self) -> LoginAttemptId {
-        self.login_attempt_id
+        self.id
     }
 
     #[inline]

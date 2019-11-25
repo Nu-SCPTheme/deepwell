@@ -91,7 +91,7 @@ pub mod model {
     pub use crate::revision::{Blame, GitHash};
     pub use crate::session::{LoginAttempt, Session};
     pub use crate::user::User;
-    pub use crate::wiki::Wiki;
+    pub use crate::wiki::{Wiki, WikiSettings};
 }
 
 mod manager_prelude {

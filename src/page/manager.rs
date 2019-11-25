@@ -950,8 +950,7 @@ impl PageManager {
         info!("Getting diff for wiki ID {}, slug {}", wiki_id, slug);
 
         // Get both commits
-        let (first, second) = join!(self.commit_hash(first), self.commit_hash(second));
-        let (first, second) = (first?, second?);
+        let (first, second) = try_join!(self.commit_hash(first), self.commit_hash(second))?;
 
         // Actually get the diff from the RevisionStore
         let guard = self.store(wiki_id).await;

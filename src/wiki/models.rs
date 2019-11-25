@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::schema::{wikis, wiki_settings};
+use crate::schema::{wiki_settings, wikis};
 
 #[derive(Debug, Insertable)]
 #[table_name = "wikis"]

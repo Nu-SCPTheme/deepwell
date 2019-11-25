@@ -64,25 +64,19 @@ impl Server {
     }
 
     /// Gets information about the wiki with the given ID
-    pub async fn get_wiki(&self, id: WikiId) -> Result<Wiki> {
-        self.wiki
-            .get_by_id(id, |wiki| match wiki {
-                Some(wiki) => Ok(wiki.clone()),
-                None => Err(Error::WikiNotFound),
-            })
-            .await
+    #[inline]
+    pub async fn get_wiki_by_id(&self, id: WikiId) -> Result<(Wiki, WikiSettings)> {
+        try_join!(self.wiki.get_by_id(id), self.wiki.get_settings(id))
     }
 
     /// Gets the wiki ID with the given slug.
     /// Returns an error if the wiki doesn't exist.
-    pub async fn get_wiki_id<S: Into<String>>(&self, slug: S) -> Result<WikiId> {
+    pub async fn get_wiki_by_slug<S: Into<String>>(&self, slug: S) -> Result<(Wiki, WikiSettings)> {
         let slug = normalize_slug(slug);
 
-        self.wiki
-            .get_by_slug(&slug, |wiki| match wiki {
-                Some(wiki) => Ok(wiki.id()),
-                None => Err(Error::WikiNotFound),
-            })
-            .await
+        let wiki = self.wiki.get_by_slug(&slug).await?;
+        let settings = self.wiki.get_settings(wiki.id()).await?;
+
+        Ok((wiki, settings))
     }
 }

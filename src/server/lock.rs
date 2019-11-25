@@ -20,5 +20,4 @@
 
 use crate::manager_prelude::*;
 
-impl Server {
-}
+impl Server {}

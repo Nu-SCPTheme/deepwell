@@ -20,7 +20,7 @@
 
 use super::models::{NewWiki, UpdateWiki};
 use crate::manager_prelude::*;
-use crate::schema::{wikis, wiki_settings};
+use crate::schema::{wiki_settings, wikis};
 use async_std::sync::RwLockWriteGuard;
 use std::time::Duration;
 
@@ -124,19 +124,15 @@ impl WikiManager {
         Ok((wiki_id, guard))
     }
 
-    pub async fn get_by_id<F, T>(&self, id: WikiId, f: F) -> Result<T>
-    where
-        F: FnOnce(Option<&Wiki>) -> Result<T>,
-    {
+    pub async fn get_by_id(&self, id: WikiId) -> Result<Wiki> {
         let guard = self.wikis.read().await;
-        let wiki = guard.get(&id);
-        f(wiki)
+        match guard.get(&id) {
+            Some(wiki) => Ok(wiki.clone()),
+            None => Err(Error::WikiNotFound),
+        }
     }
 
-    pub async fn get_by_slug<F, T>(&self, slug: &str, f: F) -> Result<T>
-    where
-        F: FnOnce(Option<&Wiki>) -> Result<T>,
-    {
+    pub async fn get_by_slug(&self, slug: &str) -> Result<Wiki> {
         fn get<'a>(wikis: &'a HashMap<WikiId, Wiki>, slug: &'_ str) -> Option<&'a Wiki> {
             for wiki in wikis.values() {
                 if wiki.slug() == slug {
@@ -148,8 +144,10 @@ impl WikiManager {
         }
 
         let guard = self.wikis.read().await;
-        let wiki = get(&*guard, slug);
-        f(wiki)
+        match get(&*guard, slug) {
+            Some(wiki) => Ok(wiki.clone()),
+            None => Err(Error::WikiNotFound),
+        }
     }
 
     pub async fn get_settings(&self, wiki_id: WikiId) -> Result<WikiSettings> {
