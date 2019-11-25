@@ -24,7 +24,7 @@ use chrono::prelude::*;
 #[derive(Debug, Insertable)]
 #[table_name = "page_locks"]
 pub struct NewPageLock {
-    page_id: i64,
-    user_id: i64,
-    locked_until: DateTime<Utc>,
+    pub page_id: i64,
+    pub user_id: i64,
+    pub locked_until: DateTime<Utc>,
 }

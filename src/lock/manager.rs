@@ -21,6 +21,7 @@
 use super::models::NewPageLock;
 use crate::manager_prelude::*;
 use crate::schema::page_locks;
+use crate::utils::rows_to_result;
 
 pub struct LockManager {
     conn: Arc<PgConnection>,
@@ -44,6 +45,47 @@ impl LockManager {
             .execute(&*self.conn)?;
 
         Ok(rows)
+    }
+
+    pub async fn add(
+        &self,
+        page_id: PageId,
+        user_id: UserId,
+        lock_duration: chrono::Duration,
+    ) -> Result<()> {
+        info!(
+            "Creating page lock for page ID {} by user ID {}",
+            page_id, user_id,
+        );
+
+        let model = NewPageLock {
+            page_id: page_id.into(),
+            user_id: user_id.into(),
+            locked_until: Utc::now() + lock_duration,
+        };
+
+        diesel::insert_into(page_locks::table)
+            .values(&model)
+            .execute(&*self.conn)?;
+
+        Ok(())
+    }
+
+    pub async fn remove(&self, page_id: PageId, user_id: UserId) -> Result<bool> {
+        info!(
+            "Removing page lock for page ID {} by user ID {}",
+            page_id, user_id
+        );
+
+        let page_id: i64 = page_id.into();
+        let user_id: i64 = user_id.into();
+
+        let rows = diesel::delete(page_locks::table)
+            .filter(page_locks::dsl::page_id.eq(page_id))
+            .filter(page_locks::dsl::user_id.eq(user_id))
+            .execute(&*self.conn)?;
+
+        Ok(rows_to_result(rows))
     }
 }
 
