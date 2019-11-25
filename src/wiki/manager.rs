@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::models::{NewWiki, UpdateWiki};
+use super::models::{NewWiki, NewWikiSettings, UpdateWiki};
 use crate::manager_prelude::*;
 use crate::schema::{wiki_settings, wikis};
 use async_std::sync::RwLockWriteGuard;
@@ -76,9 +76,7 @@ impl WikiSettings {
 
     #[inline]
     pub fn page_lock_duration(&self) -> Duration {
-        let minutes = self.page_lock_duration as u64;
-
-        Duration::from_secs(minutes * 60)
+        Duration::from_secs(self.page_lock_duration as u64)
     }
 }
 
@@ -110,18 +108,34 @@ impl WikiManager {
         slug: &str,
         domain: &str,
     ) -> Result<(WikiId, RwLockWriteGuard<'_, HashMap<WikiId, Wiki>>)> {
+        const DEFAULT_PAGE_LOCK_DURATION: i16 = 900;
+
         info!("Creating new wiki with name '{}' ('{}')", name, slug);
 
-        let model = NewWiki { name, slug, domain };
-        let wiki = diesel::insert_into(wikis::table)
-            .values(&model)
-            .get_result::<Wiki>(&*self.conn)?;
+        self.transaction(async {
+            // Insert wiki
+            let model = NewWiki { name, slug, domain };
+            let wiki = diesel::insert_into(wikis::table)
+                .values(&model)
+                .get_result::<Wiki>(&*self.conn)?;
 
-        let wiki_id = wiki.id();
-        let mut guard = self.wikis.write().await;
-        guard.insert(wiki_id, wiki);
+            let wiki_id = wiki.id();
+            let mut guard = self.wikis.write().await;
+            guard.insert(wiki_id, wiki);
 
-        Ok((wiki_id, guard))
+            // Insert default wiki settings
+            let model = NewWikiSettings {
+                wiki_id: wiki_id.into(),
+                page_lock_duration: DEFAULT_PAGE_LOCK_DURATION,
+            };
+
+            diesel::insert_into(wiki_settings::table)
+                .values(&model)
+                .execute(&*self.conn)?;
+
+            Ok((wiki_id, guard))
+        })
+        .await
     }
 
     pub async fn get_by_id(&self, id: WikiId) -> Result<Wiki> {
