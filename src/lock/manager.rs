@@ -21,7 +21,6 @@
 use super::models::NewPageLock;
 use crate::manager_prelude::*;
 use crate::schema::page_locks;
-use crate::utils::rows_to_result;
 
 pub struct LockManager {
     conn: Arc<PgConnection>,
@@ -87,21 +86,34 @@ impl LockManager {
         Ok(())
     }
 
-    pub async fn remove(&self, page_id: PageId, user_id: UserId) -> Result<bool> {
+    pub async fn update(
+        &self,
+        page_id: PageId,
+        user_id: UserId,
+        lock_duration: chrono::Duration,
+    ) -> Result<()> {
         debug!(
-            "Removing page lock for page ID {} by user ID {}",
-            page_id, user_id
+            "Extending page lock for page ID {} by user ID {}",
+            page_id, user_id,
         );
 
-        let page_id: i64 = page_id.into();
-        let user_id: i64 = user_id.into();
-
-        let rows = diesel::delete(page_locks::table)
-            .filter(page_locks::dsl::page_id.eq(page_id))
-            .filter(page_locks::dsl::user_id.eq(user_id))
+        let locked_until = Utc::now() + lock_duration;
+        let rows = diesel::update(page_locks::table)
+            .set(page_locks::dsl::locked_until.eq(locked_until))
             .execute(&*self.conn)?;
 
-        Ok(rows_to_result(rows))
+        row_check(rows)
+    }
+
+    pub async fn remove(&self, page_id: PageId) -> Result<()> {
+        debug!("Removing page lock for page ID {}", page_id);
+
+        let id: i64 = page_id.into();
+        let rows = diesel::delete(page_locks::table)
+            .filter(page_locks::dsl::page_id.eq(id))
+            .execute(&*self.conn)?;
+
+        row_check(rows)
     }
 }
 
@@ -112,5 +124,15 @@ impl Debug for LockManager {
         f.debug_struct("LockManager")
             .field("conn", &"PgConnection { .. }")
             .finish()
+    }
+}
+
+fn row_check(rows: usize) -> Result<()> {
+    use crate::utils::rows_to_result;
+
+    if rows_to_result(rows) {
+        Ok(())
+    } else {
+        Err(Error::PageLockNotFound)
     }
 }

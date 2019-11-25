@@ -21,7 +21,44 @@
 use crate::manager_prelude::*;
 
 impl Server {
+    /// Removes any page locks which are no longer active.
     pub async fn invalidate_expired_locks(&self) -> Result<usize> {
         self.lock.invalidate_expired().await
+    }
+
+    /// Creates a page lock for the given user.
+    ///
+    /// The amount of time to acquire the lock for is dependent on the wiki's settings.
+    /// This will fail if a lock is already held for this page.
+    pub async fn create_page_lock(
+        &self,
+        wiki_id: WikiId,
+        page_id: PageId,
+        user_id: UserId,
+    ) -> Result<()> {
+        self.transaction(async {
+            unimplemented!()
+        })
+        .await
+    }
+
+    /// Extends the page lock for the given user.
+    ///
+    /// This will fail if this user does not currently hold a lock for this page.
+    pub async fn update_page_lock(
+        &self,
+        wiki_id: WikiId,
+        page_id: PageId,
+        user_id: UserId,
+    ) -> Result<()> {
+        unimplemented!()
+    }
+
+    /// Lifts the page lock for a particular page.
+    ///
+    /// This will fail if there is no page lock present.
+    #[inline]
+    pub async fn remove_page_lock(&self, page_id: PageId) -> Result<()> {
+        self.lock.remove(page_id).await
     }
 }

@@ -64,6 +64,9 @@ pub enum Error {
     #[error("the page cannot be edited because a lock is present")]
     PageLocked(UserId),
 
+    #[error("a page lock for the given user does not exist")]
+    PageLockNotFound,
+
     #[error("the given user was not found")]
     UserNotFound,
 
