@@ -47,13 +47,29 @@ impl LockManager {
         Ok(rows)
     }
 
+    pub async fn check(&self, page_id: PageId) -> Result<()> {
+        debug!("Checking if a page lock exists for page ID {}", page_id);
+
+        let id: i64 = page_id.into();
+        let result = page_locks::table
+            .filter(page_locks::dsl::page_id.eq(id))
+            .select(page_locks::dsl::user_id)
+            .first::<UserId>(&*self.conn)
+            .optional()?;
+
+        match result {
+            None => Ok(()),
+            Some(user_id) => Err(Error::PageLocked(user_id)),
+        }
+    }
+
     pub async fn add(
         &self,
         page_id: PageId,
         user_id: UserId,
         lock_duration: chrono::Duration,
     ) -> Result<()> {
-        info!(
+        debug!(
             "Creating page lock for page ID {} by user ID {}",
             page_id, user_id,
         );
@@ -72,7 +88,7 @@ impl LockManager {
     }
 
     pub async fn remove(&self, page_id: PageId, user_id: UserId) -> Result<bool> {
-        info!(
+        debug!(
             "Removing page lock for page ID {} by user ID {}",
             page_id, user_id
         );

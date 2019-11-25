@@ -18,13 +18,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use crate::user::UserId;
 use diesel::result::{ConnectionError, Error as DieselError};
 use std::io;
 use subprocess::PopenError;
 
 #[derive(Debug, Error)]
 pub enum Error {
-    #[error("uncommon error: {0}")]
+    #[error("error: {0}")]
     StaticMsg(&'static str),
 
     #[error("general I/O error: {0}")]
@@ -59,6 +60,9 @@ pub enum Error {
 
     #[error("the given page already exists")]
     PageExists,
+
+    #[error("the page cannot be edited because a lock is present")]
+    PageLocked(UserId),
 
     #[error("the given user was not found")]
     UserNotFound,
