@@ -10,6 +10,7 @@ DROP TABLE roles;
 DROP TABLE page_locks;
 DROP TABLE pages;
 DROP TABLE wiki_membership;
+DROP TABLE wiki_settings;
 DROP TABLE wikis;
 DROP TABLE sessions;
 DROP TABLE login_attempts;

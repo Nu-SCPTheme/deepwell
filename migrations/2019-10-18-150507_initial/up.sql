@@ -49,6 +49,11 @@ CREATE TABLE wikis (
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE wiki_settings (
+    wiki_id BIGSERIAL PRIMARY KEY REFERENCES wikis(wiki_id),
+    page_lock_duration SMALLINT NOT NULL CHECK (page_lock_duration > 0)
+);
+
 CREATE TABLE wiki_membership (
     wiki_id BIGSERIAL NOT NULL REFERENCES wikis(wiki_id),
     user_id BIGSERIAL NOT NULL REFERENCES users(user_id),

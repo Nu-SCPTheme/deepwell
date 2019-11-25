@@ -171,6 +171,13 @@ table! {
     }
 }
 
+table! {
+    wiki_settings (wiki_id) {
+        wiki_id -> Int8,
+        page_lock_duration -> Int2,
+    }
+}
+
 joinable!(authors -> pages (page_id));
 joinable!(authors -> users (user_id));
 joinable!(files -> pages (page_id));
@@ -192,6 +199,7 @@ joinable!(sessions -> users (user_id));
 joinable!(tag_history -> revisions (revision_id));
 joinable!(wiki_membership -> users (user_id));
 joinable!(wiki_membership -> wikis (wiki_id));
+joinable!(wiki_settings -> wikis (wiki_id));
 
 allow_tables_to_appear_in_same_query!(
     authors,
@@ -211,4 +219,5 @@ allow_tables_to_appear_in_same_query!(
     users,
     wiki_membership,
     wikis,
+    wiki_settings,
 );
