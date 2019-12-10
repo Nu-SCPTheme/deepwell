@@ -16,7 +16,7 @@ CREATE TABLE users (
 );
 
 CREATE TABLE passwords (
-    user_id BIGSERIAL PRIMARY KEY REFERENCES users(user_id),
+    user_id BIGINT PRIMARY KEY REFERENCES users(user_id),
     hash BYTEA NOT NULL CHECK (LENGTH(hash) * 8 = 256),
     salt BYTEA NOT NULL CHECK (LENGTH(salt) * 8 = 128),
     logn SMALLINT NOT NULL CHECK (ABS(logn) < 128),
@@ -25,7 +25,7 @@ CREATE TABLE passwords (
 );
 
 CREATE TABLE sessions (
-    user_id BIGSERIAL PRIMARY KEY REFERENCES users(user_id),
+    user_id BIGINT PRIMARY KEY REFERENCES users(user_id),
     token VARCHAR(64) NOT NULL UNIQUE,
     ip_address INET NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
@@ -33,7 +33,7 @@ CREATE TABLE sessions (
 
 CREATE TABLE login_attempts (
     login_attempt_id BIGSERIAL PRIMARY KEY,
-    user_id BIGSERIAL REFERENCES users(user_id),
+    user_id BIGINT REFERENCES users(user_id),
     ip_address INET NOT NULL,
     success BOOLEAN NOT NULL,
     attempted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
@@ -50,13 +50,13 @@ CREATE TABLE wikis (
 );
 
 CREATE TABLE wiki_settings (
-    wiki_id BIGSERIAL PRIMARY KEY REFERENCES wikis(wiki_id),
+    wiki_id BIGINT PRIMARY KEY REFERENCES wikis(wiki_id),
     page_lock_duration SMALLINT NOT NULL CHECK (page_lock_duration > 0)
 );
 
 CREATE TABLE wiki_membership (
-    wiki_id BIGSERIAL NOT NULL REFERENCES wikis(wiki_id),
-    user_id BIGSERIAL NOT NULL REFERENCES users(user_id),
+    wiki_id BIGINT NOT NULL REFERENCES wikis(wiki_id),
+    user_id BIGINT NOT NULL REFERENCES users(user_id),
     applied_at TIMESTAMP WITH TIME ZONE NOT NULL,
     joined_at TIMESTAMP WITH TIME ZONE NOT NULL,
     banned_at TIMESTAMP WITH TIME ZONE, -- null = not banned
@@ -66,16 +66,16 @@ CREATE TABLE wiki_membership (
 
 CREATE TABLE roles (
     role_id BIGSERIAL PRIMARY KEY,
-    wiki_id BIGSERIAL NOT NULL REFERENCES wikis(wiki_id),
+    wiki_id BIGINT NOT NULL REFERENCES wikis(wiki_id),
     name TEXT NOT NULL,
     permset JSONB NOT NULL,
     UNIQUE (wiki_id, name)
 );
 
 CREATE TABLE role_membership (
-    wiki_id BIGSERIAL REFERENCES wikis(wiki_id),
-    role_id BIGSERIAL REFERENCES roles(role_id),
-    user_id BIGSERIAL REFERENCES users(user_id),
+    wiki_id BIGINT REFERENCES wikis(wiki_id),
+    role_id BIGINT REFERENCES roles(role_id),
+    user_id BIGINT REFERENCES users(user_id),
     applied_at TIMESTAMP WITH TIME ZONE NOT NULL,
     PRIMARY KEY (wiki_id, role_Id, user_id)
 );
@@ -84,7 +84,7 @@ CREATE TABLE role_membership (
 
 CREATE TABLE pages (
     page_id BIGSERIAL PRIMARY KEY,
-    wiki_id BIGSERIAL NOT NULL REFERENCES wikis(wiki_id),
+    wiki_id BIGINT NOT NULL REFERENCES wikis(wiki_id),
     slug TEXT NOT NULL CHECK (slug ~ '[a-z0-9:_-]+'),
     title TEXT NOT NULL,
     alt_title TEXT,
@@ -95,15 +95,15 @@ CREATE TABLE pages (
 );
 
 CREATE TABLE page_locks (
-    page_id BIGSERIAL PRIMARY KEY REFERENCES pages(page_id),
-    user_id BIGSERIAL REFERENCES users(user_id),
+    page_id BIGINT PRIMARY KEY REFERENCES pages(page_id),
+    user_id BIGINT REFERENCES users(user_id),
     locked_until TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 CREATE TABLE parents (
-    page_id BIGSERIAL NOT NULL REFERENCES pages(page_id),
-    parent_page_id BIGSERIAL NOT NULL REFERENCES pages(page_id),
-    parented_by BIGSERIAL NOT NULL REFERENCES users(user_id),
+    page_id BIGINT NOT NULL REFERENCES pages(page_id),
+    parent_page_id BIGINT NOT NULL REFERENCES pages(page_id),
+    parented_by BIGINT NOT NULL REFERENCES users(user_id),
     parented_at TIMESTAMP WITH TIME ZONE NOT NULL,
     PRIMARY KEY (page_id, parent_page_id)
 );
@@ -111,8 +111,8 @@ CREATE TABLE parents (
 CREATE TABLE revisions (
     revision_id BIGSERIAL PRIMARY KEY,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    page_id BIGSERIAL NOT NULL REFERENCES pages(page_id),
-    user_id BIGSERIAL NOT NULL REFERENCES users(user_id),
+    page_id BIGINT NOT NULL REFERENCES pages(page_id),
+    user_id BIGINT NOT NULL REFERENCES users(user_id),
     message TEXT NOT NULL,
     git_commit CHAR(40) NOT NULL CHECK (git_commit ~ '[a-f0-9]+'),
     change_type VARCHAR(8) NOT NULL CHECK (
@@ -129,30 +129,30 @@ CREATE TABLE revisions (
 );
 
 CREATE TABLE tag_history (
-    revision_id BIGSERIAL REFERENCES revisions(revision_id) PRIMARY KEY,
+    revision_id BIGINT REFERENCES revisions(revision_id) PRIMARY KEY,
     added_tags TEXT[] NOT NULL,
     removed_tags TEXT[] NOT NULL,
     CHECK (NOT(added_tags && removed_tags))
 );
 
 CREATE TABLE ratings (
-    page_id BIGSERIAL NOT NULL,
-    user_id BIGSERIAL NOT NULL,
+    page_id BIGINT NOT NULL REFERENCES pages(page_id),
+    user_id BIGINT NOT NULL REFERENCES users(user_id),
     rating SMALLINT NOT NULL,
     PRIMARY KEY (page_id, user_id)
 );
 
 CREATE TABLE ratings_history (
     rating_id BIGSERIAL PRIMARY KEY,
-    page_id BIGSERIAL NOT NULL REFERENCES pages(page_id),
-    user_id BIGSERIAL NOT NULL REFERENCES users(user_id),
+    page_id BIGINT NOT NULL REFERENCES pages(page_id),
+    user_id BIGINT NOT NULL REFERENCES users(user_id),
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     rating SMALLINT
 );
 
 CREATE TABLE authors (
-    page_id BIGSERIAL NOT NULL REFERENCES pages(page_id),
-    user_id BIGSERIAL NOT NULL REFERENCES users(user_id),
+    page_id BIGINT NOT NULL REFERENCES pages(page_id),
+    user_id BIGINT NOT NULL REFERENCES users(user_id),
     author_type TEXT NOT NULL CHECK (
         author_type IN (
             'author',
@@ -172,5 +172,5 @@ CREATE TABLE files (
     file_name TEXT NOT NULL UNIQUE,
     file_uri TEXT NOT NULL UNIQUE,
     description TEXT NOT NULL,
-    page_id BIGSERIAL NOT NULL REFERENCES pages(page_id)
+    page_id BIGINT NOT NULL REFERENCES pages(page_id)
 );

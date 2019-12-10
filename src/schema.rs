@@ -20,7 +20,7 @@ table! {
 table! {
     login_attempts (login_attempt_id) {
         login_attempt_id -> Int8,
-        user_id -> Int8,
+        user_id -> Nullable<Int8>,
         ip_address -> Inet,
         success -> Bool,
         attempted_at -> Timestamptz,
@@ -30,7 +30,7 @@ table! {
 table! {
     page_locks (page_id) {
         page_id -> Int8,
-        user_id -> Int8,
+        user_id -> Nullable<Int8>,
         locked_until -> Timestamptz,
     }
 }
@@ -187,6 +187,8 @@ joinable!(page_locks -> users (user_id));
 joinable!(pages -> wikis (wiki_id));
 joinable!(parents -> users (parented_by));
 joinable!(passwords -> users (user_id));
+joinable!(ratings -> pages (page_id));
+joinable!(ratings -> users (user_id));
 joinable!(ratings_history -> pages (page_id));
 joinable!(ratings_history -> users (user_id));
 joinable!(revisions -> pages (page_id));
