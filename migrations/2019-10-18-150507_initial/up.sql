@@ -33,7 +33,7 @@ CREATE TABLE sessions (
 
 CREATE TABLE login_attempts (
     login_attempt_id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT REFERENCES users(user_id),
+    user_id BIGINT NOT NULL REFERENCES users(user_id),
     ip_address INET NOT NULL,
     success BOOLEAN NOT NULL,
     attempted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
@@ -96,7 +96,7 @@ CREATE TABLE pages (
 
 CREATE TABLE page_locks (
     page_id BIGINT PRIMARY KEY REFERENCES pages(page_id),
-    user_id BIGINT REFERENCES users(user_id),
+    user_id BIGINT NOT NULL REFERENCES users(user_id),
     locked_until TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
