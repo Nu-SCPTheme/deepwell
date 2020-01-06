@@ -24,6 +24,7 @@ use std::io;
 use subprocess::PopenError;
 
 #[derive(Debug, Error)]
+#[non_exhaustive]
 pub enum Error {
     #[error("error: {0}")]
     StaticMsg(&'static str),
