@@ -85,7 +85,7 @@ pub enum Error {
 }
 
 impl Error {
-    pub fn name(&self) -> &'static str {
+    pub fn fixed_name(&self) -> &'static str {
         use self::Error::*;
 
         match *self {
