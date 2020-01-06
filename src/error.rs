@@ -83,3 +83,31 @@ pub enum Error {
     #[error("the given revision does not correspond to the specified page")]
     RevisionPageMismatch,
 }
+
+impl Error {
+    pub fn name(&self) -> &'static str {
+        use self::Error::*;
+
+        match *self {
+            StaticMsg(_) => "custom",
+            Io(_) => "io",
+            Database(_) => "database",
+            DatabaseConnection(_) => "database-connection",
+            Subprocess(_) => "subprocess",
+            CommandFailed(_) => "command-failed",
+            AuthenticationFailed => "authentication-failed",
+            InvalidToken => "invalid-token",
+            NewPasswordInvalid(_) => "invalid-password",
+            WikiNotFound => "wiki-not-found",
+            PageNotFound => "page-not-found",
+            PageExists => "page-exists",
+            PageLocked(_) => "page-locked",
+            PageLockNotFound => "page-lock-not-found",
+            UserNotFound => "user-not-found",
+            UserNameExists => "user-name-exists",
+            UserEmailExists => "user-email-exists",
+            RevisionNotFound => "revision-not-found",
+            RevisionPageMismatch => "revision-page-mismatch",
+        }
+    }
+}
