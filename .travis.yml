@@ -32,10 +32,10 @@ jobs:
         - rustfmt --edition=2018 src/lib.rs --check
     - stage: clippy
       before_script:
-        - rustup toolchain install nightly-2019-09-25-x86_64-unknown-linux-gnu
-        - rustup component add clippy --toolchain nightly-2019-09-25-x86_64-unknown-linux-gnu
+        - rustup toolchain install nightly-2020-01-02-x86_64-unknown-linux-gnu
+        - rustup component add clippy --toolchain nightly-2020-01-02-x86_64-unknown-linux-gnu
       script:
-        - cargo +nightly-2019-09-25 clippy
+        - cargo +nightly-2020-01-02 clippy
     - stage: test
       rust:
         - stable
