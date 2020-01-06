@@ -34,7 +34,6 @@ regex = "1"
 rust-crypto = "0.2"
 serde = { version = "1", features = ["derive"] }
 subprocess = "0.1"
-thiserror = "1"
 wikidot-normalize = "0.3"
 
 [dev-dependencies]

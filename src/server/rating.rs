@@ -19,7 +19,7 @@
  */
 
 use crate::manager_prelude::*;
-use crate::rating::{RatingHistory, RatingId};
+use crate::rating::RatingHistory;
 
 impl Server {
     /// Sets the rating for a given page and user.

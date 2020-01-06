@@ -1,5 +1,5 @@
 /*
- * lib.rs
+ * types.rs
  *
  * deepwell-core - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
@@ -18,23 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-extern crate diesel;
-extern crate subprocess;
-
-#[macro_use]
-extern crate log;
-
-#[macro_use]
-extern crate serde;
-
-#[macro_use]
-extern crate thiserror;
-
-#[macro_use]
-mod macros;
-
-mod error;
-mod types;
-
-pub use self::error::Error;
-pub use self::types::*;
+make_id_type!(login_attempt, LoginAttemptId);
+make_id_type!(page, PageId);
+make_id_type!(rating, RatingId);
+make_id_type!(revision, RevisionId);
+make_id_type!(user, UserId);
+make_id_type!(wiki, WikiId);

@@ -22,8 +22,6 @@ use super::{NewRating, NewRatingHistory};
 use crate::manager_prelude::*;
 use crate::utils::rows_to_result;
 
-make_id_type!(RatingId);
-
 #[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq)]
 pub struct Rating {
     score: i64,

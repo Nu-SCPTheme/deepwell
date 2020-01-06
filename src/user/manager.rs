@@ -23,8 +23,6 @@ use crate::manager_prelude::*;
 use crate::schema::users;
 use diesel::pg::expression::dsl::any;
 
-make_id_type!(UserId);
-
 #[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
 pub struct User {
     user_id: UserId,

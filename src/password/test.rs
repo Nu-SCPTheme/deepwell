@@ -19,8 +19,8 @@
  */
 
 use super::{check_password, new_password, Password};
-use crate::user::UserId;
 use async_std::task;
+use deepwell_core::UserId;
 
 #[test]
 fn crypto() {

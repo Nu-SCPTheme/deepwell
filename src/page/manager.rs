@@ -22,25 +22,15 @@ use super::{ChangeType, NewPage, NewRevision, NewTagChange, UpdatePage};
 use crate::manager_prelude::*;
 use crate::revision::{CommitInfo, GitHash, RevisionStore};
 use crate::schema::{pages, revisions, tag_history};
-use crate::user::{User, UserId};
-use crate::wiki::{Wiki, WikiId};
+use crate::user::User;
+use crate::wiki::Wiki;
 use async_std::fs;
 use async_std::sync::RwLockReadGuard;
+use deepwell_core::{UserId, WikiId};
 use either::*;
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
-
-mod page_id {
-    make_id_type!(PageId);
-}
-
-mod revision_id {
-    make_id_type!(RevisionId);
-}
-
-pub use self::page_id::PageId;
-pub use self::revision_id::RevisionId;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct PageCommit<'a> {

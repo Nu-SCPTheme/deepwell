@@ -5,7 +5,7 @@ repository = "https://github.com/Nu-SCPTheme/deepwell"
 readme = "README.md"
 license = "AGPL-3.0-or-later"
 keywords = ["wikidot", "revision", "database", "nuscp"]
-categories = []
+categories = ["asynchronous"]
 exclude = [".gitignore", ".travis.yml"]
 
 version = "0.0.1"
@@ -18,3 +18,8 @@ name = "deepwell_core"
 path = "src/lib.rs"
 
 [dependencies]
+diesel = { version = "1", features = ["chrono", "network-address", "postgres"] }
+log = "0.4"
+serde = { version = "1", features = ["derive"] }
+subprocess = "0.1"
+thiserror = "1"

@@ -24,6 +24,7 @@ extern crate arrayvec;
 extern crate async_std;
 extern crate chrono;
 extern crate crypto;
+extern crate deepwell_core;
 
 #[macro_use]
 extern crate diesel;
@@ -44,16 +45,12 @@ extern crate regex;
 #[macro_use]
 extern crate serde;
 extern crate subprocess;
-
-#[macro_use]
-extern crate thiserror;
 extern crate wikidot_normalize;
 
 #[macro_use]
 mod macros;
 
 mod author;
-mod error;
 mod lock;
 mod page;
 mod password;
@@ -70,19 +67,12 @@ mod wiki;
 mod test;
 
 pub mod prelude {
-    pub use crate::id::*;
     pub use crate::model::*;
     pub use crate::page::PageCommit;
     pub use crate::server::{Config, Server};
     pub use crate::user::UserMetadata;
     pub use crate::{Error, Result, StdResult};
-}
-
-pub mod id {
-    pub use crate::page::{PageId, RevisionId};
-    pub use crate::session::LoginAttemptId;
-    pub use crate::user::UserId;
-    pub use crate::wiki::WikiId;
+    pub use deepwell_core::*;
 }
 
 pub mod model {
@@ -116,5 +106,5 @@ mod manager_prelude {
 pub type StdResult<T, E> = std::result::Result<T, E>;
 pub type Result<T> = StdResult<T, Error>;
 
-pub use self::error::Error;
 pub use self::server::{Config, Server};
+pub use deepwell_core::Error;

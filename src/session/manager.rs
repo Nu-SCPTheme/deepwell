@@ -29,8 +29,6 @@ use std::iter;
 
 const TOKEN_LENGTH: usize = 64;
 
-make_id_type!(LoginAttemptId);
-
 // This implementation is extremely primitive -- it just stores a securely-generated
 // random string as the token and then matches it when the user makes calls.
 //

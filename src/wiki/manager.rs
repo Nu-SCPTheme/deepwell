@@ -24,8 +24,6 @@ use crate::schema::{wiki_settings, wikis};
 use async_std::sync::RwLockWriteGuard;
 use chrono::Duration;
 
-make_id_type!(WikiId);
-
 #[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
 pub struct Wiki {
     id: WikiId,

@@ -1,7 +1,7 @@
 /*
  * error.rs
  *
- * deepwell - Database management and migrations service
+ * deepwell-core - Database management and migrations service
  * Copyright (C) 2019 Ammon Smith
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::user::UserId;
+use crate::UserId;
 use diesel::result::{ConnectionError, Error as DieselError};
 use std::io;
 use subprocess::PopenError;
