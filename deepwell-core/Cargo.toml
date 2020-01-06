@@ -1,0 +1,20 @@
+[package]
+name = "deepwell-core"
+description = "Database management and migrations service"
+repository = "https://github.com/Nu-SCPTheme/deepwell"
+readme = "README.md"
+license = "AGPL-3.0-or-later"
+keywords = ["wikidot", "revision", "database", "nuscp"]
+categories = []
+exclude = [".gitignore", ".travis.yml"]
+
+version = "0.0.1"
+authors = ["Ammon Smith <ammon.i.smith@gmail.com>"]
+edition = "2018" # this refers to the Cargo.toml
+workspace = ".."
+
+[lib]
+name = "deepwell_core"
+path = "src/lib.rs"
+
+[dependencies]

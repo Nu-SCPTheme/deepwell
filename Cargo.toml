@@ -1,14 +1,28 @@
 [package]
 name = "deepwell"
 description = "Database management and migrations service"
+repository = "https://github.com/Nu-SCPTheme/deepwell"
+readme = "README.md"
+license = "AGPL-3.0-or-later"
+keywords = ["wikidot", "revision", "database", "nuscp"]
+categories = ["asynchronous"]
+exclude = [".gitignore", ".travis.yml"]
+
 version = "0.0.7"
 authors = ["Ammon Smith <ammon.i.smith@gmail.com>"]
 edition = "2018" # this refers to the Cargo.toml
+
+[workspace]
+members = [
+    ".",
+    "deepwell-core",
+]
 
 [dependencies]
 arrayvec = "0.5"
 async-std = "1"
 chrono = { version = "0.4", features = ["serde"] }
+deepwell-core = { path = "deepwell-core" }
 diesel = { version = "1", features = ["chrono", "network-address", "postgres"] }
 either = "1"
 futures = "0.3"
