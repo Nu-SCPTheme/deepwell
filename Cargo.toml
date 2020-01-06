@@ -26,7 +26,7 @@ deepwell-core = "0.0.1"
 diesel = { version = "1", features = ["chrono", "network-address", "postgres"] }
 either = "1"
 futures = "0.3"
-ipnetwork = "*"
+ipnetwork = "0.15"
 lazy_static = "1"
 log = "0.4"
 rand = "0.7"
