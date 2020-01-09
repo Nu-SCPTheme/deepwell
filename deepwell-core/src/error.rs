@@ -50,6 +50,9 @@ pub enum Error {
     #[error("session expired or invalid")]
     InvalidToken,
 
+    #[error("not logged in")]
+    NotLoggedIn,
+
     #[error("invalid password: {0}")]
     NewPasswordInvalid(&'static str),
 
@@ -97,6 +100,7 @@ impl Error {
             CommandFailed(_) => "command-failed",
             AuthenticationFailed => "authentication-failed",
             InvalidToken => "invalid-token",
+            NotLoggedIn => "not-logged-in",
             NewPasswordInvalid(_) => "invalid-password",
             WikiNotFound => "wiki-not-found",
             PageNotFound => "page-not-found",
