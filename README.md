@@ -6,7 +6,7 @@ Wikidot-like storage and maintenance system. Tracks wikis, users, passwords, pag
 You will need the `diesel_cli` crate installed. For all commands you will need to the `DATABASE_URL` environment variable set.
 
 ### Compilation
-This library targets the latest stable Rust. At time of writing, that is 1.39.0
+This library targets the latest stable Rust. At time of writing, that is 1.40.0
 
 ```sh
 $ diesel migration run
