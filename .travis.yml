@@ -55,8 +55,9 @@ jobs:
         - diesel migration redo
         - cargo build --verbose --release
         - cargo test --verbose --release -- --nocapture
-        - cd deepwell-core && cargo build --verbose --release
-        - cd deepwell-core && cargo test --verbose --release -- --nocapture
+        - cd deepwell-core
+        - cargo build --verbose --release
+        - cargo test --verbose --release -- --nocapture
     - stage: doc
       script:
         - cargo doc --verbose --release
