@@ -31,11 +31,18 @@ jobs:
       script:
         - rustfmt --edition=2018 src/lib.rs --check
         - rustfmt --edition=2018 deepwell-core/src/lib.rs --check
+        - rustfmt --edition=2018 deepwell-rpc/src/lib.rs --check
+        - rustfmt --edition=2018 deepwell-rpc/src/main.rs --check
     - stage: clippy
       before_script:
         - rustup toolchain install nightly-2020-01-02-x86_64-unknown-linux-gnu
         - rustup component add clippy --toolchain nightly-2020-01-02-x86_64-unknown-linux-gnu
       script:
+        - cargo +nightly-2020-01-02 clippy
+        - cd deepwell-core
+        - cargo +nightly-2020-01-02 clippy
+        - cd ..
+        - cd deepwell-rpc
         - cargo +nightly-2020-01-02 clippy
     - stage: test
       rust:
@@ -56,6 +63,10 @@ jobs:
         - cargo build --verbose --release
         - cargo test --verbose --release -- --nocapture
         - cd deepwell-core
+        - cargo build --verbose --release
+        - cargo test --verbose --release -- --nocapture
+        - cd ..
+        - cd deepwell-rpc
         - cargo build --verbose --release
         - cargo test --verbose --release -- --nocapture
     - stage: doc
