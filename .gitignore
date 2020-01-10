@@ -1,5 +1,4 @@
 # Artifacts
-Cargo.lock
 target/
 
 # Don't search or modify password blob
