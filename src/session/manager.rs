@@ -18,49 +18,11 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::{NewLoginAttempt, NewSession};
+use super::NewLoginAttempt;
 use crate::manager_prelude::*;
-use crate::schema::{login_attempts, sessions};
-use crate::utils::rows_to_result;
+use crate::schema::login_attempts;
 use chrono::prelude::*;
 use ipnetwork::IpNetwork;
-use rand::{distributions::Alphanumeric, rngs::OsRng, Rng};
-use std::iter;
-
-const TOKEN_LENGTH: usize = 64;
-
-// This implementation is extremely primitive -- it just stores a securely-generated
-// random string as the token and then matches it when the user makes calls.
-//
-// In the future we will want distinct session objects which are separated by IP and
-// can be invalidated separately.
-//
-// This also might want to be in-memory instead of persisted.
-
-#[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
-pub struct Session {
-    user_id: UserId,
-    token: String,
-    ip_address: IpNetwork,
-    created_at: DateTime<Utc>,
-}
-
-impl Session {
-    #[inline]
-    pub fn user_id(&self) -> UserId {
-        self.user_id
-    }
-
-    #[inline]
-    pub fn token(&self) -> &str {
-        &self.token
-    }
-
-    #[inline]
-    pub fn ip_address(&self) -> IpNetwork {
-        self.ip_address
-    }
-}
 
 #[derive(Debug, Queryable)]
 pub struct LoginAttempt {
@@ -107,76 +69,6 @@ impl SessionManager {
     pub fn new(conn: &Arc<PgConnection>) -> Self {
         let conn = Arc::clone(conn);
         SessionManager { conn }
-    }
-
-    pub async fn get_session(&self, user_id: UserId) -> Result<Option<Session>> {
-        info!("Getting session information any for user ID {}", user_id);
-
-        let id: i64 = user_id.into();
-        let session = sessions::table
-            .find(id)
-            .first::<Session>(&*self.conn)
-            .optional()?;
-
-        Ok(session)
-    }
-
-    pub async fn get_token(&self, user_id: UserId) -> Result<Option<String>> {
-        debug!("Getting token (if any) for user ID {}", user_id);
-
-        let id: i64 = user_id.into();
-        let token = sessions::table
-            .find(id)
-            .select(sessions::dsl::token)
-            .first::<String>(&*self.conn)
-            .optional()?;
-
-        Ok(token)
-    }
-
-    pub async fn check_token(&self, user_id: UserId, token: &str) -> Result<()> {
-        debug!("Checking token for user ID {}", user_id);
-
-        let id: i64 = user_id.into();
-        let result = sessions::table
-            .find(id)
-            .filter(sessions::dsl::token.eq(token))
-            .select(sessions::dsl::user_id)
-            .first::<UserId>(&*self.conn)
-            .optional()?;
-
-        match result {
-            Some(_) => Ok(()),
-            None => Err(Error::InvalidToken),
-        }
-    }
-
-    pub async fn create_token(&self, user_id: UserId, ip_address: IpNetwork) -> Result<String> {
-        debug!("Creating token for user ID {}", user_id);
-
-        let token = generate_token();
-        let model = NewSession {
-            user_id: user_id.into(),
-            token: &token,
-            ip_address,
-        };
-
-        diesel::insert_into(sessions::table)
-            .values(&model)
-            .execute(&*self.conn)?;
-
-        Ok(token)
-    }
-
-    pub async fn revoke_token(&self, user_id: UserId) -> Result<bool> {
-        debug!("Revoking token for user ID {}", user_id);
-
-        let id: i64 = user_id.into();
-        let rows = diesel::delete(sessions::table)
-            .filter(sessions::dsl::user_id.eq(id))
-            .execute(&*self.conn)?;
-
-        Ok(rows_to_result(rows))
     }
 
     pub async fn add_login_attempt(
@@ -242,10 +134,3 @@ impl SessionManager {
 }
 
 impl_async_transaction!(SessionManager);
-
-fn generate_token() -> String {
-    iter::repeat(())
-        .map(|_| OsRng.sample(Alphanumeric))
-        .take(TOKEN_LENGTH)
-        .collect()
-}

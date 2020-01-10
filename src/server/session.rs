@@ -19,26 +19,16 @@
  */
 
 use crate::manager_prelude::*;
-use crate::session::Session;
 
 impl Server {
-    /// Checks if a given token is valid for the given user.
-    #[inline]
-    pub async fn check_token(&self, user_id: UserId, token: &str) -> Result<()> {
-        self.session.check_token(user_id, token).await
-    }
-
-    /// Creates a session by validating the password and creating a token.
-    pub async fn create_session(
+    /// Attempts to login a user, returning `()` if successful.
+    pub async fn try_login(
         &self,
         user_id: UserId,
         password: &str,
         ip_address: IpNetwork,
-    ) -> Result<String> {
-        info!(
-            "Trying to create session for user ID {} (from {})",
-            user_id, ip_address,
-        );
+    ) -> Result<()> {
+        info!("Trying to login user ID {} (from {})", user_id, ip_address);
 
         // Is outside of the transaction so it doesn't get rolled back on failure
         let login_attempt_id = self
@@ -46,32 +36,10 @@ impl Server {
             .add_login_attempt(user_id, ip_address, false)
             .await?;
 
-        trace!("Password validated, getting or creating session token");
-        self.transaction(async {
-            self.password.check(user_id, password).await?;
-            self.session.set_login_success(login_attempt_id).await?;
+        self.password.check(user_id, password).await?;
+        self.session.set_login_success(login_attempt_id).await?;
 
-            let result = self.session.get_token(user_id).await?;
-            if let Some(token) = result {
-                return Ok(token);
-            }
-
-            self.session.create_token(user_id, ip_address).await
-        })
-        .await
-    }
-
-    /// Gets an existing session object for a given user.
-    #[inline]
-    pub async fn get_session(&self, user_id: UserId) -> Result<Option<Session>> {
-        self.session.get_session(user_id).await
-    }
-
-    /// Invalidates a session object manually.
-    /// Returns true if there was a session present.
-    #[inline]
-    pub async fn end_session(&self, user_id: UserId) -> Result<bool> {
-        self.session.revoke_token(user_id).await
+        Ok(())
     }
 
     /// Returns all login attempts for a user since the given date.

@@ -12,7 +12,6 @@ DROP TABLE pages;
 DROP TABLE wiki_membership;
 DROP TABLE wiki_settings;
 DROP TABLE wikis;
-DROP TABLE sessions;
 DROP TABLE login_attempts;
 DROP TABLE passwords;
 DROP TABLE users;

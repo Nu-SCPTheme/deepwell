@@ -79,7 +79,7 @@ pub mod model {
     pub use crate::page::Page;
     pub use crate::rating::Rating;
     pub use crate::revision::{Blame, GitHash};
-    pub use crate::session::{LoginAttempt, Session};
+    pub use crate::session::LoginAttempt;
     pub use crate::user::User;
     pub use crate::wiki::{Wiki, WikiSettings};
 }

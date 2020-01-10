@@ -18,16 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::schema::{login_attempts, sessions};
+use crate::schema::login_attempts;
 use ipnetwork::IpNetwork;
-
-#[derive(Debug, Insertable)]
-#[table_name = "sessions"]
-pub struct NewSession<'a> {
-    pub user_id: i64,
-    pub token: &'a str,
-    pub ip_address: IpNetwork,
-}
 
 #[derive(Debug, Insertable)]
 #[table_name = "login_attempts"]

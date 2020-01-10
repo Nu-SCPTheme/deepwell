@@ -24,13 +24,6 @@ CREATE TABLE passwords (
     param_p INTEGER NOT NULL
 );
 
-CREATE TABLE sessions (
-    user_id BIGINT PRIMARY KEY REFERENCES users(user_id),
-    token VARCHAR(64) NOT NULL UNIQUE,
-    ip_address INET NOT NULL,
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
-
 CREATE TABLE login_attempts (
     login_attempt_id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(user_id),
