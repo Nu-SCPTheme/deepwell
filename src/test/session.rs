@@ -23,8 +23,12 @@ use chrono::prelude::*;
 use ipnetwork::IpNetwork;
 
 lazy_static! {
-    static ref IP_ADDRESS: IpNetwork = {
+    static ref IP_ADDRESS_1: IpNetwork = {
         let ipv6 = "::1".parse().unwrap();
+        IpNetwork::new(ipv6, 0).unwrap()
+    };
+    static ref IP_ADDRESS_2: IpNetwork = {
+        let ipv6 = "2004::aa".parse().unwrap();
         IpNetwork::new(ipv6, 0).unwrap()
     };
 }
@@ -41,77 +45,31 @@ async fn session_manager_internal(server: &Server) {
         .await
         .expect("Unable to create user");
 
-    // Invalid checks
-    server
-        .check_token(user_id, "invalidtoken")
+    // Login
+    let error = server
+        .try_login(user_id, "letmein", *IP_ADDRESS_2)
         .await
-        .expect_err("Invalid token was accepted");
+        .expect_err("Allowed invalid login");
 
-    server
-        .create_session(user_id, "letmein", *IP_ADDRESS)
+    match error {
+        Error::AuthenticationFailed => (),
+        _ => panic!("Error wasn't invalid username or password"),
+    }
+
+    let error = server
+        .try_login(user_id, "backmonhowl", *IP_ADDRESS_1)
         .await
-        .expect_err("Invalid password was accepted");
+        .expect_err("Allowed invalid login");
 
-    let session = server
-        .get_session(user_id)
-        .await
-        .expect("Unable to get session");
-
-    assert!(session.is_none());
-
-    // Create session
-    let token = server
-        .create_session(user_id, "blackmoonhowls", *IP_ADDRESS)
-        .await
-        .expect("Failed to create session");
+    match error {
+        Error::AuthenticationFailed => (),
+        _ => panic!("Error wasn't invalid username or password"),
+    }
 
     server
-        .check_token(user_id, &token)
+        .try_login(user_id, "blackmoonhowls", *IP_ADDRESS_1)
         .await
-        .expect("Token wasn't valid");
-
-    let session = server
-        .get_session(user_id)
-        .await
-        .expect("Unable to get session")
-        .expect("No active session");
-
-    assert_eq!(session.user_id(), user_id);
-    assert_eq!(session.token(), &token);
-    assert_eq!(session.ip_address(), *IP_ADDRESS);
-
-    // End session
-    let deleted = server
-        .end_session(user_id)
-        .await
-        .expect("Unable to end session");
-
-    assert_eq!(deleted, true);
-
-    // Invalid checks
-    let session = server
-        .get_session(user_id)
-        .await
-        .expect("Unable to get session");
-
-    assert!(session.is_none());
-
-    server
-        .check_token(user_id, "invalidtoken")
-        .await
-        .expect_err("Invalid token was accepted");
-
-    server
-        .check_token(user_id, &token)
-        .await
-        .expect_err("Invalid token was accepted");
-
-    let deleted = server
-        .end_session(user_id)
-        .await
-        .expect("Unable to end session");
-
-    assert_eq!(deleted, false);
+        .expect("Unable to login");
 
     // Check all login attempts
     let date = NaiveDate::from_ymd(2001, 1, 1).and_hms(6, 0, 0);
@@ -120,16 +78,21 @@ async fn session_manager_internal(server: &Server) {
         .await
         .expect("Unable to get login attempts");
 
-    assert_eq!(attempts.len(), 2);
+    assert_eq!(attempts.len(), 3);
 
     let first = &attempts[0];
     let second = &attempts[1];
+    let third = &attempts[2];
 
     assert_eq!(first.user_id(), user_id);
-    assert_eq!(first.ip_address(), *IP_ADDRESS);
+    assert_eq!(first.ip_address(), *IP_ADDRESS_2);
     assert_eq!(first.success(), false);
 
     assert_eq!(second.user_id(), user_id);
-    assert_eq!(second.ip_address(), *IP_ADDRESS);
-    assert_eq!(second.success(), true);
+    assert_eq!(second.ip_address(), *IP_ADDRESS_1);
+    assert_eq!(second.success(), false);
+
+    assert_eq!(third.user_id(), user_id);
+    assert_eq!(third.ip_address(), *IP_ADDRESS_1);
+    assert_eq!(third.success(), true);
 }
