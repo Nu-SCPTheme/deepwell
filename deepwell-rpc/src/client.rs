@@ -40,4 +40,35 @@ impl Client {
 
         Ok(Client { client })
     }
+
+    // Misc
+    pub async fn protocol(&mut self) -> io::Result<String> {
+        info!("Method: protocol");
+
+        let version = self.client.protocol(context::current()).await?;
+
+        if PROTOCOL_VERSION != version {
+            warn!(
+                "Protocol version mismatch! Client: {}, server: {}",
+                PROTOCOL_VERSION, version,
+            );
+        }
+
+        Ok(version)
+    }
+
+    pub async fn ping(&mut self) -> io::Result<()> {
+        info!("Method: ping");
+
+        self.client.ping(context::current()).await?;
+        Ok(())
+    }
+
+    pub async fn time(&mut self) -> io::Result<f64> {
+        info!("Method: time");
+
+        self.client.time(context::current()).await
+    }
+
+    // TODO
 }
