@@ -37,5 +37,5 @@ subprocess = "0.1"
 wikidot-normalize = "0.3"
 
 [dev-dependencies]
-color-backtrace = "0.2"
+color-backtrace = "0.3"
 tempfile = "3"
