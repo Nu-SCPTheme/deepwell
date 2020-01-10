@@ -257,6 +257,7 @@ impl UserManager {
         } = changes;
 
         let gender = gender.map(|s| s.to_ascii_lowercase());
+        // Allocate for lowercase'd version, then take reference
         let gender = gender.as_ref().map(|s| s.as_str());
 
         let is_verified = if email.is_some() { Some(false) } else { None };
