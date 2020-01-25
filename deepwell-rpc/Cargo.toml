@@ -14,11 +14,11 @@ edition = "2018" # this refers to the Cargo.toml
 workspace = ".."
 
 [lib]
-name = "client"
+name = "deepwell_rpc"
 path = "src/lib.rs"
 
 [[bin]]
-name = "server"
+name = "deepwell-server"
 path = "src/main.rs"
 
 [dependencies]
