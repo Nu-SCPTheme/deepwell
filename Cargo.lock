@@ -320,7 +320,7 @@ dependencies = [
 
 [[package]]
 name = "deepwell-rpc"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "color-backtrace 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "deepwell 0.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
