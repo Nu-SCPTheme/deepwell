@@ -18,8 +18,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::Result;
-
 pub const PROTOCOL_VERSION: &str = "0";
 
 #[tarpc::service]

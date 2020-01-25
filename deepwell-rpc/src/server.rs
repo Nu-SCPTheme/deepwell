@@ -19,7 +19,6 @@
  */
 
 use crate::api::{Deepwell as DeepwellApi, PROTOCOL_VERSION};
-use crate::Result;
 use futures::future::{self, Ready};
 use futures::prelude::*;
 use std::io;
