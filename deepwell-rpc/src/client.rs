@@ -19,7 +19,6 @@
  */
 
 use crate::api::{DeepwellClient, PROTOCOL_VERSION};
-use crate::Result;
 use std::io;
 use std::net::SocketAddr;
 use tarpc::rpc::client::Config as RpcConfig;
