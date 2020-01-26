@@ -19,10 +19,13 @@
  */
 
 use crate::api::{Deepwell as DeepwellApi, PROTOCOL_VERSION};
+use crate::async_deepwell::*;
 use crate::Result;
-use deepwell::Server as DeepwellServer;
+use async_std::task;
+use deepwell::{Config as DeepwellConfig, Server as DeepwellServer};
 use futures::future::{self, Ready};
 use futures::prelude::*;
+use futures::channel::mpsc;
 use ipnetwork::IpNetwork;
 use std::io;
 use std::net::{IpAddr, SocketAddr};
@@ -36,17 +39,28 @@ use tokio_serde::formats::Json;
 // Prevent network socket exhaustion or related slowdown
 const MAX_PARALLEL_REQUESTS: usize = 16;
 
+// Applies backpressure to AsyncDeepwell
+const QUEUE_SIZE: usize = 256;
+
 #[derive(Debug, Clone)]
 pub struct Server {
-    inner: Arc<DeepwellServer>,
+    channel: mpsc::Sender<AsyncDeepwellRequest>,
 }
 
 impl Server {
     #[inline]
-    pub fn new(deepwell: DeepwellServer) -> Self {
-        Server {
-            inner: Arc::new(deepwell),
-        }
+    pub fn init(config: DeepwellConfig) -> Self {
+        info!("Initializing DEEPWELL server");
+        let (send, recv) = mpsc::channel(QUEUE_SIZE);
+
+        task::spawn(async move {
+            let server = DeepwellServer::new(config)
+                .expect("Unable to start DEEPWELL server");
+
+            AsyncDeepwell::new(server, recv).run().await;
+        });
+
+        Self { channel: send }
     }
 
     pub async fn run(&self, address: SocketAddr) -> io::Result<()> {
@@ -56,6 +70,7 @@ impl Server {
             .filter_map(|conn| {
                 async move {
                     match conn {
+                        // Note incoming connection
                         Ok(conn) => {
                             match conn.peer_addr() {
                                 Ok(addr) => info!("Accepted connection from {}", addr),
@@ -64,6 +79,7 @@ impl Server {
 
                             Some(conn)
                         }
+                        // Unable to accept connection
                         Err(error) => {
                             warn!("Error accepting connection: {}", error);
 

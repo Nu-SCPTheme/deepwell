@@ -308,6 +308,7 @@ dependencies = [
 name = "deepwell-rpc"
 version = "0.0.2"
 dependencies = [
+ "async-std 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "color-backtrace 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "deepwell 0.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "deepwell-core 0.0.5 (registry+https://github.com/rust-lang/crates.io-index)",

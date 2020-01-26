@@ -22,6 +22,7 @@ name = "deepwell-server"
 path = "src/main.rs"
 
 [dependencies]
+async-std = "1"
 color-backtrace = "0.3"
 deepwell = "0.0.7"
 deepwell-core = "0.0.5"

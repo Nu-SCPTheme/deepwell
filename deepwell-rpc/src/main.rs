@@ -20,6 +20,7 @@
 
 //! Server for DEEPWELL via RPC.
 
+extern crate async_std;
 extern crate color_backtrace;
 extern crate deepwell;
 extern crate deepwell_core;
@@ -41,17 +42,17 @@ extern crate tokio;
 extern crate tokio_serde;
 
 mod api;
+mod async_deepwell;
 mod config;
 mod server;
 
+use ref_map::*;
 use self::config::Config;
 use self::server::Server;
 use std::io;
 
 pub use deepwell::{Config as DeepwellConfig, Server as DeepwellServer};
 pub use deepwell_core::SendableError;
-
-use ref_map::*;
 
 pub type StdResult<T, E> = std::result::Result<T, E>;
 pub type Result<T> = StdResult<T, SendableError>;
@@ -79,9 +80,6 @@ async fn main() -> io::Result<()> {
         password_blacklist: password_blacklist.ref_map(|p| p.as_path()),
     };
 
-    info!("Initializing DEEPWELL server");
-    let deepwell = DeepwellServer::new(config).expect("Unable to start DEEPWELL server");
-
     info!("Starting RPC server on {}", address);
-    Server::new(deepwell).run(address).await
+    Server::init(config).run(address).await
 }
