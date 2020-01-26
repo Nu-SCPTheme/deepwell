@@ -20,8 +20,6 @@
 
 use crate::UserId;
 use diesel::result::{ConnectionError, Error as DieselError};
-use serde::{Serialize, Serializer};
-use serde::ser::SerializeMap;
 use std::io;
 use subprocess::PopenError;
 
@@ -118,14 +116,39 @@ impl Error {
     }
 }
 
-impl Serialize for Error {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: Serializer
-    {
-        let mut map = serializer.serialize_map(Some(2))?;
+impl Into<SendableError> for &'_ Error {
+    #[inline]
+    fn into(self) -> SendableError {
+        SendableError {
+            name: self.fixed_name().into(),
+            message: self.to_string(),
+        }
+    }
+}
 
-        map.serialize_entry("error", self.fixed_name())?;
-        map.serialize_entry("message", &self.to_string())?;
-        map.end()
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
+pub struct SendableError {
+    name: String,
+    message: String,
+}
+
+impl SendableError {
+    #[inline]
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    #[inline]
+    pub fn message(&self) -> &str {
+        &self.message
+    }
+}
+
+impl Into<(String, String)> for SendableError {
+    #[inline]
+    fn into(self) -> (String, String) {
+        let Self { name, message } = self;
+
+        (name, message)
     }
 }
