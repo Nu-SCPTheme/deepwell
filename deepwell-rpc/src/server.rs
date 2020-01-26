@@ -19,17 +19,14 @@
  */
 
 use crate::api::{Deepwell as DeepwellApi, PROTOCOL_VERSION};
-use crate::async_deepwell::*;
+use crate::async_deepwell::AsyncDeepwellRequest;
 use crate::Result;
-use async_std::task;
-use deepwell::{Config as DeepwellConfig, Server as DeepwellServer};
+use futures::channel::mpsc;
 use futures::future::{self, Ready};
 use futures::prelude::*;
-use futures::channel::mpsc;
 use ipnetwork::IpNetwork;
 use std::io;
 use std::net::{IpAddr, SocketAddr};
-use std::sync::Arc;
 use std::time::SystemTime;
 use tarpc::context::Context;
 use tarpc::serde_transport::tcp;
@@ -39,9 +36,6 @@ use tokio_serde::formats::Json;
 // Prevent network socket exhaustion or related slowdown
 const MAX_PARALLEL_REQUESTS: usize = 16;
 
-// Applies backpressure to AsyncDeepwell
-const QUEUE_SIZE: usize = 256;
-
 #[derive(Debug, Clone)]
 pub struct Server {
     channel: mpsc::Sender<AsyncDeepwellRequest>,
@@ -49,18 +43,8 @@ pub struct Server {
 
 impl Server {
     #[inline]
-    pub fn init(config: DeepwellConfig) -> Self {
-        info!("Initializing DEEPWELL server");
-        let (send, recv) = mpsc::channel(QUEUE_SIZE);
-
-        task::spawn(async move {
-            let server = DeepwellServer::new(config)
-                .expect("Unable to start DEEPWELL server");
-
-            AsyncDeepwell::new(server, recv).run().await;
-        });
-
-        Self { channel: send }
+    pub fn init(channel: mpsc::Sender<AsyncDeepwellRequest>) -> Self {
+        Self { channel }
     }
 
     pub async fn run(&self, address: SocketAddr) -> io::Result<()> {
@@ -152,7 +136,7 @@ impl DeepwellApi for Server {
 
         let network = get_network(ip_address);
 
-        let fut = self.inner.try_login(&username_or_email, &password, network);
+        //let fut = self.inner.try_login(&username_or_email, &password, network);
         unimplemented!()
         //let result = fut.await.map_err(|error| SendableError::from(error));
     }

@@ -25,16 +25,21 @@ use deepwell::Server as DeepwellServer;
 use futures::channel::{mpsc, oneshot};
 use futures::prelude::*;
 
+const QUEUE_SIZE: usize = 256;
+
 #[derive(Debug)]
 pub struct AsyncDeepwell {
     server: DeepwellServer,
-    channel: mpsc::Receiver<AsyncDeepwellRequest>,
+    recv: mpsc::Receiver<AsyncDeepwellRequest>,
+    send: mpsc::Sender<AsyncDeepwellRequest>,
 }
 
 impl AsyncDeepwell {
     #[inline]
-    pub fn new(server: DeepwellServer, channel: mpsc::Receiver<AsyncDeepwellRequest>) -> Self {
-        Self { server, channel }
+    pub fn new(server: DeepwellServer) -> Self {
+        let (send, recv) = mpsc::channel(QUEUE_SIZE);
+
+        Self { server, recv, send }
     }
 
     #[inline]
@@ -43,7 +48,7 @@ impl AsyncDeepwell {
     }
 
     pub async fn run(&mut self) {
-        while let Some(request) = self.channel.next().await {
+        while let Some(request) = self.recv.next().await {
             match request {
                 // TODO
             }
@@ -54,5 +59,4 @@ impl AsyncDeepwell {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub enum AsyncDeepwellRequest {
-}
+pub enum AsyncDeepwellRequest {}

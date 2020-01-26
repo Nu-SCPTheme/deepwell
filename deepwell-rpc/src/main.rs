@@ -24,6 +24,8 @@ extern crate async_std;
 extern crate color_backtrace;
 extern crate deepwell;
 extern crate deepwell_core;
+
+#[macro_use]
 extern crate futures;
 extern crate ipnetwork;
 
@@ -46,9 +48,10 @@ mod async_deepwell;
 mod config;
 mod server;
 
-use ref_map::*;
+use self::async_deepwell::*;
 use self::config::Config;
 use self::server::Server;
+use ref_map::*;
 use std::io;
 
 pub use deepwell::{Config as DeepwellConfig, Server as DeepwellServer};
@@ -80,6 +83,15 @@ async fn main() -> io::Result<()> {
         password_blacklist: password_blacklist.ref_map(|p| p.as_path()),
     };
 
-    info!("Starting RPC server on {}", address);
-    Server::init(config).run(address).await
+    info!("Initializing DEEPWELL server");
+    let deepwell_server = DeepwellServer::new(config).expect("Unable to start DEEPWELL server");
+
+    let mut deepwell = AsyncDeepwell::new(deepwell_server);
+    let send = deepwell.sender();
+
+    info!("Initializing RPC server on {}", address);
+    let rpc = Server::init(send);
+
+    // Run both in parallel, return RPC status at end
+    join!(rpc.run(address), deepwell.run()).0
 }
