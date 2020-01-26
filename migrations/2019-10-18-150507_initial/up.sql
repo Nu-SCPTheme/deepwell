@@ -26,7 +26,8 @@ CREATE TABLE passwords (
 
 CREATE TABLE login_attempts (
     login_attempt_id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES users(user_id),
+    user_id BIGINT REFERENCES users(user_id),
+    username_or_email TEXT,
     ip_address INET NOT NULL,
     success BOOLEAN NOT NULL,
     attempted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()

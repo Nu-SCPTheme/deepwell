@@ -23,11 +23,13 @@ use crate::manager_prelude::*;
 use crate::schema::login_attempts;
 use chrono::prelude::*;
 use ipnetwork::IpNetwork;
+use ref_map::*;
 
 #[derive(Debug, Queryable)]
 pub struct LoginAttempt {
     id: LoginAttemptId,
-    user_id: UserId,
+    user_id: Option<UserId>,
+    username_or_email: Option<String>,
     ip_address: IpNetwork,
     success: bool,
     attempted_at: DateTime<Utc>,
@@ -40,8 +42,13 @@ impl LoginAttempt {
     }
 
     #[inline]
-    pub fn user_id(&self) -> UserId {
+    pub fn user_id(&self) -> Option<UserId> {
         self.user_id
+    }
+
+    #[inline]
+    pub fn username_or_email(&self) -> Option<&str> {
+        self.username_or_email.ref_map(|s| s.as_str())
     }
 
     #[inline]
@@ -73,17 +80,19 @@ impl SessionManager {
 
     pub async fn add_login_attempt(
         &self,
-        user_id: UserId,
+        user_id: Option<UserId>,
+        username_or_email: Option<&str>,
         ip_address: IpNetwork,
         success: bool,
     ) -> Result<LoginAttemptId> {
         debug!(
-            "Adding login attempt for user ID {} from {}",
-            user_id, ip_address,
+            "Adding login attempt for user ID {:?} / name {:?} from {}",
+            user_id, username_or_email, ip_address,
         );
 
         let model = NewLoginAttempt {
-            user_id: user_id.into(),
+            user_id: user_id.map(|id| id.into()),
+            username_or_email,
             ip_address,
             success,
         };
@@ -114,18 +123,21 @@ impl SessionManager {
 
     pub async fn get_login_attempts(
         &self,
-        user_id: UserId,
+        user: &User,
         since: DateTime<Utc>,
     ) -> Result<Vec<LoginAttempt>> {
         debug!(
             "Getting login attempts for user ID {} since {}",
-            user_id, since,
+            user.id(),
+            since,
         );
 
-        let id: i64 = user_id.into();
+        let id: i64 = user.id().into();
         let attempts = login_attempts::table
             .filter(login_attempts::attempted_at.gt(since))
             .filter(login_attempts::user_id.eq(id))
+            .or_filter(login_attempts::username_or_email.eq(user.name()))
+            .or_filter(login_attempts::username_or_email.eq(user.email()))
             .order_by(login_attempts::attempted_at.desc())
             .get_results::<LoginAttempt>(&*self.conn)?;
 

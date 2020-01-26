@@ -23,8 +23,9 @@ use ipnetwork::IpNetwork;
 
 #[derive(Debug, Insertable)]
 #[table_name = "login_attempts"]
-pub struct NewLoginAttempt {
-    pub user_id: i64,
+pub struct NewLoginAttempt<'a> {
+    pub user_id: Option<i64>,
+    pub username_or_email: Option<&'a str>,
     pub ip_address: IpNetwork,
     pub success: bool,
 }

@@ -30,10 +30,10 @@ impl Server {
     ) -> Result<()> {
         info!("Trying to login user ID {} (from {})", user_id, ip_address);
 
-        // Is outside of the transaction so it doesn't get rolled back on failure
+        // Outside of a transaction so it doesn't get rolled back
         let login_attempt_id = self
             .session
-            .add_login_attempt(user_id, ip_address, false)
+            .add_login_attempt(Some(user_id), None, ip_address, false)
             .await?;
 
         self.password.check(user_id, password).await?;
@@ -54,11 +54,32 @@ impl Server {
             name_or_email, ip_address,
         );
 
+        if password.is_empty() {
+            // If they filled in the username but not the password,
+            // it is possible they accidentally entered the password
+            // in the username/email field and hit enter.
+            //
+            // In such a case we do not want to log their attempt, or
+            // we could be recording their password (or something similar)
+            // in plaintext.
+            //
+            // Instead we will bail out with an authentication failure.
+            return Err(Error::AuthenticationFailed);
+        }
+
+        // Get associated user, if it exists
         let user_id = self.user.get_id_from_email_or_name(name_or_email).await?;
 
+        // Attempt login or fail
         match user_id {
             Some(id) => self.try_login_id(id, password, ip_address).await,
-            None => Err(Error::AuthenticationFailed),
+            None => {
+                self.session
+                    .add_login_attempt(None, Some(name_or_email), ip_address, false)
+                    .await?;
+
+                Err(Error::AuthenticationFailed)
+            }
         }
     }
 
@@ -69,6 +90,15 @@ impl Server {
         user_id: UserId,
         since: DateTime<Utc>,
     ) -> Result<Vec<LoginAttempt>> {
-        self.session.get_login_attempts(user_id, since).await
+        self.transaction(async {
+            let user = self
+                .user
+                .get_from_id(user_id)
+                .await?
+                .ok_or(Error::UserNotFound)?;
+
+            self.session.get_login_attempts(&user, since).await
+        })
+        .await
     }
 }

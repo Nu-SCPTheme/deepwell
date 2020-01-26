@@ -25,6 +25,10 @@ impl Server {
     /// Sets or overwrites the given user's password.
     #[inline]
     pub fn set_user_password(&self, user_id: UserId, password: &str) -> Result<()> {
+        if password.is_empty() {
+            return Err(Error::NewPasswordInvalid("passwords may not be empty"));
+        }
+
         task::block_on(self.password.set(user_id, password))?;
         Ok(())
     }
