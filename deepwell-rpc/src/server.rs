@@ -19,11 +19,14 @@
  */
 
 use crate::api::{Deepwell as DeepwellApi, PROTOCOL_VERSION};
+use deepwell::Server as DeepwellServer;
 use futures::future::{self, Ready};
 use futures::prelude::*;
+use ipnetwork::IpNetwork;
 use std::io;
-use std::net::SocketAddr;
+use std::net::{IpAddr, SocketAddr};
 use std::time::SystemTime;
+use std::rc::Rc;
 use tarpc::context::Context;
 use tarpc::serde_transport::tcp;
 use tarpc::server::{BaseChannel, Channel};
@@ -115,4 +118,22 @@ impl DeepwellApi for Server {
     }
 
     // TODO
+}
+
+fn get_network(ip: IpAddr) -> IpNetwork {
+    use ipnetwork::{Ipv4Network, Ipv6Network, IpNetwork};
+    use std::net::{IpAddrV4, IpAddrV6};
+
+    fn convert_v4(ip: IpAddrV4) -> Ipv4Network {
+        Ipv4Network::new(ip, 32).expect("Unable to convert IPv4 address")
+    }
+
+    fn convert_v6(ip: IpAddrV6) -> Ipv6Network {
+        Ipv6Network::new(ip, 128).expect("Unable to convert IPv6 address")
+    }
+
+    match ip {
+        IpAddr::V4(ip) => IpNetwork::V4(convert_v4(ip)),
+        IpAddr::V6(ip) => IpNetwork::V6(convert_v6(ip)),
+    }
 }

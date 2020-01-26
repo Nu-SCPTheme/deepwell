@@ -23,6 +23,7 @@
 extern crate color_backtrace;
 extern crate deepwell_core;
 extern crate futures;
+extern crate ipnetwork;
 
 #[macro_use]
 extern crate log;
