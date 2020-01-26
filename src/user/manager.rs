@@ -220,22 +220,22 @@ impl UserManager {
         Ok(users)
     }
 
-    pub async fn get_from_name(&self, name: &str) -> Result<Option<User>> {
-        info!("Getting user for name '{}'", name);
+    pub async fn get_from_email(&self, email: &str) -> Result<Option<User>> {
+        info!("Getting user for email '{}'", email);
 
         let result = users::table
-            .filter(users::name.eq(name))
+            .filter(users::email.eq(email))
             .first::<User>(&*self.conn)
             .optional()?;
 
         Ok(result)
     }
 
-    pub async fn get_from_email(&self, email: &str) -> Result<Option<User>> {
-        info!("Getting user for email '{}'", email);
+    pub async fn get_from_name(&self, name: &str) -> Result<Option<User>> {
+        info!("Getting user for name '{}'", name);
 
         let result = users::table
-            .filter(users::email.eq(email))
+            .filter(users::name.eq(name))
             .first::<User>(&*self.conn)
             .optional()?;
 
