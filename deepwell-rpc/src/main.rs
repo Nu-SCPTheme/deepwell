@@ -29,6 +29,7 @@ extern crate ipnetwork;
 #[macro_use]
 extern crate log;
 extern crate pretty_env_logger;
+extern crate ref_map;
 
 #[macro_use]
 extern crate serde;
@@ -50,6 +51,8 @@ use std::io;
 pub use deepwell::{Config as DeepwellConfig, Server as DeepwellServer};
 pub use deepwell_core::SendableError;
 
+use ref_map::*;
+
 pub type StdResult<T, E> = std::result::Result<T, E>;
 pub type Result<T> = StdResult<T, SendableError>;
 
@@ -67,7 +70,7 @@ async fn main() -> io::Result<()> {
     let config = DeepwellConfig {
         database_url: &database_url,
         revisions_dir,
-        password_blacklist: password_blacklist.map(|p| p.as_path()),
+        password_blacklist: password_blacklist.ref_map(|p| p.as_path()),
     };
 
     info!("Initializing DEEPWELL server");
