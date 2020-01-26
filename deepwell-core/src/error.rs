@@ -20,6 +20,8 @@
 
 use crate::UserId;
 use diesel::result::{ConnectionError, Error as DieselError};
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeMap;
 use std::io;
 use subprocess::PopenError;
 
@@ -113,5 +115,17 @@ impl Error {
             RevisionNotFound => "revision-not-found",
             RevisionPageMismatch => "revision-page-mismatch",
         }
+    }
+}
+
+impl Serialize for Error {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: Serializer
+    {
+        let mut map = serializer.serialize_map(Some(2))?;
+
+        map.serialize_entry("error", self.fixed_name())?;
+        map.serialize_entry("message", &self.to_string())?;
+        map.end()
     }
 }
