@@ -35,7 +35,7 @@ regex = "1"
 rust-crypto = "0.2"
 serde = { version = "1", features = ["derive"] }
 subprocess = "0.1"
-wikidot-normalize = "0.3"
+wikidot-normalize = "0.4"
 
 [dev-dependencies]
 color-backtrace = "0.3"
