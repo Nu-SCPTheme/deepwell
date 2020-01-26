@@ -21,9 +21,12 @@
 //! Helper struct to keep `deepwell::Server` in a fixed memory position,
 //! and use `Send + Sync` future channels to communicate with it.
 
+use crate::StdResult;
 use deepwell::Server as DeepwellServer;
+use deepwell_core::Error as DeepwellError;
 use futures::channel::{mpsc, oneshot};
 use futures::prelude::*;
+use ipnetwork::IpNetwork;
 
 const QUEUE_SIZE: usize = 256;
 
@@ -48,9 +51,25 @@ impl AsyncDeepwell {
     }
 
     pub async fn run(&mut self) {
+        use AsyncDeepwellRequest::*;
+
         while let Some(request) = self.recv.next().await {
             match request {
-                // TODO
+                TryLogin {
+                    username_or_email,
+                    password,
+                    network,
+                    response,
+                } => {
+                    debug!("Received TryLogin request");
+
+                    let result = self
+                        .server
+                        .try_login(&username_or_email, &password, network)
+                        .await;
+
+                    response.send(result).expect("Result receiver closed");
+                } // TODO
             }
         }
 
@@ -58,5 +77,12 @@ impl AsyncDeepwell {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum AsyncDeepwellRequest {}
+#[derive(Debug)]
+pub enum AsyncDeepwellRequest {
+    TryLogin {
+        username_or_email: String,
+        password: String,
+        network: IpNetwork,
+        response: oneshot::Sender<StdResult<(), DeepwellError>>,
+    },
+}

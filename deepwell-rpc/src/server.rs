@@ -20,9 +20,10 @@
 
 use crate::api::{Deepwell as DeepwellApi, PROTOCOL_VERSION};
 use crate::async_deepwell::AsyncDeepwellRequest;
-use crate::Result;
-use futures::channel::mpsc;
-use futures::future::{self, Ready};
+use crate::{Result, StdResult};
+use deepwell_core::Error as DeepwellError;
+use futures::channel::{mpsc, oneshot};
+use futures::future::{self, BoxFuture, Ready};
 use futures::prelude::*;
 use ipnetwork::IpNetwork;
 use std::io;
@@ -84,6 +85,19 @@ impl Server {
 
         Ok(())
     }
+
+    /// Enqueues the deepwell request on the mpsc, and awaits the result oneshot for the result.
+    async fn call<T>(
+        &mut self,
+        request: AsyncDeepwellRequest,
+        recv: oneshot::Receiver<StdResult<T, DeepwellError>>,
+    ) -> Result<T> {
+        self.channel.send(request).await;
+
+        recv.await
+            .expect("Oneshot closed before result")
+            .map_err(|e| e.to_sendable())
+    }
 }
 
 impl DeepwellApi for Server {
@@ -123,10 +137,10 @@ impl DeepwellApi for Server {
     }
 
     // Sessions
-    type LoginFut = Ready<Result<()>>;
+    type LoginFut = BoxFuture<'static, Result<()>>;
 
     fn login(
-        self,
+        mut self,
         _: Context,
         username_or_email: String,
         password: String,
@@ -134,11 +148,21 @@ impl DeepwellApi for Server {
     ) -> Self::LoginFut {
         info!("Method: login");
 
-        let network = get_network(ip_address);
+        let fut = async move {
+            let (send, recv) = oneshot::channel();
+            let network = get_network(ip_address);
 
-        //let fut = self.inner.try_login(&username_or_email, &password, network);
-        unimplemented!()
-        //let result = fut.await.map_err(|error| SendableError::from(error));
+            let request = AsyncDeepwellRequest::TryLogin {
+                username_or_email,
+                password,
+                network,
+                response: send,
+            };
+
+            self.call(request, recv).await
+        };
+
+        fut.boxed()
     }
 
     // TODO
