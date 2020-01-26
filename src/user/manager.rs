@@ -220,6 +220,19 @@ impl UserManager {
         Ok(users)
     }
 
+    pub async fn get_id_from_email_or_name(&self, name_or_email: &str) -> Result<Option<UserId>> {
+        info!("Getting user ID for username or email '{}'", name_or_email);
+
+        let result = users::table
+            .filter(users::name.eq(name_or_email))
+            .or_filter(users::email.eq(name_or_email))
+            .select(users::dsl::user_id)
+            .first::<UserId>(&*self.conn)
+            .optional()?;
+
+        Ok(result)
+    }
+
     pub async fn get_from_email(&self, email: &str) -> Result<Option<User>> {
         info!("Getting user for email '{}'", email);
 

@@ -21,8 +21,8 @@
 use crate::manager_prelude::*;
 
 impl Server {
-    /// Attempts to login a user, returning `()` if successful.
-    pub async fn try_login(
+    /// Attempts to login a user via user ID, returning `()` if successful.
+    pub async fn try_login_id(
         &self,
         user_id: UserId,
         password: &str,
@@ -40,6 +40,26 @@ impl Server {
         self.session.set_login_success(login_attempt_id).await?;
 
         Ok(())
+    }
+
+    /// Attempts to login a user via username or email, returning `()` if successful.
+    pub async fn try_login(
+        &self,
+        name_or_email: &str,
+        password: &str,
+        ip_address: IpNetwork,
+    ) -> Result<()> {
+        info!(
+            "Trying to login user '{}' (from {})",
+            name_or_email, ip_address,
+        );
+
+        let user_id = self.user.get_id_from_email_or_name(name_or_email).await?;
+
+        match user_id {
+            Some(id) => self.try_login_id(id, password, ip_address).await,
+            None => Err(Error::AuthenticationFailed),
+        }
     }
 
     /// Returns all login attempts for a user since the given date.
