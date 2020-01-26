@@ -8,7 +8,7 @@ keywords = ["wikidot", "revision", "database", "nuscp"]
 categories = ["asynchronous"]
 exclude = [".gitignore", ".travis.yml"]
 
-version = "0.0.5"
+version = "0.0.6"
 authors = ["Ammon Smith <ammon.i.smith@gmail.com>"]
 edition = "2018" # this refers to the Cargo.toml
 workspace = ".."
