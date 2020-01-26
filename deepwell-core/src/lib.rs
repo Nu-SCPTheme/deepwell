@@ -36,5 +36,5 @@ mod macros;
 mod error;
 mod types;
 
-pub use self::error::Error;
+pub use self::error::{Error, SendableError};
 pub use self::types::*;
