@@ -18,6 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use crate::Result;
+use std::net::IpAddr;
+
 pub const PROTOCOL_VERSION: &str = "0";
 
 #[tarpc::service]
@@ -26,6 +29,9 @@ pub trait Deepwell {
     async fn protocol() -> String;
     async fn ping() -> String;
     async fn time() -> f64;
+
+    // Session
+    async fn login(username_or_email: String, password: String, ip_address: IpAddr) -> Result<()>;
 
     // TODO
 }

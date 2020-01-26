@@ -20,7 +20,7 @@
 
 //! Client for sending RPC calls to DEEPWELL
 
-extern crate deepwell;
+extern crate deepwell_core;
 extern crate futures;
 
 #[macro_use]
@@ -35,7 +35,7 @@ mod client;
 
 pub use self::api::PROTOCOL_VERSION;
 pub use self::client::Client;
-pub use deepwell::Error;
+pub use deepwell_core::SendableError;
 
 pub type StdResult<T, E> = std::result::Result<T, E>;
-pub type Result<T> = StdResult<T, Error>;
+pub type Result<T> = StdResult<T, SendableError>;

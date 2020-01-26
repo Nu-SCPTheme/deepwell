@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use crate::Result;
 use crate::api::{Deepwell as DeepwellApi, PROTOCOL_VERSION};
 use deepwell::Server as DeepwellServer;
 use futures::future::{self, Ready};
@@ -36,12 +37,14 @@ use tokio_serde::formats::Json;
 const MAX_PARALLEL_REQUESTS: usize = 16;
 
 #[derive(Debug, Clone)]
-pub struct Server;
+pub struct Server {
+    inner: Rc<DeepwellServer>,
+}
 
 impl Server {
     #[inline]
-    pub fn new() -> Self {
-        Server
+    pub fn new(deepwell: DeepwellServer) -> Self {
+        Server { inner: Rc::new(deepwell) }
     }
 
     pub async fn run(&self, address: SocketAddr) -> io::Result<()> {
@@ -117,18 +120,31 @@ impl DeepwellApi for Server {
         future::ready(unix_time)
     }
 
+    // Sessions
+    type LoginFut = Ready<Result<()>>;
+
+    fn login(self, _: Context, username_or_email: String, password: String, ip_address: IpAddr) -> Self::LoginFut {
+        info!("Method: login");
+
+        let network = get_network(ip_address);
+
+        let fut = self.inner.try_login(&username_or_email, &password, network);
+        unimplemented!()
+        //let result = fut.await.map_err(|error| SendableError::from(error));
+    }
+
     // TODO
 }
 
 fn get_network(ip: IpAddr) -> IpNetwork {
-    use ipnetwork::{Ipv4Network, Ipv6Network, IpNetwork};
-    use std::net::{IpAddrV4, IpAddrV6};
+    use ipnetwork::{Ipv4Network, Ipv6Network};
+    use std::net::{Ipv4Addr, Ipv6Addr};
 
-    fn convert_v4(ip: IpAddrV4) -> Ipv4Network {
+    fn convert_v4(ip: Ipv4Addr) -> Ipv4Network {
         Ipv4Network::new(ip, 32).expect("Unable to convert IPv4 address")
     }
 
-    fn convert_v6(ip: IpAddrV6) -> Ipv6Network {
+    fn convert_v6(ip: Ipv6Addr) -> Ipv6Network {
         Ipv6Network::new(ip, 128).expect("Unable to convert IPv6 address")
     }
 

@@ -21,6 +21,7 @@
 //! Server for DEEPWELL via RPC.
 
 extern crate color_backtrace;
+extern crate deepwell;
 extern crate deepwell_core;
 extern crate futures;
 extern crate ipnetwork;
@@ -46,22 +47,32 @@ use self::config::Config;
 use self::server::Server;
 use std::io;
 
-pub use deepwell_core::Error;
+pub use deepwell::{Config as DeepwellConfig, Server as DeepwellServer};
+pub use deepwell_core::SendableError;
 
 pub type StdResult<T, E> = std::result::Result<T, E>;
-pub type Result<T> = StdResult<T, Error>;
+pub type Result<T> = StdResult<T, SendableError>;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
     color_backtrace::install();
 
-    let Config { address, log_level } = Config::parse_args();
+    let Config { address, log_level, database_url, revisions_dir, password_blacklist } = Config::parse_args();
 
     pretty_env_logger::formatted_builder()
         .filter_level(log_level)
         .init();
 
-    info!("Initializing DEEPWELL RPC server on {}", address);
+    debug!("Building DEEPWELL server configuration");
+    let config = DeepwellConfig {
+        database_url: &database_url,
+        revisions_dir,
+        password_blacklist: password_blacklist.map(|p| p.as_path()),
+    };
 
-    Server::new().run(address).await
+    info!("Initializing DEEPWELL server");
+    let deepwell = DeepwellServer::new(config).expect("Unable to start DEEPWELL server");
+
+    info!("Starting RPC server on {}", address);
+    Server::new(deepwell).run(address).await
 }

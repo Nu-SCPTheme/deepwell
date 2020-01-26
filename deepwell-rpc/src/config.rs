@@ -51,6 +51,9 @@ struct Options {
 pub struct Config {
     pub address: SocketAddr,
     pub log_level: LevelFilter,
+    pub database_url: String,
+    pub revisions_dir: PathBuf,
+    pub password_blacklist: Option<PathBuf>,
 }
 
 impl Config {
@@ -81,9 +84,25 @@ struct Network {
 
 #[serde(rename_all = "kebab-case")]
 #[derive(Deserialize, Debug)]
+struct Data {
+    database_url: String,
+    revisions_dir: PathBuf,
+}
+
+
+#[serde(rename_all = "kebab-case")]
+#[derive(Deserialize, Debug)]
+struct Security {
+    password_blacklist_file: PathBuf,
+}
+
+#[serde(rename_all = "kebab-case")]
+#[derive(Deserialize, Debug)]
 struct ConfigFile {
     app: App,
     network: Network,
+    data: Data,
+    security: Security,
 }
 
 impl ConfigFile {
@@ -132,14 +151,22 @@ impl ConfigFile {
 impl Into<Config> for ConfigFile {
     #[cold]
     fn into(self) -> Config {
-        let ConfigFile { app, network } = self;
+        let ConfigFile { app, network, data, security } = self;
 
         let Network { use_ipv6, port } = network;
+        let Data { database_url, revisions_dir } = data;
+        let Security { password_blacklist_file } = security;
 
         let ip_address = if use_ipv6 {
             IpAddr::V6(Ipv6Addr::UNSPECIFIED)
         } else {
             IpAddr::V4(Ipv4Addr::UNSPECIFIED)
+        };
+
+        let password_blacklist = if password_blacklist_file.as_os_str().is_empty() {
+            None
+        } else {
+            Some(password_blacklist_file)
         };
 
         let address = SocketAddr::new(ip_address, port.unwrap_or(DEFAULT_PORT));
@@ -148,6 +175,9 @@ impl Into<Config> for ConfigFile {
         Config {
             address,
             log_level: Self::parse_log_level(log_level),
+            database_url,
+            revisions_dir,
+            password_blacklist,
         }
     }
 }

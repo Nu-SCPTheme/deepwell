@@ -10,5 +10,19 @@ log-level = "debug"
 # Whether to use IPv6 or not.
 use-ipv6 = true
 
-# What port to serve on
+# What port to serve on.
 port = 2747
+
+[data]
+
+# The URL of the postgres database to connect to.
+database-url = "postgres://overseer:blackmoon@localhost/deepwell"
+
+# Path of the directory containing the git repositories for each wiki.
+revisions-dir = "/var/lib/scp/deepwell/stored-revisions"
+
+[security]
+
+# File containing all blacklisted passwords. One password per line.
+# If this key is empty, no blacklist is used.
+password-blacklist-file = "password-blacklist.txt"
