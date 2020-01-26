@@ -114,11 +114,9 @@ impl Error {
             RevisionPageMismatch => "revision-page-mismatch",
         }
     }
-}
 
-impl Into<SendableError> for &'_ Error {
     #[inline]
-    fn into(self) -> SendableError {
+    pub fn to_sendable(&self) -> SendableError {
         SendableError {
             name: self.fixed_name().into(),
             message: self.to_string(),
