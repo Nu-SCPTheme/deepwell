@@ -89,7 +89,6 @@ struct Data {
     revisions_dir: PathBuf,
 }
 
-
 #[serde(rename_all = "kebab-case")]
 #[derive(Deserialize, Debug)]
 struct Security {
@@ -151,11 +150,21 @@ impl ConfigFile {
 impl Into<Config> for ConfigFile {
     #[cold]
     fn into(self) -> Config {
-        let ConfigFile { app, network, data, security } = self;
+        let ConfigFile {
+            app,
+            network,
+            data,
+            security,
+        } = self;
 
         let Network { use_ipv6, port } = network;
-        let Data { database_url, revisions_dir } = data;
-        let Security { password_blacklist_file } = security;
+        let Data {
+            database_url,
+            revisions_dir,
+        } = data;
+        let Security {
+            password_blacklist_file,
+        } = security;
 
         let ip_address = if use_ipv6 {
             IpAddr::V6(Ipv6Addr::UNSPECIFIED)

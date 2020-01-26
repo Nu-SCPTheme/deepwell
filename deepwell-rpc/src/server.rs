@@ -18,16 +18,16 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::Result;
 use crate::api::{Deepwell as DeepwellApi, PROTOCOL_VERSION};
+use crate::Result;
 use deepwell::Server as DeepwellServer;
 use futures::future::{self, Ready};
 use futures::prelude::*;
 use ipnetwork::IpNetwork;
 use std::io;
 use std::net::{IpAddr, SocketAddr};
+use std::sync::Arc;
 use std::time::SystemTime;
-use std::rc::Rc;
 use tarpc::context::Context;
 use tarpc::serde_transport::tcp;
 use tarpc::server::{BaseChannel, Channel};
@@ -38,13 +38,15 @@ const MAX_PARALLEL_REQUESTS: usize = 16;
 
 #[derive(Debug, Clone)]
 pub struct Server {
-    inner: Rc<DeepwellServer>,
+    inner: Arc<DeepwellServer>,
 }
 
 impl Server {
     #[inline]
     pub fn new(deepwell: DeepwellServer) -> Self {
-        Server { inner: Rc::new(deepwell) }
+        Server {
+            inner: Arc::new(deepwell),
+        }
     }
 
     pub async fn run(&self, address: SocketAddr) -> io::Result<()> {
@@ -123,7 +125,13 @@ impl DeepwellApi for Server {
     // Sessions
     type LoginFut = Ready<Result<()>>;
 
-    fn login(self, _: Context, username_or_email: String, password: String, ip_address: IpAddr) -> Self::LoginFut {
+    fn login(
+        self,
+        _: Context,
+        username_or_email: String,
+        password: String,
+        ip_address: IpAddr,
+    ) -> Self::LoginFut {
         info!("Method: login");
 
         let network = get_network(ip_address);

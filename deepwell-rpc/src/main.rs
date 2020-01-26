@@ -60,7 +60,13 @@ pub type Result<T> = StdResult<T, SendableError>;
 async fn main() -> io::Result<()> {
     color_backtrace::install();
 
-    let Config { address, log_level, database_url, revisions_dir, password_blacklist } = Config::parse_args();
+    let Config {
+        address,
+        log_level,
+        database_url,
+        revisions_dir,
+        password_blacklist,
+    } = Config::parse_args();
 
     pretty_env_logger::formatted_builder()
         .filter_level(log_level)
