@@ -25,49 +25,59 @@ use ipnetwork::IpNetwork;
 lazy_static! {
     static ref IP_ADDRESS_1: IpNetwork = {
         let ipv6 = "::1".parse().unwrap();
-        IpNetwork::new(ipv6, 0).unwrap()
+        IpNetwork::new(ipv6, 128).unwrap()
     };
     static ref IP_ADDRESS_2: IpNetwork = {
         let ipv6 = "2004::aa".parse().unwrap();
-        IpNetwork::new(ipv6, 0).unwrap()
+        IpNetwork::new(ipv6, 128).unwrap()
+    };
+}
+
+macro_rules! check_err {
+    ($error:expr) => {
+        match $error {
+            Error::AuthenticationFailed => (),
+            _ => panic!("Error wasn't invalid username or password"),
+        }
     };
 }
 
 #[test]
 fn session_manager() {
-    run(|server| task::block_on(session_manager_internal(server)));
+    run(|server| {
+        task::block_on(async {
+            let user_id = setup(server).await;
+            session_manager_internal_id(server, user_id).await;
+            session_manager_internal_name(server).await;
+        })
+    });
 }
 
-async fn session_manager_internal(server: &Server) {
-    // Setup
-    let user_id = server
+async fn setup(server: &Server) -> UserId {
+    server
         .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
         .await
-        .expect("Unable to create user");
+        .expect("Unable to create user")
+}
 
+async fn session_manager_internal_id(server: &Server, user_id: UserId) {
     // Login
     let error = server
-        .try_login(user_id, "letmein", *IP_ADDRESS_2)
+        .try_login_id(user_id, "letmein", *IP_ADDRESS_2)
         .await
         .expect_err("Allowed invalid login");
 
-    match error {
-        Error::AuthenticationFailed => (),
-        _ => panic!("Error wasn't invalid username or password"),
-    }
+    check_err!(error);
 
     let error = server
-        .try_login(user_id, "backmonhowl", *IP_ADDRESS_1)
+        .try_login_id(user_id, "backmonhowl", *IP_ADDRESS_1)
         .await
         .expect_err("Allowed invalid login");
 
-    match error {
-        Error::AuthenticationFailed => (),
-        _ => panic!("Error wasn't invalid username or password"),
-    }
+    check_err!(error);
 
     server
-        .try_login(user_id, "blackmoonhowls", *IP_ADDRESS_1)
+        .try_login_id(user_id, "blackmoonhowls", *IP_ADDRESS_1)
         .await
         .expect("Unable to login");
 
@@ -95,4 +105,48 @@ async fn session_manager_internal(server: &Server) {
     assert_eq!(third.user_id(), user_id);
     assert_eq!(third.ip_address(), *IP_ADDRESS_1);
     assert_eq!(third.success(), true);
+}
+
+async fn session_manager_internal_name(server: &Server) {
+    // Login
+    let error = server
+        .try_login("squirrel", "blackmoonhowls", *IP_ADDRESS_1)
+        .await
+        .expect_err("Allowed invalid login");
+
+    check_err!(error);
+
+    let error = server
+        .try_login("squirrelbird", "letmein", *IP_ADDRESS_1)
+        .await
+        .expect_err("Allowed invalid login");
+
+    check_err!(error);
+
+    server
+        .try_login("squirrelbird", "blackmoonhowls", *IP_ADDRESS_2)
+        .await
+        .expect("Unable to login");
+
+    let error = server
+        .try_login("jenny@gmail.com", "blackmoonhowls", *IP_ADDRESS_1)
+        .await
+        .expect_err("Allowed invalid login");
+
+    check_err!(error);
+
+    let error = server
+        .try_login("jenny@example.net", "letmein", *IP_ADDRESS_1)
+        .await
+        .expect_err("Allowed invalid login");
+
+    check_err!(error);
+
+    server
+        .try_login("jenny@example.net", "blackmoonhowls", *IP_ADDRESS_2)
+        .await
+        .expect("Unable to login");
+
+    // Check all login attempts
+    // TODO
 }
