@@ -20,18 +20,10 @@
 
 use super::prelude::*;
 use chrono::prelude::*;
-use ipnetwork::IpNetwork;
 
-lazy_static! {
-    static ref IP_ADDRESS_1: IpNetwork = {
-        let ipv6 = "::1".parse().unwrap();
-        IpNetwork::new(ipv6, 128).unwrap()
-    };
-    static ref IP_ADDRESS_2: IpNetwork = {
-        let ipv6 = "2004::aa".parse().unwrap();
-        IpNetwork::new(ipv6, 128).unwrap()
-    };
-}
+const IP_ADDRESS_1: Option<&str> = Some("alpha-beta.local");
+const IP_ADDRESS_2: Option<&str> = Some("1.1.1.1");
+const IP_ADDRESS_3: Option<&str> = None;
 
 macro_rules! check_err {
     ($error:expr) => {
@@ -63,21 +55,21 @@ async fn setup(server: &Server) -> UserId {
 async fn session_manager_internal_id(server: &Server, user_id: UserId) {
     // Login
     let error = server
-        .try_login_id(user_id, "letmein", *IP_ADDRESS_2)
+        .try_login_id(user_id, "letmein", IP_ADDRESS_2)
         .await
         .expect_err("Allowed invalid login");
 
     check_err!(error);
 
     let error = server
-        .try_login_id(user_id, "backmonhowl", *IP_ADDRESS_1)
+        .try_login_id(user_id, "backmonhowl", IP_ADDRESS_1)
         .await
         .expect_err("Allowed invalid login");
 
     check_err!(error);
 
     server
-        .try_login_id(user_id, "blackmoonhowls", *IP_ADDRESS_1)
+        .try_login_id(user_id, "blackmoonhowls", IP_ADDRESS_3)
         .await
         .expect("Unable to login");
 
@@ -96,57 +88,57 @@ async fn session_manager_internal_id(server: &Server, user_id: UserId) {
 
     assert_eq!(first.user_id(), Some(user_id));
     assert_eq!(first.username_or_email(), None);
-    assert_eq!(first.ip_address(), *IP_ADDRESS_2);
+    assert_eq!(first.remote_address(), IP_ADDRESS_2);
     assert_eq!(first.success(), false);
 
     assert_eq!(second.user_id(), Some(user_id));
     assert_eq!(second.username_or_email(), None);
-    assert_eq!(second.ip_address(), *IP_ADDRESS_1);
+    assert_eq!(second.remote_address(), IP_ADDRESS_1);
     assert_eq!(second.success(), false);
 
     assert_eq!(third.user_id(), Some(user_id));
     assert_eq!(third.username_or_email(), None);
-    assert_eq!(third.ip_address(), *IP_ADDRESS_1);
+    assert_eq!(third.remote_address(), IP_ADDRESS_3);
     assert_eq!(third.success(), true);
 }
 
 async fn session_manager_internal_name(server: &Server, user_id: UserId) {
     // Login
     let error = server
-        .try_login("squirrel", "blackmoonhowls", *IP_ADDRESS_1)
+        .try_login("squirrel", "blackmoonhowls", IP_ADDRESS_3)
         .await
         .expect_err("Allowed invalid login");
 
     check_err!(error);
 
     let error = server
-        .try_login("squirrelbird", "letmein", *IP_ADDRESS_1)
+        .try_login("squirrelbird", "letmein", IP_ADDRESS_1)
         .await
         .expect_err("Allowed invalid login");
 
     check_err!(error);
 
     server
-        .try_login("squirrelbird", "blackmoonhowls", *IP_ADDRESS_2)
+        .try_login("squirrelbird", "blackmoonhowls", IP_ADDRESS_2)
         .await
         .expect("Unable to login");
 
     let error = server
-        .try_login("jenny@gmail.com", "blackmoonhowls", *IP_ADDRESS_1)
+        .try_login("jenny@gmail.com", "blackmoonhowls", IP_ADDRESS_1)
         .await
         .expect_err("Allowed invalid login");
 
     check_err!(error);
 
     let error = server
-        .try_login("jenny@example.net", "letmein", *IP_ADDRESS_1)
+        .try_login("jenny@example.net", "letmein", IP_ADDRESS_3)
         .await
         .expect_err("Allowed invalid login");
 
     check_err!(error);
 
     server
-        .try_login("jenny@example.net", "blackmoonhowls", *IP_ADDRESS_2)
+        .try_login("jenny@example.net", "blackmoonhowls", IP_ADDRESS_2)
         .await
         .expect("Unable to login");
 
@@ -172,31 +164,31 @@ async fn session_manager_internal_name(server: &Server, user_id: UserId) {
 
     assert_eq!(first.user_id(), None);
     assert_eq!(first.username_or_email(), Some("squirrel"));
-    assert_eq!(first.ip_address(), *IP_ADDRESS_1);
+    assert_eq!(first.remote_address(), IP_ADDRESS_3);
     assert_eq!(first.success(), false);
 
     assert_eq!(second.user_id(), Some(user_id));
     assert_eq!(second.username_or_email(), None);
-    assert_eq!(second.ip_address(), *IP_ADDRESS_1);
+    assert_eq!(second.remote_address(), IP_ADDRESS_1);
     assert_eq!(second.success(), false);
 
     assert_eq!(third.user_id(), Some(user_id));
     assert_eq!(third.username_or_email(), None);
-    assert_eq!(third.ip_address(), *IP_ADDRESS_2);
+    assert_eq!(third.remote_address(), IP_ADDRESS_2);
     assert_eq!(third.success(), true);
 
     assert_eq!(fourth.user_id(), None);
     assert_eq!(fourth.username_or_email(), Some("jenny@gmail.com"));
-    assert_eq!(fourth.ip_address(), *IP_ADDRESS_1);
+    assert_eq!(fourth.remote_address(), IP_ADDRESS_1);
     assert_eq!(fourth.success(), false);
 
     assert_eq!(fifth.user_id(), Some(user_id));
     assert_eq!(fifth.username_or_email(), None);
-    assert_eq!(fifth.ip_address(), *IP_ADDRESS_1);
+    assert_eq!(fifth.remote_address(), IP_ADDRESS_3);
     assert_eq!(fifth.success(), false);
 
     assert_eq!(sixth.user_id(), Some(user_id));
     assert_eq!(sixth.username_or_email(), None);
-    assert_eq!(sixth.ip_address(), *IP_ADDRESS_2);
+    assert_eq!(sixth.remote_address(), IP_ADDRESS_2);
     assert_eq!(sixth.success(), true);
 }
