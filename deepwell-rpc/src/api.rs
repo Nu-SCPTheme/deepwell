@@ -19,7 +19,6 @@
  */
 
 use crate::Result;
-use std::net::IpAddr;
 
 pub const PROTOCOL_VERSION: &str = "0";
 
@@ -31,7 +30,11 @@ pub trait Deepwell {
     async fn time() -> f64;
 
     // Session
-    async fn login(username_or_email: String, password: String, ip_address: IpAddr) -> Result<()>;
+    async fn login(
+        username_or_email: String,
+        password: String,
+        remote_address: Option<String>,
+    ) -> Result<()>;
 
     // TODO
 }

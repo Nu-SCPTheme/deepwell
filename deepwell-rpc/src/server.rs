@@ -25,9 +25,8 @@ use deepwell_core::Error as DeepwellError;
 use futures::channel::{mpsc, oneshot};
 use futures::future::{self, BoxFuture, Ready};
 use futures::prelude::*;
-use ipnetwork::IpNetwork;
 use std::io;
-use std::net::{IpAddr, SocketAddr};
+use std::net::SocketAddr;
 use std::time::SystemTime;
 use tarpc::context::Context;
 use tarpc::serde_transport::tcp;
@@ -147,18 +146,17 @@ impl DeepwellApi for Server {
         _: Context,
         username_or_email: String,
         password: String,
-        ip_address: IpAddr,
+        remote_address: Option<String>,
     ) -> Self::LoginFut {
         info!("Method: login");
 
         let fut = async move {
             let (send, recv) = oneshot::channel();
-            let network = get_network(ip_address);
 
             let request = AsyncDeepwellRequest::TryLogin {
                 username_or_email,
                 password,
-                network,
+                remote_address,
                 response: send,
             };
 
@@ -169,22 +167,4 @@ impl DeepwellApi for Server {
     }
 
     // TODO
-}
-
-fn get_network(ip: IpAddr) -> IpNetwork {
-    use ipnetwork::{Ipv4Network, Ipv6Network};
-    use std::net::{Ipv4Addr, Ipv6Addr};
-
-    fn convert_v4(ip: Ipv4Addr) -> Ipv4Network {
-        Ipv4Network::new(ip, 32).expect("Unable to convert IPv4 address")
-    }
-
-    fn convert_v6(ip: Ipv6Addr) -> Ipv6Network {
-        Ipv6Network::new(ip, 128).expect("Unable to convert IPv6 address")
-    }
-
-    match ip {
-        IpAddr::V4(ip) => IpNetwork::V4(convert_v4(ip)),
-        IpAddr::V6(ip) => IpNetwork::V6(convert_v6(ip)),
-    }
 }

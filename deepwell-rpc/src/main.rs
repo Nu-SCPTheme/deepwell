@@ -29,7 +29,6 @@ extern crate deepwell_core;
 
 #[macro_use]
 extern crate futures;
-extern crate ipnetwork;
 
 #[macro_use]
 extern crate log;

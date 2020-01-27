@@ -26,7 +26,6 @@ use deepwell::Server as DeepwellServer;
 use deepwell_core::Error as DeepwellError;
 use futures::channel::{mpsc, oneshot};
 use futures::prelude::*;
-use ipnetwork::IpNetwork;
 
 const QUEUE_SIZE: usize = 64;
 
@@ -58,14 +57,14 @@ impl AsyncDeepwell {
                 TryLogin {
                     username_or_email,
                     password,
-                    network,
+                    remote_address,
                     response,
                 } => {
                     debug!("Received TryLogin request");
 
                     let result = self
                         .server
-                        .try_login(&username_or_email, &password, network)
+                        .try_login(&username_or_email, &password, remote_address)
                         .await;
 
                     response.send(result).expect("Result receiver closed");
@@ -82,7 +81,7 @@ pub enum AsyncDeepwellRequest {
     TryLogin {
         username_or_email: String,
         password: String,
-        network: IpNetwork,
+        remote_address: Option<String>,
         response: oneshot::Sender<StdResult<(), DeepwellError>>,
     },
 }
