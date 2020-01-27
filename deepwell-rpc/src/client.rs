@@ -19,6 +19,7 @@
  */
 
 use crate::api::{DeepwellClient, PROTOCOL_VERSION};
+use crate::Result;
 use std::io;
 use std::net::SocketAddr;
 use tarpc::rpc::client::Config as RpcConfig;
@@ -67,6 +68,25 @@ impl Client {
         info!("Method: time");
 
         self.client.time(context::current()).await
+    }
+
+    // Session
+    pub async fn login(
+        &mut self,
+        username_or_email: String,
+        password: String,
+        remote_address: Option<String>,
+    ) -> io::Result<Result<()>> {
+        info!("Method: login");
+
+        self.client
+            .login(
+                context::current(),
+                username_or_email,
+                password,
+                remote_address,
+            )
+            .await
     }
 
     // TODO
