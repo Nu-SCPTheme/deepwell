@@ -70,7 +70,6 @@ impl AsyncDeepwell {
 
                     response.send(result).expect("Result receiver closed");
                 }
-                // TODO
             }
         }
 
