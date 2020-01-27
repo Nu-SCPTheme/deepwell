@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#![forbid(unsafe_code)]
+
 extern crate diesel;
 extern crate subprocess;
 

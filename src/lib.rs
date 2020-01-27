@@ -19,6 +19,7 @@
  */
 
 #![deny(missing_debug_implementations)]
+#![forbid(unsafe_code)]
 
 extern crate arrayvec;
 extern crate async_std;

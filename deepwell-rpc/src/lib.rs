@@ -20,6 +20,8 @@
 
 //! Client for sending RPC calls to DEEPWELL
 
+#![forbid(unsafe_code)]
+
 extern crate deepwell_core;
 extern crate futures;
 

@@ -6,6 +6,8 @@ Wikidot-like storage and maintenance system. Tracks wikis, users, passwords, pag
 DEEPWELL provides logical operations for handling low-level abstracted data such as individual page revisions.
 Verification and permissions checking needs to be handled by the consumer.
 
+The lint `#![forbid(unsafe_code)]` is set, and therefore this crate has only safe code. However dependencies may have `unsafe` internals.
+
 Currently, the following services are provided:
 
 * **Page creation and modification:** the primary feature is the ability to make pages and set their content.

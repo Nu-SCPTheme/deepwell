@@ -20,6 +20,8 @@
 
 //! Server for DEEPWELL via RPC.
 
+#![forbid(unsafe_code)]
+
 extern crate async_std;
 extern crate color_backtrace;
 extern crate deepwell;
