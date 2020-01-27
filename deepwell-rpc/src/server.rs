@@ -92,7 +92,10 @@ impl Server {
         request: AsyncDeepwellRequest,
         recv: oneshot::Receiver<StdResult<T, DeepwellError>>,
     ) -> Result<T> {
-        self.channel.send(request).await;
+        self.channel
+            .send(request)
+            .await
+            .expect("Deepwell server channel closed");
 
         recv.await
             .expect("Oneshot closed before result")
