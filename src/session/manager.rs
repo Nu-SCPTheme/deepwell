@@ -123,22 +123,35 @@ impl SessionManager {
 
     pub async fn get_login_attempts(
         &self,
-        user: &User,
+        user_id: UserId,
         since: DateTime<Utc>,
     ) -> Result<Vec<LoginAttempt>> {
         debug!(
             "Getting login attempts for user ID {} since {}",
-            user.id(),
-            since,
+            user_id, since,
         );
 
-        let id: i64 = user.id().into();
+        let id: i64 = user_id.into();
         let attempts = login_attempts::table
             .filter(login_attempts::attempted_at.gt(since))
             .filter(login_attempts::user_id.eq(id))
-            .or_filter(login_attempts::username_or_email.eq(user.name()))
-            .or_filter(login_attempts::username_or_email.eq(user.email()))
             .order_by(login_attempts::attempted_at.desc())
+            .limit(100)
+            .get_results::<LoginAttempt>(&*self.conn)?;
+
+        Ok(attempts)
+    }
+
+    pub async fn get_all_login_attempts(
+        &self,
+        since: DateTime<Utc>,
+    ) -> Result<Vec<LoginAttempt>> {
+        debug!("Getting all login attempts for since {}", since);
+
+        let attempts = login_attempts::table
+            .filter(login_attempts::attempted_at.gt(since))
+            .order_by(login_attempts::attempted_at.desc())
+            .limit(100)
             .get_results::<LoginAttempt>(&*self.conn)?;
 
         Ok(attempts)

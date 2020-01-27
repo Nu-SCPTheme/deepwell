@@ -84,21 +84,23 @@ impl Server {
     }
 
     /// Returns all login attempts for a user since the given date.
+    /// Limited to 100 entries.
     #[inline]
     pub async fn get_login_attempts(
         &self,
         user_id: UserId,
         since: DateTime<Utc>,
     ) -> Result<Vec<LoginAttempt>> {
-        self.transaction(async {
-            let user = self
-                .user
-                .get_from_id(user_id)
-                .await?
-                .ok_or(Error::UserNotFound)?;
+        self.session.get_login_attempts(user_id, since).await
+    }
 
-            self.session.get_login_attempts(&user, since).await
-        })
-        .await
+    /// Returns all login attempts for all users since the given date.
+    /// Limited to 100 entries.
+    #[inline]
+    pub async fn get_all_login_attempts(
+        &self,
+        since: DateTime<Utc>,
+    ) -> Result<Vec<LoginAttempt>> {
+        self.session.get_all_login_attempts(since).await
     }
 }
