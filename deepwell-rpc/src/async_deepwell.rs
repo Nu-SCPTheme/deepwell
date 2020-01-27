@@ -26,6 +26,7 @@ use deepwell::Server as DeepwellServer;
 use deepwell_core::Error as DeepwellError;
 use futures::channel::{mpsc, oneshot};
 use futures::prelude::*;
+use ref_map::*;
 
 const QUEUE_SIZE: usize = 64;
 
@@ -64,7 +65,11 @@ impl AsyncDeepwell {
 
                     let result = self
                         .server
-                        .try_login(&username_or_email, &password, remote_address)
+                        .try_login(
+                            &username_or_email,
+                            &password,
+                            remote_address.ref_map(|s| s.as_str()),
+                        )
                         .await;
 
                     response.send(result).expect("Result receiver closed");
