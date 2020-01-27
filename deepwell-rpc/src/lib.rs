@@ -35,7 +35,7 @@ extern crate tokio_serde;
 mod api;
 mod client;
 
-pub use self::api::PROTOCOL_VERSION;
+pub use self::api::{Deepwell as Api, PROTOCOL_VERSION};
 pub use self::client::Client;
 pub use deepwell_core::SendableError;
 
