@@ -142,10 +142,7 @@ impl SessionManager {
         Ok(attempts)
     }
 
-    pub async fn get_all_login_attempts(
-        &self,
-        since: DateTime<Utc>,
-    ) -> Result<Vec<LoginAttempt>> {
+    pub async fn get_all_login_attempts(&self, since: DateTime<Utc>) -> Result<Vec<LoginAttempt>> {
         debug!("Getting all login attempts for since {}", since);
 
         let attempts = login_attempts::table
