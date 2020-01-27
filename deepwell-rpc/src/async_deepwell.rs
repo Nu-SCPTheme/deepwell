@@ -28,7 +28,7 @@ use futures::channel::{mpsc, oneshot};
 use futures::prelude::*;
 use ipnetwork::IpNetwork;
 
-const QUEUE_SIZE: usize = 256;
+const QUEUE_SIZE: usize = 64;
 
 #[derive(Debug)]
 pub struct AsyncDeepwell {
@@ -69,7 +69,8 @@ impl AsyncDeepwell {
                         .await;
 
                     response.send(result).expect("Result receiver closed");
-                } // TODO
+                }
+                // TODO
             }
         }
 
