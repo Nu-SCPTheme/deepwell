@@ -294,7 +294,7 @@ dependencies = [
 
 [[package]]
 name = "deepwell-rpc"
-version = "0.0.4"
+version = "0.0.5"
 dependencies = [
  "async-std 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "color-backtrace 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
