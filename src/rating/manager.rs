@@ -83,8 +83,9 @@ pub struct RatingManager {
 impl RatingManager {
     #[inline]
     pub fn new(conn: &Arc<PgConnection>) -> Self {
-        let conn = Arc::clone(conn);
+        debug!("Creating rating-manager service");
 
+        let conn = Arc::clone(conn);
         RatingManager { conn }
     }
 

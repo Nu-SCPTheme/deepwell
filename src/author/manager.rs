@@ -62,8 +62,9 @@ pub struct AuthorManager {
 
 impl AuthorManager {
     pub fn new(conn: &Arc<PgConnection>) -> Self {
-        let conn = Arc::clone(conn);
+        debug!("Creating author-manager service");
 
+        let conn = Arc::clone(conn);
         AuthorManager { conn }
     }
 

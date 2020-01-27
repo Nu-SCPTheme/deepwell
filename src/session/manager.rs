@@ -74,6 +74,8 @@ pub struct SessionManager {
 impl SessionManager {
     #[inline]
     pub fn new(conn: &Arc<PgConnection>) -> Self {
+        debug!("Creating session-manager service");
+
         let conn = Arc::clone(conn);
         SessionManager { conn }
     }

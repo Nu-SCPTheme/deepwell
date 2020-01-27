@@ -85,6 +85,8 @@ pub struct WikiManager {
 
 impl WikiManager {
     pub fn new(conn: &Arc<PgConnection>) -> Result<Self> {
+        debug!("Creating wiki-manager service");
+
         let conn = Arc::clone(conn);
         let values = wikis::table.load::<Wiki>(&*conn)?;
 

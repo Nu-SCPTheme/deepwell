@@ -126,6 +126,8 @@ pub struct PageManager {
 impl PageManager {
     #[inline]
     pub fn new(conn: &Arc<PgConnection>, directory: PathBuf) -> Self {
+        debug!("Creating page-manager service");
+
         let conn = Arc::clone(conn);
 
         PageManager {

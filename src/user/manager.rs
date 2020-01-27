@@ -124,6 +124,8 @@ pub struct UserManager {
 impl UserManager {
     #[inline]
     pub fn new(conn: &Arc<PgConnection>) -> Self {
+        debug!("Creating user-manager service");
+
         let conn = Arc::clone(conn);
         UserManager { conn }
     }

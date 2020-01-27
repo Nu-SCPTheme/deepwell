@@ -97,11 +97,17 @@ pub struct PasswordManager {
 
 impl PasswordManager {
     pub fn new(conn: &Arc<PgConnection>, blacklist: Option<&Path>) -> Result<Self> {
+        debug!("Creating password-manager service");
+
         let conn = Arc::clone(conn);
 
         let blacklist = match blacklist {
-            Some(path) => build_blacklist(path)?,
             None => HashSet::new(),
+            Some(path) => {
+                debug!("Loading password blacklist from {}", path.display());
+
+                build_blacklist(path)?
+            }
         };
 
         Ok(PasswordManager { conn, blacklist })
