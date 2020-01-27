@@ -22,7 +22,6 @@ use super::NewLoginAttempt;
 use crate::manager_prelude::*;
 use crate::schema::login_attempts;
 use chrono::prelude::*;
-use ipnetwork::IpNetwork;
 use ref_map::*;
 
 #[derive(Debug, Queryable)]
@@ -30,7 +29,7 @@ pub struct LoginAttempt {
     id: LoginAttemptId,
     user_id: Option<UserId>,
     username_or_email: Option<String>,
-    ip_address: IpNetwork,
+    remote_address: Option<String>,
     success: bool,
     attempted_at: DateTime<Utc>,
 }
@@ -52,8 +51,8 @@ impl LoginAttempt {
     }
 
     #[inline]
-    pub fn ip_address(&self) -> IpNetwork {
-        self.ip_address
+    pub fn remote_address(&self) -> Option<&str> {
+        self.remote_address.ref_map(|s| s.as_str())
     }
 
     #[inline]
@@ -84,18 +83,20 @@ impl SessionManager {
         &self,
         user_id: Option<UserId>,
         username_or_email: Option<&str>,
-        ip_address: IpNetwork,
+        remote_address: Option<&str>,
         success: bool,
     ) -> Result<LoginAttemptId> {
         debug!(
             "Adding login attempt for user ID {:?} / name {:?} from {}",
-            user_id, username_or_email, ip_address,
+            user_id,
+            username_or_email,
+            remote_address.unwrap_or("<unknown>"),
         );
 
         let model = NewLoginAttempt {
             user_id: user_id.map(|id| id.into()),
             username_or_email,
-            ip_address,
+            remote_address,
             success,
         };
 

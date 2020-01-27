@@ -33,7 +33,6 @@ extern crate either;
 
 #[macro_use]
 extern crate futures;
-extern crate ipnetwork;
 
 #[macro_use]
 extern crate lazy_static;
@@ -95,7 +94,6 @@ mod manager_prelude {
     pub use diesel::prelude::*;
     pub use diesel::query_builder::debug_query;
     pub use either::{Either, Left, Right};
-    pub use ipnetwork::IpNetwork;
     pub use std::collections::HashMap;
     pub use std::convert::TryFrom;
     pub use std::fmt::{self, Debug};

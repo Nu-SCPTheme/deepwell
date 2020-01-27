@@ -22,7 +22,7 @@ table! {
         login_attempt_id -> Int8,
         user_id -> Nullable<Int8>,
         username_or_email -> Nullable<Text>,
-        ip_address -> Inet,
+        remote_address -> Nullable<Text>,
         success -> Bool,
         attempted_at -> Timestamptz,
     }

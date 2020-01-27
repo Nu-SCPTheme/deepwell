@@ -24,10 +24,9 @@ arrayvec = "0.5"
 async-std = "1"
 chrono = { version = "0.4", features = ["serde"] }
 deepwell-core = "0.0.6"
-diesel = { version = "1", features = ["chrono", "network-address", "postgres"] }
+diesel = { version = "1", features = ["chrono", "postgres"] }
 either = "1"
 futures = "0.3"
-ipnetwork = "0.15"
 lazy_static = "1"
 log = "0.4"
 rand = "0.7"

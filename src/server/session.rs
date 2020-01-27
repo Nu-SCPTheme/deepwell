@@ -26,14 +26,18 @@ impl Server {
         &self,
         user_id: UserId,
         password: &str,
-        ip_address: IpNetwork,
+        remote_address: Option<&str>,
     ) -> Result<()> {
-        info!("Trying to login user ID {} (from {})", user_id, ip_address);
+        info!(
+            "Trying to login user ID {} (from {})",
+            user_id,
+            remote_address.unwrap_or("<unknown>"),
+        );
 
         // Outside of a transaction so it doesn't get rolled back
         let login_attempt_id = self
             .session
-            .add_login_attempt(Some(user_id), None, ip_address, false)
+            .add_login_attempt(Some(user_id), None, remote_address, false)
             .await?;
 
         self.password.check(user_id, password).await?;
@@ -47,11 +51,12 @@ impl Server {
         &self,
         name_or_email: &str,
         password: &str,
-        ip_address: IpNetwork,
+        remote_address: Option<&str>,
     ) -> Result<()> {
         info!(
             "Trying to login user '{}' (from {})",
-            name_or_email, ip_address,
+            name_or_email,
+            remote_address.unwrap_or("<unknown>"),
         );
 
         if password.is_empty() {
@@ -72,10 +77,10 @@ impl Server {
 
         // Attempt login or fail
         match user_id {
-            Some(id) => self.try_login_id(id, password, ip_address).await,
+            Some(id) => self.try_login_id(id, password, remote_address).await,
             None => {
                 self.session
-                    .add_login_attempt(None, Some(name_or_email), ip_address, false)
+                    .add_login_attempt(None, Some(name_or_email), remote_address, false)
                     .await?;
 
                 Err(Error::AuthenticationFailed)
