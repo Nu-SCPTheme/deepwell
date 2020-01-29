@@ -3,7 +3,7 @@
 
 Wikidot-like storage and maintenance system. Tracks wikis, users, passwords, pages, files, and manages a Postgres database. Its schema and migrations are handled by [Diesel](https://diesel.rs/).
 
-DEEPWELL provides logical operations for handling low-level abstracted data such as individual page revisions.
+DEEPWELL provides logical, CRUD-like operations for handling low-level abstracted data such as individual page revisions.
 Verification and permissions checking needs to be handled by the consumer.
 
 The lint `#![forbid(unsafe_code)]` is set, and therefore this crate has only safe code. However dependencies may have `unsafe` internals.
