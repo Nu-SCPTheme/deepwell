@@ -124,14 +124,14 @@ impl SessionManager {
         Ok(())
     }
 
-    pub async fn get_login_attempts(
+    pub async fn get_login_attempts<Tz: TimeZone>(
         &self,
         user_id: UserId,
-        since: DateTime<Utc>,
+        since: DateTime<Tz>,
     ) -> Result<Vec<LoginAttempt>> {
         debug!(
             "Getting login attempts for user ID {} since {}",
-            user_id, since,
+            user_id, since.time(),
         );
 
         let id: i64 = user_id.into();
@@ -145,8 +145,8 @@ impl SessionManager {
         Ok(attempts)
     }
 
-    pub async fn get_all_login_attempts(&self, since: DateTime<Utc>) -> Result<Vec<LoginAttempt>> {
-        debug!("Getting all login attempts for since {}", since);
+    pub async fn get_all_login_attempts<Tz: TimeZone>(&self, since: DateTime<Tz>) -> Result<Vec<LoginAttempt>> {
+        debug!("Getting all login attempts for since {}", since.time());
 
         let attempts = login_attempts::table
             .filter(login_attempts::attempted_at.gt(since))
