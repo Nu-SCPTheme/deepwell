@@ -35,11 +35,20 @@ macro_rules! check_err {
 }
 
 #[test]
-fn session_manager() {
+fn session_manager_id() {
     run(|server| {
         task::block_on(async {
             let user_id = setup(server).await;
             session_manager_internal_id(server, user_id).await;
+        })
+    });
+}
+
+#[test]
+fn session_manager_name() {
+    run(|server| {
+        task::block_on(async {
+            let user_id = setup(server).await;
             session_manager_internal_name(server, user_id).await;
         })
     });
@@ -148,10 +157,6 @@ async fn session_manager_internal_name(server: &Server, user_id: UserId) {
         .get_all_login_attempts(DateTime::from_utc(date, Utc))
         .await
         .expect("Unable to get login attempts");
-
-    // Ignore entries from previous test
-
-    let attempts = &attempts[3..];
 
     assert_eq!(attempts.len(), 6);
 
