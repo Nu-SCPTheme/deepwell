@@ -102,7 +102,10 @@ impl Server {
     /// Returns all login attempts for all users since the given date.
     /// Limited to 100 entries.
     #[inline]
-    pub async fn get_all_login_attempts<Tz: TimeZone>(&self, since: DateTime<Tz>) -> Result<Vec<LoginAttempt>> {
+    pub async fn get_all_login_attempts<Tz: TimeZone>(
+        &self,
+        since: DateTime<Tz>,
+    ) -> Result<Vec<LoginAttempt>> {
         self.session.get_all_login_attempts(since).await
     }
 }

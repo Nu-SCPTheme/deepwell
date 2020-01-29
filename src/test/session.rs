@@ -162,5 +162,9 @@ async fn session_manager_internal_name(server: &Server) {
         .expect("Unable to get login attempts");
 
     // Since this will also grab existing database entries, we cannot use == here.
-    assert!(attempts.len() >= 6, "Only {} login attempts found", attempts.len());
+    assert!(
+        attempts.len() >= 6,
+        "Only {} login attempts found",
+        attempts.len(),
+    );
 }
