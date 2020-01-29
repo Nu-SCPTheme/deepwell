@@ -54,6 +54,11 @@ fn session_manager_name() {
     });
 }
 
+#[inline]
+fn now() -> DateTime<Utc> {
+    DateTime::from(Local::now())
+}
+
 async fn setup(server: &Server) -> UserId {
     server
         .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
@@ -83,9 +88,8 @@ async fn session_manager_internal_id(server: &Server, user_id: UserId) {
         .expect("Unable to login");
 
     // Check all login attempts
-    let date = NaiveDate::from_ymd(2001, 1, 1).and_hms(6, 0, 0);
     let attempts = server
-        .get_login_attempts(user_id, DateTime::from_utc(date, Utc))
+        .get_login_attempts(user_id, now())
         .await
         .expect("Unable to get login attempts");
 
@@ -152,9 +156,8 @@ async fn session_manager_internal_name(server: &Server, user_id: UserId) {
         .expect("Unable to login");
 
     // Check all login attempts
-    let date = NaiveDate::from_ymd(2001, 1, 1).and_hms(6, 0, 0);
     let attempts = server
-        .get_all_login_attempts(DateTime::from_utc(date, Utc))
+        .get_all_login_attempts(now())
         .await
         .expect("Unable to get login attempts");
 
