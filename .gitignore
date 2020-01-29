@@ -1,8 +1,6 @@
 # Artifacts
 target/
 
-# Don't search or modify password blob
-misc/most-common-passwords.txt
-
 # Misc
+.*.swp
 *.rs.bak
