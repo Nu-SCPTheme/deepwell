@@ -1,4 +1,14 @@
 table! {
+    audit_log (audit_log_entry_id) {
+        audit_log_entry_id -> Int8,
+        audit_log_entry_type -> Text,
+        created_at -> Timestamptz,
+        user_id -> Nullable<Int8>,
+        data -> Jsonb,
+    }
+}
+
+table! {
     authors (page_id, user_id, author_type) {
         page_id -> Int8,
         user_id -> Int8,
@@ -170,6 +180,7 @@ table! {
     }
 }
 
+joinable!(audit_log -> users (user_id));
 joinable!(authors -> pages (page_id));
 joinable!(authors -> users (user_id));
 joinable!(files -> pages (page_id));
@@ -195,6 +206,7 @@ joinable!(wiki_membership -> wikis (wiki_id));
 joinable!(wiki_settings -> wikis (wiki_id));
 
 allow_tables_to_appear_in_same_query!(
+    audit_log,
     authors,
     files,
     login_attempts,
