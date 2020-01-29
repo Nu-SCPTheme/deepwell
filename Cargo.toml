@@ -16,7 +16,6 @@ edition = "2018" # this refers to the Cargo.toml
 members = [
     ".",
     "deepwell-core",
-    "deepwell-rpc",
 ]
 
 [dependencies]
