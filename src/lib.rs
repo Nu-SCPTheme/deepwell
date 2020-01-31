@@ -46,6 +46,7 @@ extern crate regex;
 #[macro_use]
 extern crate serde;
 extern crate subprocess;
+extern crate tokio_diesel;
 extern crate wikidot_normalize;
 
 #[macro_use]
