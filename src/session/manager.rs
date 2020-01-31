@@ -86,12 +86,28 @@ impl SessionManager {
         remote_address: Option<&str>,
         success: bool,
     ) -> Result<LoginAttemptId> {
-        debug!(
-            "Adding login attempt for user ID {:?} / name {:?} from {}",
-            user_id,
-            username_or_email,
-            remote_address.unwrap_or("<unknown>"),
-        );
+        {
+            // Logging call
+            let remote_address = remote_address.unwrap_or("<unknown>");
+
+            match user_id {
+                Some(id) => {
+                    debug!(
+                        "Adding login attempt for user ID {} from {}",
+                        id, remote_address,
+                    );
+                }
+                None => {
+                    let name = username_or_email
+                        .expect("One of user_id or username_or_email must be Some(_)");
+
+                    debug!(
+                        "Adding login attempt for user '{}' from {}",
+                        name, remote_address,
+                    );
+                }
+            }
+        }
 
         let model = NewLoginAttempt {
             user_id: user_id.map(|id| id.into()),
