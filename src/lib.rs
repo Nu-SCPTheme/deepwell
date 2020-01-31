@@ -99,6 +99,7 @@ mod manager_prelude {
     pub use std::convert::TryFrom;
     pub use std::fmt::{self, Debug};
     pub use std::sync::Arc;
+    pub use tokio_diesel::*;
 
     // For Option<Option<T>>, updating nullable columns
     pub type Nullable<T> = Option<T>;

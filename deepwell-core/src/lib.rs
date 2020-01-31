@@ -25,6 +25,7 @@ extern crate subprocess;
 
 #[macro_use]
 extern crate log;
+extern crate r2d2;
 
 #[macro_use]
 extern crate serde;

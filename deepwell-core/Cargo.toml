@@ -20,6 +20,7 @@ path = "src/lib.rs"
 [dependencies]
 diesel = { version = "1", features = ["chrono", "network-address", "postgres"] }
 log = "0.4"
+r2d2 = "0.8"
 serde = { version = "1", features = ["derive"] }
 subprocess = "0.1"
 thiserror = "1"

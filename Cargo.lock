@@ -244,6 +244,7 @@ version = "0.0.6"
 dependencies = [
  "diesel 1.4.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "r2d2 0.8.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.104 (registry+https://github.com/rust-lang/crates.io-index)",
  "subprocess 0.1.20 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror 1.0.10 (registry+https://github.com/rust-lang/crates.io-index)",

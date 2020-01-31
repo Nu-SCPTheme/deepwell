@@ -38,6 +38,10 @@ use crate::rating::RatingManager;
 use crate::session::SessionManager;
 use crate::user::UserManager;
 use crate::wiki::WikiManager;
+use diesel::{
+    prelude::*,
+    r2d2::{ConnectionManager, Pool},
+};
 use std::fmt::{self, Debug};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -50,6 +54,7 @@ pub struct Config<'a> {
 }
 
 pub struct Server {
+    pool: Pool<ConnectionManager<PgConnection>>,
     conn: Arc<PgConnection>,
     author: AuthorManager,
     lock: LockManager,
@@ -71,14 +76,15 @@ impl Server {
             password_blacklist,
         } = config;
 
-        let conn = match PgConnection::establish(database_url) {
-            Ok(conn) => Arc::new(conn),
-            Err(error) => {
-                error!("Error establishing Postgres connection: {}", error);
+        let conn_mgr = ConnectionManager::new(database_url);
+        let pool = Pool::builder().build(conn_mgr).map_err(|error| {
+            error!("Error establishing Postgres connection: {}", error);
 
-                return Err(Error::DatabaseConnection(error));
-            }
-        };
+            Error::DatabaseConnection(error)
+        })?;
+
+        // TEMP
+        let conn = Arc::new(PgConnection::establish(database_url).unwrap());
 
         let author = AuthorManager::new(&conn);
         let lock = LockManager::new(&conn);
@@ -90,6 +96,7 @@ impl Server {
         let wiki = WikiManager::new(&conn)?;
 
         Ok(Server {
+            pool,
             conn,
             author,
             lock,

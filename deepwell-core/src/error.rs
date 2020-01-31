@@ -19,7 +19,8 @@
  */
 
 use crate::UserId;
-use diesel::result::{ConnectionError, Error as DieselError};
+use diesel::result::Error as DieselError;
+use r2d2::Error as ConnectionError;
 use std::io;
 use subprocess::PopenError;
 
