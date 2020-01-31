@@ -53,8 +53,10 @@ pub struct Config<'a> {
     pub password_blacklist: Option<&'a Path>,
 }
 
+pub type ConnectionPool = Pool<ConnectionManager<PgConnection>>;
+
 pub struct Server {
-    pool: Pool<ConnectionManager<PgConnection>>,
+    pool: ConnectionPool,
     conn: Arc<PgConnection>,
     author: AuthorManager,
     lock: LockManager,
@@ -92,7 +94,7 @@ impl Server {
         let password = PasswordManager::new(&conn, password_blacklist)?;
         let rating = RatingManager::new(&conn);
         let session = SessionManager::new(&conn);
-        let user = UserManager::new(&conn);
+        let user = UserManager::new(&conn, &pool);
         let wiki = WikiManager::new(&conn)?;
 
         Ok(Server {

@@ -23,6 +23,7 @@ use diesel::result::Error as DieselError;
 use r2d2::Error as ConnectionError;
 use std::io;
 use subprocess::PopenError;
+use tokio_diesel::AsyncError;
 
 #[derive(Debug, Error)]
 #[non_exhaustive]
@@ -121,6 +122,16 @@ impl Error {
         SendableError {
             name: self.fixed_name().into(),
             message: self.to_string(),
+        }
+    }
+}
+
+impl From<AsyncError> for Error {
+    #[inline]
+    fn from(error: AsyncError) -> Error {
+        match error {
+            AsyncError::Checkout(error) => Error::DatabaseConnection(error),
+            AsyncError::Error(error) => Error::Database(error),
         }
     }
 }

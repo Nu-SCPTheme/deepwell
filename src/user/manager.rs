@@ -119,18 +119,20 @@ pub struct UserMetadata<'a> {
 
 pub struct UserManager {
     conn: Arc<PgConnection>,
+    pool: ConnectionPool,
 }
 
 impl UserManager {
     #[inline]
-    pub fn new(conn: &Arc<PgConnection>) -> Self {
+    pub fn new(conn: &Arc<PgConnection>, pool: &ConnectionPool) -> Self {
         debug!("Creating user-manager service");
 
         let conn = Arc::clone(conn);
-        UserManager { conn }
+        let pool = ConnectionPool::clone(pool);
+        UserManager { conn, pool }
     }
 
-    pub async fn create(&self, name: &str, email: &str) -> Result<UserId> {
+    pub async fn create(&self, name: String, email: String) -> Result<UserId> {
         use self::users::dsl;
 
         info!(
@@ -143,7 +145,7 @@ impl UserManager {
         self.transaction(async {
             // Check if there any existing users
             let result = users::table
-                .filter(users::name.eq(name))
+                .filter(users::name.eq(&name))
                 .or_filter(users::email.eq(&email))
                 .select((dsl::user_id, dsl::name, dsl::email))
                 .get_result::<(UserId, String, String)>(&*self.conn)
@@ -164,15 +166,13 @@ impl UserManager {
             }
 
             // If not, insert into database
-            let model = NewUser {
-                name,
-                email: &email,
-            };
+            let model = NewUser { name, email };
 
             let id = diesel::insert_into(users::table)
-                .values(&model)
+                .values(model)
                 .returning(users::dsl::user_id)
-                .get_result::<UserId>(&*self.conn)?;
+                .get_result_async::<UserId>(&self.pool)
+                .await?;
 
             Ok(id)
         })

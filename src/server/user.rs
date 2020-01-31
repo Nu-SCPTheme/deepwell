@@ -23,7 +23,14 @@ use crate::manager_prelude::*;
 impl Server {
     /// Creates a new user with the given name and email. Returns its ID.
     #[inline]
-    pub async fn create_user(&self, name: &str, email: &str, password: &str) -> Result<UserId> {
+    pub async fn create_user<S1, S2>(&self, name: S1, email: S2, password: &str) -> Result<UserId>
+    where
+        S1: Into<String>,
+        S2: Into<String>,
+    {
+        let name = name.into();
+        let email = email.into();
+
         self.transaction(async {
             let user_id = self.user.create(name, email).await?;
             self.password.set(user_id, password).await?;

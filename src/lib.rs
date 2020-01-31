@@ -89,6 +89,7 @@ pub mod model {
 mod manager_prelude {
     pub use crate::prelude::*;
     pub use crate::schema::*;
+    pub use crate::server::ConnectionPool;
     pub use async_std::prelude::*;
     pub use async_std::sync::RwLock;
     pub use chrono::prelude::*;

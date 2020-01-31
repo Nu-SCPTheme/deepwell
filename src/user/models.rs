@@ -23,9 +23,9 @@ use chrono::prelude::*;
 
 #[derive(Debug, Insertable)]
 #[table_name = "users"]
-pub struct NewUser<'a> {
-    pub name: &'a str,
-    pub email: &'a str,
+pub struct NewUser {
+    pub name: String,
+    pub email: String,
 }
 
 type Nullable<T> = Option<T>;

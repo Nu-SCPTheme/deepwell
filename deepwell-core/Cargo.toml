@@ -24,3 +24,4 @@ r2d2 = "0.8"
 serde = { version = "1", features = ["derive"] }
 subprocess = "0.1"
 thiserror = "1"
+tokio-diesel = "0.3"

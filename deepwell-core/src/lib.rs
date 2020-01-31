@@ -32,6 +32,7 @@ extern crate serde;
 
 #[macro_use]
 extern crate thiserror;
+extern crate tokio_diesel;
 
 #[macro_use]
 mod macros;
