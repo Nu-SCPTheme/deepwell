@@ -28,9 +28,7 @@ before_script:
   # Add clippy
   - .travis/clippy.sh setup
   # Setup database
-  - cargo install diesel_cli --no-default-features --features postgres
-  - psql -c "CREATE USER overseer PASSWORD 'blackmoon';" -U postgres
-  - psql -c "CREATE DATABASE deepwell OWNER overseer;" -U postgres
+  - .travis/database.sh setup
 
 script:
   # Ensure code is rustfmt'd
@@ -39,12 +37,14 @@ script:
   # Check clippy lints
   - .travis/banner.sh clippy
   - .travis/clippy.sh check
-  # Test migrations
-  - diesel migration run
-  - diesel migration redo
   # Run build
   - .travis/banner.sh build
   - cargo build --release
+  # Test migrations
+  - .travis/banner.sh diesel
+  - .travis/database.sh check
+  # Run tests
+  - .travis/banner.sh tests
   - cargo test --release -- --nocapture
   # Build documentation
   - .travis/banner.sh docs
