@@ -1,68 +1,41 @@
-dist: xenial
 language: rust
-rust: stable
+rust:
+  - stable
+  - beta
+  - nightly
 
-env:
-  - DATABASE_URL=postgres://overseer:blackmoon@localhost/deepwell
+os:
+  - linux
+  - osx
+  - windows
 
-services:
-  - postgresql
+before_script:
+  # Add rustfmt
+  - rustup component add rustfmt
+  # Add clippy
+  - .travis/clippy.sh setup
 
-cache: cargo
-
-addons:
-  postgresql: '10'
-  apt:
-    packages:
-      - postgresql-10
-      - postgresql-client-10
-
-stages:
-  - format
-  - clippy
-  - test
-  - doc
+script:
+  # Ensure code is rustfmt'd
+  - .travis/banner.sh rustfmt
+  - rustfmt --edition=2018 src/lib.rs --check
+  - rustfmt --edition=2018 src/main.rs --check
+  # Check clippy lints
+  - .travis/banner.sh clippy
+  - .travis/clippy.sh check
+  # Run build
+  - .travis/banner.sh build
+  - cargo build --verbose --release
+  - cargo test --verbose --release -- --nocapture
+  # Build documentation
+  - .travis/banner.sh docs
+  - cargo doc --verbose --no-deps
 
 jobs:
-  include:
-    - stage: format
-      before_script:
-        - rustup component add rustfmt
-      script:
-        - rustfmt --edition=2018 src/lib.rs --check
-        - rustfmt --edition=2018 deepwell-core/src/lib.rs --check
-    - stage: clippy
-      before_script:
-        - rustup toolchain install nightly-2020-01-02-x86_64-unknown-linux-gnu
-        - rustup component add clippy --toolchain nightly-2020-01-02-x86_64-unknown-linux-gnu
-      script:
-        - cargo +nightly-2020-01-02 clippy
-        - cd deepwell-core
-        - cargo +nightly-2020-01-02 clippy
-    - stage: test
-      rust:
-        - stable
-        - beta
-        - nightly
-      os:
-        - linux
-        - osx
-        - windows
-      before_script:
-        - psql -c "CREATE USER overseer PASSWORD 'blackmoon';" -U postgres
-        - psql -c "CREATE DATABASE deepwell OWNER overseer;" -U postgres
-        - which diesel || cargo install diesel_cli --no-default-features --features postgres
-      script:
-        - diesel migration run
-        - diesel migration redo
-        - cargo build --verbose --release
-        - cargo test --verbose --release -- --nocapture
-        - cd deepwell-core
-        - cargo build --verbose --release
-        - cargo test --verbose --release -- --nocapture
-    - stage: doc
-      script:
-        - cargo doc --verbose --release
+  allow_failures:
+    - rust: nightly
+    - os: windows
+  fast_finish: true
 
 notifications:
   email:
