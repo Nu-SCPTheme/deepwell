@@ -45,7 +45,7 @@ script:
   - .travis/database.sh check
   # Run tests
   - .travis/banner.sh tests
-  - cargo test --release -- --nocapture
+  - .travis/database.sh test
   # Build documentation
   - .travis/banner.sh docs
   - cargo doc --no-deps

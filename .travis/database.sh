@@ -16,4 +16,7 @@ case "$1" in
 		diesel migration run
 		diesel migration redo
 		;;
+	test)
+		cargo test --release -- --nocapture
+		;;
 esac
