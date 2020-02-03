@@ -164,6 +164,20 @@ impl SessionManager {
         Ok(())
     }
 
+    pub async fn get_login_attempt(
+        &self,
+        login_attempt_id: LoginAttemptId,
+    ) -> Result<LoginAttempt> {
+        debug!("Getting login attempt with ID {}", login_attempt_id);
+
+        let id: i64 = login_attempt_id.into();
+        let attempt = login_attempts::table
+            .find(id)
+            .first::<LoginAttempt>(&*self.conn)?;
+
+        Ok(attempt)
+    }
+
     pub async fn get_login_attempts<Tz: TimeZone>(
         &self,
         user_id: UserId,

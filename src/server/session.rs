@@ -88,6 +88,15 @@ impl Server {
         }
     }
 
+    /// Fetch login attempt associated with the passed ID.
+    #[inline]
+    pub async fn get_login_attempt(
+        &self,
+        login_attempt_id: LoginAttemptId,
+    ) -> Result<LoginAttempt> {
+        self.session.get_login_attempt(login_attempt_id).await
+    }
+
     /// Returns all login attempts for a user since the given date.
     /// Limited to 100 entries.
     #[inline]
