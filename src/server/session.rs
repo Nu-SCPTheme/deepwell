@@ -35,6 +35,19 @@ impl Server {
             remote_address.unwrap_or("<unknown>"),
         );
 
+        if password.is_empty() {
+            // If they filled in the username but not the password,
+            // it is possible they accidentally entered the password
+            // in the username/email field and hit enter.
+            //
+            // In such a case we do not want to log their attempt, or
+            // we could be recording their password (or something similar)
+            // in plaintext.
+            //
+            // Instead we will bail out with an authentication failure.
+            return Err(Error::AuthenticationFailed);
+        }
+
         // Outside of a transaction so it doesn't get rolled back
         let login_attempt_id = self
             .session
@@ -60,19 +73,6 @@ impl Server {
             name_or_email,
             remote_address.unwrap_or("<unknown>"),
         );
-
-        if password.is_empty() {
-            // If they filled in the username but not the password,
-            // it is possible they accidentally entered the password
-            // in the username/email field and hit enter.
-            //
-            // In such a case we do not want to log their attempt, or
-            // we could be recording their password (or something similar)
-            // in plaintext.
-            //
-            // Instead we will bail out with an authentication failure.
-            return Err(Error::AuthenticationFailed);
-        }
 
         // Get associated user, if it exists
         let user_id = self.user.get_id_from_email_or_name(name_or_email).await?;
