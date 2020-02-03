@@ -3,6 +3,7 @@ table! {
         audit_log_entry_id -> Int8,
         audit_log_entry_type -> Text,
         created_at -> Timestamptz,
+        wiki_id -> Int8,
         user_id -> Nullable<Int8>,
         data -> Jsonb,
     }
@@ -181,6 +182,7 @@ table! {
 }
 
 joinable!(audit_log -> users (user_id));
+joinable!(audit_log -> wikis (wiki_id));
 joinable!(authors -> pages (page_id));
 joinable!(authors -> users (user_id));
 joinable!(files -> pages (page_id));

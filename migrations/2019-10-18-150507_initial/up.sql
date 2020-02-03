@@ -184,6 +184,7 @@ CREATE TABLE audit_log (
         )
     ),
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    wiki_id BIGINT NOT NULL REFERENCES wikis(wiki_id),
     user_id BIGINT REFERENCES users(user_id),
     data JSONB NOT NULL
 );
