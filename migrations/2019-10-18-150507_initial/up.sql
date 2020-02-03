@@ -15,24 +15,6 @@ CREATE TABLE users (
     deleted_at TIMESTAMP WITH TIME ZONE
 );
 
-CREATE TABLE passwords (
-    user_id BIGINT PRIMARY KEY REFERENCES users(user_id),
-    hash BYTEA NOT NULL CHECK (LENGTH(hash) * 8 = 256),
-    salt BYTEA NOT NULL CHECK (LENGTH(salt) * 8 = 128),
-    logn SMALLINT NOT NULL CHECK (ABS(logn) < 128),
-    param_r INTEGER NOT NULL,
-    param_p INTEGER NOT NULL
-);
-
-CREATE TABLE login_attempts (
-    login_attempt_id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT REFERENCES users(user_id),
-    username_or_email TEXT,
-    remote_address TEXT,
-    success BOOLEAN NOT NULL,
-    attempted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-);
-
 -- Wikis and wiki settings
 
 CREATE TABLE wikis (
@@ -167,6 +149,26 @@ CREATE TABLE files (
     file_uri TEXT NOT NULL UNIQUE,
     description TEXT NOT NULL,
     page_id BIGINT NOT NULL REFERENCES pages(page_id)
+);
+
+-- Active sessions
+
+CREATE TABLE passwords (
+    user_id BIGINT PRIMARY KEY REFERENCES users(user_id),
+    hash BYTEA NOT NULL CHECK (LENGTH(hash) * 8 = 256),
+    salt BYTEA NOT NULL CHECK (LENGTH(salt) * 8 = 128),
+    logn SMALLINT NOT NULL CHECK (ABS(logn) < 128),
+    param_r INTEGER NOT NULL,
+    param_p INTEGER NOT NULL
+);
+
+CREATE TABLE login_attempts (
+    login_attempt_id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES users(user_id),
+    username_or_email TEXT,
+    remote_address TEXT,
+    success BOOLEAN NOT NULL,
+    attempted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
 -- Audit log
