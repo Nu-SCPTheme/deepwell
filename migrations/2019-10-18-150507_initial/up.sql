@@ -171,6 +171,12 @@ CREATE TABLE login_attempts (
     attempted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE sessions (
+    session_id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT NOT NULL REFERENCES users(user_id),
+    login_attempt_id BIGINT NOT NULL REFERENCES login_attempts(login_attempt_id)
+);
+
 -- Audit log
 
 CREATE TABLE audit_log (
