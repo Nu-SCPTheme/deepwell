@@ -21,7 +21,8 @@
 use crate::manager_prelude::*;
 
 impl Server {
-    /// Attempts to login a user via user ID, returning `()` if successful.
+    /// Attempts to login a user via user ID.
+    /// Returns `()` if successful, `AuthenticationFailed` otherwise.
     pub async fn try_login_id(
         &self,
         user_id: UserId,
@@ -46,7 +47,8 @@ impl Server {
         Ok(())
     }
 
-    /// Attempts to login a user via username or email, returning `()` if successful.
+    /// Attempts to login a user via username or email.
+    /// Returns `()` if successful, `AuthenticationFailed` otherwise.
     pub async fn try_login(
         &self,
         name_or_email: &str,
@@ -86,6 +88,13 @@ impl Server {
                 Err(Error::AuthenticationFailed)
             }
         }
+    }
+
+    /// Validate a user's session to ensure they are logged in.
+    /// Returns `()` is successful, `NotLoggedIn` otherwise.
+    #[inline]
+    pub async fn check_session(&self, session_id: SessionId, user_id: UserId) -> Result<()> {
+        self.session.check_session(session_id, user_id).await
     }
 
     /// Fetch login attempt associated with the passed ID.

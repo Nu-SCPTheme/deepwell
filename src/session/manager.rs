@@ -20,7 +20,7 @@
 
 use super::NewLoginAttempt;
 use crate::manager_prelude::*;
-use crate::schema::login_attempts;
+use crate::schema::{login_attempts, sessions};
 use chrono::prelude::*;
 use ref_map::*;
 
@@ -101,6 +101,23 @@ impl SessionManager {
 
         let conn = Arc::clone(conn);
         SessionManager { conn }
+    }
+
+    pub async fn check_session(&self, session_id: SessionId, user_id: UserId) -> Result<()> {
+        debug!("Checking session ID {} for user ID {}", session_id, user_id);
+
+        let session: i64 = session_id.into();
+        let user: i64 = user_id.into();
+        let result = sessions::table
+            .filter(sessions::session_id.eq(session))
+            .filter(sessions::session_id.eq(user))
+            .first::<Session>(&*self.conn)
+            .optional()?;
+
+        match result {
+            Some(_) => Ok(()),
+            None => Err(Error::NotLoggedIn),
+        }
     }
 
     pub async fn add_login_attempt(
