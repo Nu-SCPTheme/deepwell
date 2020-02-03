@@ -103,23 +103,6 @@ impl SessionManager {
         SessionManager { conn }
     }
 
-    pub async fn check_session(&self, session_id: SessionId, user_id: UserId) -> Result<()> {
-        debug!("Checking session ID {} for user ID {}", session_id, user_id);
-
-        let session: i64 = session_id.into();
-        let user: i64 = user_id.into();
-        let result = sessions::table
-            .filter(sessions::session_id.eq(session))
-            .filter(sessions::session_id.eq(user))
-            .first::<Session>(&*self.conn)
-            .optional()?;
-
-        match result {
-            Some(_) => Ok(()),
-            None => Err(Error::NotLoggedIn),
-        }
-    }
-
     pub async fn add_login_attempt(
         &self,
         user_id: Option<UserId>,
@@ -201,6 +184,23 @@ impl SessionManager {
             .get_result::<Session>(&*self.conn)?;
 
         Ok(session)
+    }
+
+    pub async fn check_session(&self, session_id: SessionId, user_id: UserId) -> Result<()> {
+        debug!("Checking session ID {} for user ID {}", session_id, user_id);
+
+        let session: i64 = session_id.into();
+        let user: i64 = user_id.into();
+        let result = sessions::table
+            .filter(sessions::session_id.eq(session))
+            .filter(sessions::session_id.eq(user))
+            .first::<Session>(&*self.conn)
+            .optional()?;
+
+        match result {
+            Some(_) => Ok(()),
+            None => Err(Error::NotLoggedIn),
+        }
     }
 
     pub async fn get_login_attempt(
