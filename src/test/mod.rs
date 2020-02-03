@@ -25,6 +25,7 @@ mod authors;
 mod login;
 mod page;
 mod password;
+mod session;
 mod tags;
 mod user;
 mod wiki;
