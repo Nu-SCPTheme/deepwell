@@ -19,16 +19,17 @@
  */
 
 use crate::manager_prelude::*;
+use crate::session::Session;
 
 impl Server {
     /// Attempts to login a user via user ID.
-    /// Returns `()` if successful, `AuthenticationFailed` otherwise.
+    /// Returns the new session if successful, `AuthenticationFailed` otherwise.
     pub async fn try_login_id(
         &self,
         user_id: UserId,
         password: &str,
         remote_address: Option<&str>,
-    ) -> Result<()> {
+    ) -> Result<Session> {
         info!(
             "Trying to login user ID {} (from {})",
             user_id,
@@ -54,20 +55,27 @@ impl Server {
             .add_login_attempt(Some(user_id), None, remote_address, false)
             .await?;
 
-        self.password.check(user_id, password).await?;
-        self.session.set_login_success(login_attempt_id).await?;
+        self.transaction(async {
+            self.password.check(user_id, password).await?;
 
-        Ok(())
+            let session = self
+                .session
+                .create_session(user_id, login_attempt_id)
+                .await?;
+
+            Ok(session)
+        })
+        .await
     }
 
     /// Attempts to login a user via username or email.
-    /// Returns `()` if successful, `AuthenticationFailed` otherwise.
+    /// Returns the new session if successful, `AuthenticationFailed` otherwise.
     pub async fn try_login(
         &self,
         name_or_email: &str,
         password: &str,
         remote_address: Option<&str>,
-    ) -> Result<()> {
+    ) -> Result<Session> {
         info!(
             "Trying to login user '{}' (from {})",
             name_or_email,

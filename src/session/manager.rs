@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::NewLoginAttempt;
+use super::{NewLoginAttempt, NewSession};
 use crate::manager_prelude::*;
 use crate::schema::{login_attempts, sessions};
 use chrono::prelude::*;
@@ -165,20 +165,42 @@ impl SessionManager {
         Ok(id)
     }
 
-    pub async fn set_login_success(&self, login_attempt_id: LoginAttemptId) -> Result<()> {
+    pub async fn create_session(
+        &self,
+        user_id: UserId,
+        login_attempt_id: LoginAttemptId,
+    ) -> Result<Session> {
         use login_attempts::dsl;
 
         debug!(
-            "Setting login attempt ID {} as successful",
-            login_attempt_id,
+            "Creating a session for user ID {} after login attempt ID {}",
+            user_id, login_attempt_id,
         );
 
-        let id: i64 = login_attempt_id.into();
-        diesel::update(dsl::login_attempts.filter(dsl::login_attempt_id.eq(id)))
+        let user_id = user_id.into();
+        let login_attempt_id = login_attempt_id.into();
+
+        // Mark login attempt as successful
+        diesel::update(dsl::login_attempts.filter(dsl::login_attempt_id.eq(login_attempt_id)))
             .set(dsl::success.eq(true))
             .execute(&*self.conn)?;
 
-        Ok(())
+        // Add session
+        let model = NewSession {
+            user_id,
+            login_attempt_id,
+        };
+
+        let session = diesel::insert_into(sessions::table)
+            .values(&model)
+            .returning((
+                sessions::dsl::session_id,
+                sessions::dsl::user_id,
+                sessions::dsl::login_attempt_id,
+            ))
+            .get_result::<Session>(&*self.conn)?;
+
+        Ok(session)
     }
 
     pub async fn get_login_attempt(
