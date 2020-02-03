@@ -21,6 +21,7 @@
 use super::{NewLoginAttempt, NewSession};
 use crate::manager_prelude::*;
 use crate::schema::{login_attempts, sessions};
+use crate::utils::rows_to_result;
 use chrono::prelude::*;
 use ref_map::*;
 
@@ -200,6 +201,23 @@ impl SessionManager {
         match result {
             Some(_) => Ok(()),
             None => Err(Error::NotLoggedIn),
+        }
+    }
+
+    pub async fn end_session(&self, session_id: SessionId, user_id: UserId) -> Result<()> {
+        debug!("Ending session ID {} for user ID {}", session_id, user_id);
+
+        let session: i64 = session_id.into();
+        let user: i64 = user_id.into();
+        let rows = diesel::delete(sessions::table)
+            .filter(sessions::session_id.eq(session))
+            .filter(sessions::session_id.eq(user))
+            .execute(&*self.conn)?;
+
+        if rows_to_result(rows) {
+            Ok(())
+        } else {
+            Err(Error::NotLoggedIn)
         }
     }
 
