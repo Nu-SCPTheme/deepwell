@@ -22,5 +22,6 @@ make_id_type!(login_attempt, LoginAttemptId);
 make_id_type!(page, PageId);
 make_id_type!(rating, RatingId);
 make_id_type!(revision, RevisionId);
+make_id_type!(session, SessionId);
 make_id_type!(user, UserId);
 make_id_type!(wiki, WikiId);

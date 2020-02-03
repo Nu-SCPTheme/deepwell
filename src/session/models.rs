@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::schema::login_attempts;
+use crate::schema::{login_attempts, sessions};
 
 #[derive(Debug, Insertable)]
 #[table_name = "login_attempts"]
@@ -27,4 +27,11 @@ pub struct NewLoginAttempt<'a> {
     pub username_or_email: Option<&'a str>,
     pub remote_address: Option<&'a str>,
     pub success: bool,
+}
+
+#[derive(Debug, Insertable)]
+#[table_name = "sessions"]
+pub struct NewSession {
+    pub user_id: i64,
+    pub login_attempt_id: i64,
 }

@@ -66,6 +66,30 @@ impl LoginAttempt {
     }
 }
 
+#[derive(Debug, Queryable)]
+pub struct Session {
+    id: SessionId,
+    user_id: UserId,
+    login_attempt_id: LoginAttemptId,
+}
+
+impl Session {
+    #[inline]
+    pub fn session_id(&self) -> SessionId {
+        self.id
+    }
+
+    #[inline]
+    pub fn user_id(&self) -> UserId {
+        self.user_id
+    }
+
+    #[inline]
+    pub fn login_attempt_id(&self) -> LoginAttemptId {
+        self.login_attempt_id
+    }
+}
+
 pub struct SessionManager {
     conn: Arc<PgConnection>,
 }
