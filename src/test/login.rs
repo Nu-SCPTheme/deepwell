@@ -1,5 +1,5 @@
 /*
- * test/session.rs
+ * test/login.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019-2020 Ammon Smith
@@ -40,21 +40,21 @@ fn start_time() -> DateTime<Utc> {
 }
 
 #[test]
-fn session_manager_id() {
+fn login_manager_id() {
     run(|server| {
         task::block_on(async {
             let user_id = setup(server).await;
-            session_manager_internal_id(server, user_id).await;
+            login_manager_internal_id(server, user_id).await;
         })
     });
 }
 
 #[test]
-fn session_manager_name() {
+fn login_manager_name() {
     run(|server| {
         task::block_on(async {
             setup(server).await;
-            session_manager_internal_name(server).await;
+            login_manager_internal_name(server).await;
         })
     });
 }
@@ -66,7 +66,7 @@ async fn setup(server: &Server) -> UserId {
         .expect("Unable to create user")
 }
 
-async fn session_manager_internal_id(server: &Server, user_id: UserId) {
+async fn login_manager_internal_id(server: &Server, user_id: UserId) {
     // Login
     let error = server
         .try_login_id(user_id, "letmein", IP_ADDRESS_2)
@@ -115,7 +115,7 @@ async fn session_manager_internal_id(server: &Server, user_id: UserId) {
     assert_eq!(third.success(), true);
 }
 
-async fn session_manager_internal_name(server: &Server) {
+async fn login_manager_internal_name(server: &Server) {
     // Login
     let error = server
         .try_login("squirrel", "blackmoonhowls", IP_ADDRESS_3)
