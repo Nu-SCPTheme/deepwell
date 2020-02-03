@@ -194,7 +194,7 @@ impl SessionManager {
         let user: i64 = user_id.into();
         let result = sessions::table
             .filter(sessions::session_id.eq(session))
-            .filter(sessions::session_id.eq(user))
+            .filter(sessions::user_id.eq(user))
             .first::<Session>(&*self.conn)
             .optional()?;
 
@@ -211,7 +211,7 @@ impl SessionManager {
         let user: i64 = user_id.into();
         let rows = diesel::delete(sessions::table)
             .filter(sessions::session_id.eq(session))
-            .filter(sessions::session_id.eq(user))
+            .filter(sessions::user_id.eq(user))
             .execute(&*self.conn)?;
 
         if rows_to_result(rows) {
