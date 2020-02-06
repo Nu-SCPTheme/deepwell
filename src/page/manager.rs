@@ -166,7 +166,7 @@ impl PageManager {
         Ok(())
     }
 
-    async fn store<'a>(&'a self, wiki_id: WikiId) -> ReadGuard<'a> {
+    async fn store(&self, wiki_id: WikiId) -> ReadGuard<'_> {
         trace!("Getting revision store for wiki ID {}", wiki_id);
 
         let guard = self.stores.read().await;
@@ -900,6 +900,7 @@ impl PageManager {
         }
     }
 
+    #[allow(clippy::needless_lifetimes)] // clippy doesn't realize explicit lifetimes are necessary here..
     async fn commit_hash<'a>(
         &self,
         revision: Either<RevisionId, &'a GitHash>,

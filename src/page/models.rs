@@ -37,7 +37,7 @@ pub enum ChangeType {
 
 impl ChangeType {
     // For git commit messages
-    pub fn verb(&self) -> &'static str {
+    pub fn verb(self) -> &'static str {
         use self::ChangeType::*;
 
         match self {
