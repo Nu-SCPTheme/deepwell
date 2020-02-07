@@ -1,5 +1,5 @@
 /*
- * revision/blame/parse.rs
+ * models/blame/parse.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019-2020 Ammon Smith
@@ -24,8 +24,6 @@ use crate::{Error, Result};
 use chrono::{DateTime, FixedOffset, NaiveDateTime};
 use regex::bytes::Regex;
 use std::{mem, str};
-
-// TODO split into separate crate
 
 lazy_static! {
     static ref GIT_HASH_REGEX: Regex = Regex::new(

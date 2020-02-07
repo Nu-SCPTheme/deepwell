@@ -1,5 +1,5 @@
 /*
- * revision/blame/object.rs
+ * models/blame/object.rs
  *
  * deepwell - Database management and migrations service
  * Copyright (C) 2019-2020 Ammon Smith
