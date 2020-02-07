@@ -19,7 +19,6 @@
  */
 
 use crate::manager_prelude::*;
-use crate::session::Session;
 
 impl Server {
     /// Attempts to login a user via user ID.

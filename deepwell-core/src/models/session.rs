@@ -1,5 +1,5 @@
 /*
- * models/mod.rs
+ * models/session.rs
  *
  * deepwell-core - Database management and migrations service
  * Copyright (C) 2019-2020 Ammon Smith
@@ -18,27 +18,28 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-mod blame;
-mod git_hash;
-mod login_attempt;
-mod page;
-mod rating;
-mod session;
-mod user;
-mod wiki;
+use super::prelude::*;
 
-mod prelude {
-    pub use crate::error::*;
-    pub use crate::types::*;
-    pub use chrono::prelude::*;
-    pub use ref_map::*;
+#[derive(Serialize, Deserialize, Queryable, Debug)]
+pub struct Session {
+    id: SessionId,
+    user_id: UserId,
+    login_attempt_id: LoginAttemptId,
 }
 
-pub use self::blame::Blame;
-pub use self::git_hash::GitHash;
-pub use self::login_attempt::LoginAttempt;
-pub use self::page::Page;
-pub use self::rating::Rating;
-pub use self::session::Session;
-pub use self::user::User;
-pub use self::wiki::{Wiki, WikiSettings};
+impl Session {
+    #[inline]
+    pub fn session_id(&self) -> SessionId {
+        self.id
+    }
+
+    #[inline]
+    pub fn user_id(&self) -> UserId {
+        self.user_id
+    }
+
+    #[inline]
+    pub fn login_attempt_id(&self) -> LoginAttemptId {
+        self.login_attempt_id
+    }
+}
