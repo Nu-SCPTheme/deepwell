@@ -22,24 +22,6 @@ use super::{NewRating, NewRatingHistory};
 use crate::manager_prelude::*;
 use crate::utils::rows_to_result;
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq)]
-pub struct Rating {
-    score: i64,
-    votes: u32,
-}
-
-impl Rating {
-    #[inline]
-    pub fn score(&self) -> i64 {
-        self.score
-    }
-
-    #[inline]
-    pub fn votes(&self) -> u32 {
-        self.votes
-    }
-}
-
 #[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
 pub struct RatingHistory {
     rating_id: RatingId,
@@ -115,7 +97,7 @@ impl RatingManager {
                 .try_into()
                 .map_err(|_| Error::StaticMsg("number of votes doesn't fit into u32"))?;
 
-            Ok(Rating { score, votes })
+            Ok(Rating::new(score, votes))
         })
         .await
     }

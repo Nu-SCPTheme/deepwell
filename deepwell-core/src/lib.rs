@@ -20,11 +20,19 @@
 
 #![forbid(unsafe_code)]
 
+extern crate chrono;
+
+#[macro_use]
 extern crate diesel;
 extern crate subprocess;
 
 #[macro_use]
+extern crate lazy_static;
+
+#[macro_use]
 extern crate log;
+extern crate ref_map;
+extern crate regex;
 
 #[macro_use]
 extern crate serde;
@@ -36,7 +44,12 @@ extern crate thiserror;
 mod macros;
 
 mod error;
+mod models;
 mod types;
 
+pub type StdResult<T, E> = std::result::Result<T, E>;
+pub type Result<T> = StdResult<T, Error>;
+
 pub use self::error::{Error, SendableError};
+pub use self::models::*;
 pub use self::types::*;

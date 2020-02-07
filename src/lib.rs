@@ -21,7 +21,6 @@
 #![deny(missing_debug_implementations)]
 #![forbid(unsafe_code)]
 
-extern crate arrayvec;
 extern crate async_std;
 extern crate chrono;
 extern crate crypto;
@@ -41,11 +40,13 @@ extern crate lazy_static;
 extern crate log;
 extern crate rand;
 extern crate ref_map;
-extern crate regex;
 
 #[macro_use]
 extern crate serde;
 extern crate subprocess;
+
+#[macro_use]
+extern crate tinyvec;
 extern crate wikidot_normalize;
 
 #[macro_use]
@@ -68,21 +69,11 @@ mod wiki;
 mod test;
 
 pub mod prelude {
-    pub use crate::model::*;
     pub use crate::page::PageCommit;
     pub use crate::server::{Config, Server};
     pub use crate::user::UserMetadata;
     pub use crate::{Error, Result, StdResult};
     pub use deepwell_core::*;
-}
-
-pub mod model {
-    pub use crate::page::Page;
-    pub use crate::rating::Rating;
-    pub use crate::revision::{Blame, GitHash};
-    pub use crate::session::{LoginAttempt, Session};
-    pub use crate::user::User;
-    pub use crate::wiki::{Wiki, WikiSettings};
 }
 
 mod manager_prelude {

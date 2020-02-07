@@ -18,11 +18,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::{Blame, CommitInfo, GitHash};
+use super::CommitInfo;
 use crate::{Error, Result};
 use async_std::fs::{self, File};
 use async_std::prelude::*;
 use async_std::sync::{Mutex, RwLock};
+use deepwell_core::{Blame, GitHash};
 use std::convert::TryFrom;
 use std::ffi::{OsStr, OsString};
 use std::path::PathBuf;
@@ -31,9 +32,7 @@ use wikidot_normalize::is_normal;
 
 macro_rules! arguments {
     ($($x:expr), *) => {{
-        use arrayvec::ArrayVec;
-
-        let mut arguments = ArrayVec::<[&OsStr; 16]>::new();
+        let mut arguments = array_vec!([&OsStr; 16]);
 
         $(
             arguments.push(OsStr::new($x));

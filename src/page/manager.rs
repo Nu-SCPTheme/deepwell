@@ -20,13 +20,10 @@
 
 use super::{ChangeType, NewPage, NewRevision, NewTagChange, UpdatePage};
 use crate::manager_prelude::*;
-use crate::revision::{CommitInfo, GitHash, RevisionStore};
+use crate::revision::{CommitInfo, RevisionStore};
 use crate::schema::{pages, revisions, tag_history};
-use crate::user::User;
-use crate::wiki::Wiki;
 use async_std::fs;
 use async_std::sync::RwLockReadGuard;
-use deepwell_core::{UserId, WikiId};
 use either::*;
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
@@ -38,65 +35,6 @@ pub struct PageCommit<'a> {
     pub slug: &'a str,
     pub message: &'a str,
     pub user: &'a User,
-}
-
-#[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
-pub struct Page {
-    page_id: PageId,
-    wiki_id: WikiId,
-    slug: String,
-    title: String,
-    alt_title: Option<String>,
-    tags: Vec<String>,
-    created_at: DateTime<Utc>,
-    deleted_at: Option<DateTime<Utc>>,
-}
-
-impl Page {
-    #[inline]
-    pub fn id(&self) -> PageId {
-        self.page_id
-    }
-
-    #[inline]
-    pub fn wiki_id(&self) -> WikiId {
-        self.wiki_id
-    }
-
-    #[inline]
-    pub fn slug(&self) -> &str {
-        &self.slug
-    }
-
-    #[inline]
-    pub fn title(&self) -> &str {
-        &self.title
-    }
-
-    #[inline]
-    pub fn alt_title(&self) -> Option<&str> {
-        self.alt_title.as_ref().map(|s| s as _)
-    }
-
-    #[inline]
-    pub fn tags(&self) -> &[String] {
-        &self.tags
-    }
-
-    #[inline]
-    pub fn created_at(&self) -> DateTime<Utc> {
-        self.created_at
-    }
-
-    #[inline]
-    pub fn deleted_at(&self) -> Option<DateTime<Utc>> {
-        self.deleted_at
-    }
-
-    #[inline]
-    pub fn exists(&self) -> bool {
-        self.deleted_at.is_none()
-    }
 }
 
 #[derive(Debug)]

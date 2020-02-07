@@ -1,7 +1,7 @@
 /*
- * revision/mod.rs
+ * models/rating.rs
  *
- * deepwell - Database management and migrations service
+ * deepwell-core - Database management and migrations service
  * Copyright (C) 2019-2020 Ammon Smith
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,13 +18,25 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-mod info;
-mod process;
-mod store;
+#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq)]
+pub struct Rating {
+    score: i64,
+    votes: u32,
+}
 
-#[cfg(test)]
-mod test;
+impl Rating {
+    #[inline]
+    pub fn new(score: i64, votes: u32) -> Self {
+        Rating { score, votes }
+    }
 
-pub use self::info::CommitInfo;
-pub use self::process::{spawn, spawn_output};
-pub use self::store::RevisionStore;
+    #[inline]
+    pub fn score(&self) -> i64 {
+        self.score
+    }
+
+    #[inline]
+    pub fn votes(&self) -> u32 {
+        self.votes
+    }
+}

@@ -22,61 +22,6 @@ use super::models::{NewWiki, NewWikiSettings, UpdateWiki};
 use crate::manager_prelude::*;
 use crate::schema::{wiki_settings, wikis};
 use async_std::sync::RwLockWriteGuard;
-use chrono::Duration;
-
-#[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
-pub struct Wiki {
-    id: WikiId,
-    name: String,
-    slug: String,
-    domain: String,
-    created_at: DateTime<Utc>,
-}
-
-impl Wiki {
-    #[inline]
-    pub fn id(&self) -> WikiId {
-        self.id
-    }
-
-    #[inline]
-    pub fn name(&self) -> &str {
-        &self.name
-    }
-
-    #[inline]
-    pub fn slug(&self) -> &str {
-        &self.slug
-    }
-
-    #[inline]
-    pub fn domain(&self) -> &str {
-        &self.domain
-    }
-
-    #[inline]
-    pub fn created_at(&self) -> DateTime<Utc> {
-        self.created_at
-    }
-}
-
-#[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
-pub struct WikiSettings {
-    id: WikiId,
-    page_lock_duration: i16,
-}
-
-impl WikiSettings {
-    #[inline]
-    pub fn id(&self) -> WikiId {
-        self.id
-    }
-
-    #[inline]
-    pub fn page_lock_duration(&self) -> Duration {
-        Duration::seconds(self.page_lock_duration as i64)
-    }
-}
 
 pub struct WikiManager {
     conn: Arc<PgConnection>,

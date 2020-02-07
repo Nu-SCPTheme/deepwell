@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::revision::GitHash;
+use crate::GitHash;
 use chrono::{DateTime, FixedOffset};
 
 #[derive(Debug, Clone, PartialEq, Eq)]

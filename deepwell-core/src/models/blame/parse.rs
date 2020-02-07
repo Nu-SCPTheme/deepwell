@@ -19,7 +19,7 @@
  */
 
 use super::*;
-use crate::revision::GitHash;
+use crate::GitHash;
 use crate::{Error, Result};
 use chrono::{DateTime, FixedOffset, NaiveDateTime};
 use regex::bytes::Regex;

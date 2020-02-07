@@ -23,49 +23,6 @@ use crate::manager_prelude::*;
 use crate::schema::{login_attempts, sessions};
 use crate::utils::rows_to_result;
 use chrono::prelude::*;
-use ref_map::*;
-
-#[derive(Debug, Queryable)]
-pub struct LoginAttempt {
-    id: LoginAttemptId,
-    user_id: Option<UserId>,
-    username_or_email: Option<String>,
-    remote_address: Option<String>,
-    success: bool,
-    attempted_at: DateTime<Utc>,
-}
-
-impl LoginAttempt {
-    #[inline]
-    pub fn login_attempt_id(&self) -> LoginAttemptId {
-        self.id
-    }
-
-    #[inline]
-    pub fn user_id(&self) -> Option<UserId> {
-        self.user_id
-    }
-
-    #[inline]
-    pub fn username_or_email(&self) -> Option<&str> {
-        self.username_or_email.ref_map(|s| s.as_str())
-    }
-
-    #[inline]
-    pub fn remote_address(&self) -> Option<&str> {
-        self.remote_address.ref_map(|s| s.as_str())
-    }
-
-    #[inline]
-    pub fn success(&self) -> bool {
-        self.success
-    }
-
-    #[inline]
-    pub fn attempted_at(&self) -> DateTime<Utc> {
-        self.attempted_at
-    }
-}
 
 #[derive(Debug, Queryable)]
 pub struct Session {

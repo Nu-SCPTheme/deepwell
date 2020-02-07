@@ -1,7 +1,7 @@
 /*
- * revision/mod.rs
+ * models/mod.rs
  *
- * deepwell - Database management and migrations service
+ * deepwell-core - Database management and migrations service
  * Copyright (C) 2019-2020 Ammon Smith
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,13 +18,25 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-mod info;
-mod process;
-mod store;
+mod blame;
+mod git_hash;
+mod login_attempt;
+mod page;
+mod rating;
+mod user;
+mod wiki;
 
-#[cfg(test)]
-mod test;
+mod prelude {
+    pub use crate::error::*;
+    pub use crate::types::*;
+    pub use chrono::prelude::*;
+    pub use ref_map::*;
+}
 
-pub use self::info::CommitInfo;
-pub use self::process::{spawn, spawn_output};
-pub use self::store::RevisionStore;
+pub use self::blame::Blame;
+pub use self::git_hash::GitHash;
+pub use self::login_attempt::LoginAttempt;
+pub use self::page::Page;
+pub use self::rating::Rating;
+pub use self::user::User;
+pub use self::wiki::{Wiki, WikiSettings};
