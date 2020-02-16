@@ -61,7 +61,7 @@ impl Server {
         self.transaction(async {
             let page_id = self.lock_page_id(wiki_id, &slug).await?;
 
-            self.lock.check(page_id).await?;
+            self.lock.check(page_id, user_id).await?;
 
             let lock_duration = self.lock_duration(wiki_id).await?;
             self.lock.add(page_id, user_id, lock_duration).await?;
@@ -90,7 +90,7 @@ impl Server {
         self.transaction(async {
             let page_id = self.lock_page_id(wiki_id, &slug).await?;
 
-            self.lock.check(page_id).await?;
+            self.lock.check(page_id, user_id).await?;
 
             let lock_duration = self.lock_duration(wiki_id).await?;
             self.lock.update(page_id, user_id, lock_duration).await?;

@@ -47,8 +47,12 @@ impl LockManager {
         Ok(rows)
     }
 
-    pub async fn check(&self, page_id: PageId) -> Result<()> {
-        debug!("Checking if a page lock exists for page ID {}", page_id);
+    pub async fn check(&self, page_id: PageId, user_id: UserId) -> Result<()> {
+        debug!(
+            "Checking if a page lock exists for page ID {} by user ID {}",
+            page_id,
+            user_id,
+        );
 
         let id: i64 = page_id.into();
         let result = page_locks::table
@@ -59,7 +63,8 @@ impl LockManager {
 
         match result {
             None => Ok(()),
-            Some(user_id) => Err(Error::PageLocked(user_id)),
+            Some(id) if id == user_id => Ok(()),
+            Some(id) => Err(Error::PageLocked(id)),
         }
     }
 
