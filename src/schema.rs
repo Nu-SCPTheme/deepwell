@@ -162,6 +162,14 @@ table! {
 }
 
 table! {
+    user_verification (user_id) {
+        user_id -> Int8,
+        token -> Text,
+        created_at -> Timestamptz,
+    }
+}
+
+table! {
     wiki_membership (wiki_id, user_id) {
         wiki_id -> Int8,
         user_id -> Int8,
@@ -213,6 +221,7 @@ joinable!(roles -> wikis (wiki_id));
 joinable!(sessions -> login_attempts (login_attempt_id));
 joinable!(sessions -> users (user_id));
 joinable!(tag_history -> revisions (revision_id));
+joinable!(user_verification -> users (user_id));
 joinable!(wiki_membership -> users (user_id));
 joinable!(wiki_membership -> wikis (wiki_id));
 joinable!(wiki_settings -> wikis (wiki_id));
@@ -234,6 +243,7 @@ allow_tables_to_appear_in_same_query!(
     sessions,
     tag_history,
     users,
+    user_verification,
     wiki_membership,
     wikis,
     wiki_settings,
