@@ -43,7 +43,21 @@ impl UpdateWiki<'_> {
 
 #[derive(Debug, Insertable)]
 #[table_name = "wiki_settings"]
-pub struct NewWikiSettings {
+pub struct NewWikiSettings<'a> {
     pub wiki_id: i64,
+    pub default_domain: &'a str,
     pub page_lock_duration: i16,
+}
+
+#[derive(Debug, Default, AsChangeset)]
+#[table_name = "wiki_settings"]
+pub struct UpdateWikiSettings<'a> {
+    pub default_domain: Option<&'a str>,
+    pub page_lock_duration: Option<i16>,
+}
+
+impl UpdateWikiSettings<'_> {
+    pub fn has_changes(&self) -> bool {
+        self.default_domain.is_some() || self.page_lock_duration.is_some()
+    }
 }

@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::models::{NewWiki, NewWikiSettings, UpdateWiki};
+use super::models::*;
 use crate::manager_prelude::*;
 use crate::schema::{wiki_settings, wikis};
 use async_std::sync::RwLockWriteGuard;
@@ -139,6 +139,23 @@ impl WikiManager {
             Some(settings) => Ok(settings),
             None => Err(Error::WikiNotFound),
         }
+    }
+
+    pub async fn edit_settings(&self, wiki_id: WikiId, default_domain: Option<&str>, page_lock_duration: Option<i16>) -> Result<()> {
+        use self::wiki_settings::dsl;
+
+        let model = UpdateWikiSettings { default_domain, page_lock_duration };
+
+        info!("Editing settings for wiki ID {}: {:?}", wiki_id, model);
+
+        if model.has_changes() {
+            let id: i64 = wiki_id.into();
+            diesel::update(dsl::wiki_settings.filter(dsl::wiki_id.eq(id)))
+                .set(&model)
+                .execute(&self.conn)?;
+        }
+
+        Ok(())
     }
 }
 
