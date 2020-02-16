@@ -104,16 +104,26 @@ impl Server {
         self.session.check_session(session_id, user_id).await
     }
 
-    /// Deactivate a session that's logged in.
+    /// Deactivate a session currently logged in.
     /// Returns `()` if successful, `NotLoggedIn` if no such session was found.
     #[inline]
     pub async fn end_session(&self, session_id: SessionId, user_id: UserId) -> Result<()> {
         self.session.end_session(session_id, user_id).await
     }
 
+    /// Deactivates all sessions except the one currently logged in.
+    /// Returns a list of the sessions which were deactivated.
+    pub async fn end_other_sessions(
+        &self,
+        session_id: SessionId,
+        user_id: UserId,
+    ) -> Result<Vec<Session>> {
+        self.session.end_other_sessions(session_id, user_id).await
+    }
+
     /// Get all sessions for the given user.
     /// Returns the current session (the one passed in the argument) first,
-    /// and the other sessions in the vector.
+    /// and the other sessions in the list.
     pub async fn get_sessions(
         &self,
         session_id: SessionId,

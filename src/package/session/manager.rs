@@ -154,6 +154,36 @@ impl SessionManager {
         }
     }
 
+    pub async fn end_other_sessions(
+        &self,
+        session_id: SessionId,
+        user_id: UserId,
+    ) -> Result<Vec<Session>> {
+        debug!(
+            "Ending all other sessions except ID {} for user ID {}",
+            session_id, user_id,
+        );
+
+        self.transaction(async {
+            // Get sessions to invalidate
+            let (_, others) = self.get_sessions(session_id, user_id).await?;
+
+            let user: i64 = user_id.into();
+            let other_ids = others
+                .iter()
+                .map(|session| -> i64 { session.session_id().into() });
+
+            // Remove from active sessions table
+            diesel::delete(sessions::table)
+                .filter(sessions::session_id.eq_any(other_ids))
+                .filter(sessions::user_id.eq(user))
+                .execute(&*self.conn)?;
+
+            Ok(others)
+        })
+        .await
+    }
+
     pub async fn get_sessions(
         &self,
         session_id: SessionId,
@@ -161,7 +191,7 @@ impl SessionManager {
     ) -> Result<(Session, Vec<Session>)> {
         debug!(
             "Getting all sessions for user ID {} (current session ID {})",
-            user_id, session_id
+            user_id, session_id,
         );
 
         // Get all sessions for a user
