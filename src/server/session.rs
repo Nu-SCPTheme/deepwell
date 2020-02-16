@@ -111,6 +111,17 @@ impl Server {
         self.session.end_session(session_id, user_id).await
     }
 
+    /// Get all sessions for the given user.
+    /// Returns the current session (the one passed in the argument) first,
+    /// and the other sessions in the vector.
+    pub async fn get_sessions(
+        &self,
+        session_id: SessionId,
+        user_id: UserId,
+    ) -> Result<(Session, Vec<Session>)> {
+        self.session.get_sessions(session_id, user_id).await
+    }
+
     /// Fetch login attempt associated with the passed ID.
     #[inline]
     pub async fn get_login_attempt(
