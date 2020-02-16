@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use diesel::sql_types::Text;
+
 pub fn rows_to_result(rows_deleted: usize) -> bool {
     match rows_deleted {
         0 => false,
@@ -25,3 +27,6 @@ pub fn rows_to_result(rows_deleted: usize) -> bool {
         _ => panic!("Multiple rows deleted in primary key removal"),
     }
 }
+
+sql_function!(fn lower(val: Text) -> Text);
+sql_function!(fn upper(val: Text) -> Text);

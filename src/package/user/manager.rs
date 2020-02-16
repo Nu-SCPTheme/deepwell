@@ -21,7 +21,7 @@
 use super::models::{NewUser, NewUserVerification, UpdateUser};
 use crate::manager_prelude::*;
 use crate::schema::{user_verification, users};
-use crate::utils::rows_to_result;
+use crate::utils::{lower, rows_to_result};
 use diesel::pg::expression::dsl::any;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
@@ -65,7 +65,7 @@ impl UserManager {
         // Already in a transaction at the server level
         let result = users::table
             .filter(users::name.eq(name))
-            .or_filter(users::email.eq(email))
+            .or_filter(users::email.eq(&email))
             .select((dsl::user_id, dsl::name, dsl::email))
             .get_result::<(UserId, String, String)>(&*self.conn)
             .optional()?;
@@ -146,7 +146,7 @@ impl UserManager {
 
         let result = users::table
             .filter(users::name.eq(name_or_email))
-            .or_filter(users::email.eq(name_or_email))
+            .or_filter(users::email.eq(lower(name_or_email)))
             .select(users::dsl::user_id)
             .first::<UserId>(&*self.conn)
             .optional()?;
@@ -158,7 +158,7 @@ impl UserManager {
         info!("Getting user for email '{}'", email);
 
         let result = users::table
-            .filter(users::email.eq(email))
+            .filter(users::email.eq(lower(email)))
             .first::<User>(&*self.conn)
             .optional()?;
 
