@@ -141,10 +141,14 @@ impl WikiManager {
         }
     }
 
-    pub async fn edit_settings(&self, wiki_id: WikiId, default_domain: Option<&str>, page_lock_duration: Option<i16>) -> Result<()> {
+    pub async fn edit_settings(
+        &self,
+        wiki_id: WikiId,
+        page_lock_duration: Option<i16>,
+    ) -> Result<()> {
         use self::wiki_settings::dsl;
 
-        let model = UpdateWikiSettings { default_domain, page_lock_duration };
+        let model = UpdateWikiSettings { page_lock_duration };
 
         info!("Editing settings for wiki ID {}: {:?}", wiki_id, model);
 
@@ -152,7 +156,7 @@ impl WikiManager {
             let id: i64 = wiki_id.into();
             diesel::update(dsl::wiki_settings.filter(dsl::wiki_id.eq(id)))
                 .set(&model)
-                .execute(&self.conn)?;
+                .execute(&*self.conn)?;
         }
 
         Ok(())
