@@ -29,8 +29,6 @@ use std::pin::Pin;
 use std::time::Duration;
 use subprocess::{ExitStatus, Popen, PopenConfig, Redirection};
 
-const TIMEOUT: Duration = Duration::from_millis(1800);
-
 macro_rules! mut_borrow {
     ($option:expr) => {
         $option.as_mut().unwrap()
@@ -64,6 +62,8 @@ async fn spawn_inner(
     arguments: &[&OsStr],
     output: bool,
 ) -> Result<Option<Box<[u8]>>> {
+    const TIMEOUT: Duration = Duration::from_millis(1800);
+
     let config = PopenConfig {
         stdin: Redirection::Pipe,
         stdout: Redirection::Pipe,
@@ -140,12 +140,12 @@ async fn spawn_inner(
             Err(Error::CommandFailed(buffer))
         }
         Err(_) => {
+            const KILL_TIMEOUT: Duration = Duration::from_millis(2000);
+
             warn!(
                 "Process timed out after {} ms, terminating",
                 TIMEOUT.as_millis(),
             );
-
-            const KILL_TIMEOUT: Duration = Duration::from_millis(2000);
 
             if let Err(error) = popen.terminate() {
                 warn!("Failed to terminate process: {}", error);
