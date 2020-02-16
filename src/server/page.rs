@@ -23,6 +23,24 @@ use crate::manager_prelude::*;
 use crate::package::author::AuthorType;
 
 impl Server {
+    async fn check_page_lock(
+        &self,
+        wiki_id: WikiId,
+        slug: &str,
+        user_id: UserId,
+    ) -> Result<PageId> {
+        trace!("Checking page lock for wiki ID {} / slug {}", wiki_id, slug,);
+
+        let page_id = self
+            .page
+            .get_page_id(wiki_id, slug)
+            .await?
+            .ok_or(Error::PageNotFound)?;
+
+        self.lock.check(page_id, user_id).await?;
+        Ok(page_id)
+    }
+
     /// Creates a new page with the given contents and metadata.
     pub async fn create_page(
         &self,
@@ -72,6 +90,13 @@ impl Server {
         title: Option<&str>,
         alt_title: Option<&str>,
     ) -> Result<RevisionId> {
+        let PageCommit {
+            wiki_id,
+            slug,
+            user,
+            ..
+        } = commit;
+
         // Empty string means use default
         let alt_title: Option<Option<&str>> = match alt_title {
             Some("") => Some(None),
@@ -79,7 +104,14 @@ impl Server {
             None => None,
         };
 
-        self.page.commit(commit, content, title, alt_title).await
+        self.transaction(async {
+            let page_id = self.check_page_lock(wiki_id, slug, user.id()).await?;
+
+            self.page
+                .commit(commit, page_id, content, title, alt_title)
+                .await
+        })
+        .await
     }
 
     /// Renames a page to use a different slug.
@@ -99,15 +131,31 @@ impl Server {
         let old_slug = normalize_slug(old_slug);
         let new_slug = normalize_slug(new_slug);
 
-        self.page
-            .rename(wiki_id, &old_slug, &new_slug, message, user)
-            .await
+        self.transaction(async {
+            let page_id = self.check_page_lock(wiki_id, &old_slug, user.id()).await?;
+
+            self.page
+                .rename(wiki_id, &old_slug, &new_slug, page_id, message, user)
+                .await
+        })
+        .await
     }
 
     /// Removes the given page.
-    #[inline]
     pub async fn remove_page(&self, commit: PageCommit<'_>) -> Result<RevisionId> {
-        self.page.remove(commit).await
+        let PageCommit {
+            wiki_id,
+            slug,
+            user,
+            ..
+        } = commit;
+
+        self.transaction(async {
+            let page_id = self.check_page_lock(wiki_id, slug, user.id()).await?;
+
+            self.page.remove(commit, page_id).await
+        })
+        .await
     }
 
     /// Determines if a page with the given slug exists.

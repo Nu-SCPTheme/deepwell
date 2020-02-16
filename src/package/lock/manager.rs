@@ -50,8 +50,7 @@ impl LockManager {
     pub async fn check(&self, page_id: PageId, user_id: UserId) -> Result<()> {
         debug!(
             "Checking if a page lock exists for page ID {} by user ID {}",
-            page_id,
-            user_id,
+            page_id, user_id,
         );
 
         let id: i64 = page_id.into();

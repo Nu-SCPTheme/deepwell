@@ -208,6 +208,7 @@ impl PageManager {
     pub async fn commit(
         &self,
         commit: PageCommit<'_>,
+        page_id: PageId,
         content: Option<&[u8]>,
         title: Option<&str>,
         alt_title: Option<Nullable<&str>>,
@@ -227,11 +228,6 @@ impl PageManager {
                 title,
                 alt_title,
             };
-
-            let page_id = self
-                .get_page_id(wiki_id, slug)
-                .await?
-                .ok_or(Error::PageNotFound)?;
 
             if model.has_changes() {
                 use self::pages::dsl;
@@ -278,6 +274,7 @@ impl PageManager {
         wiki_id: WikiId,
         old_slug: &str,
         new_slug: &str,
+        page_id: PageId,
         message: &str,
         user: &User,
     ) -> Result<RevisionId> {
@@ -292,11 +289,6 @@ impl PageManager {
                 title: None,
                 alt_title: None,
             };
-
-            let page_id = self
-                .get_page_id(wiki_id, old_slug)
-                .await?
-                .ok_or(Error::PageNotFound)?;
 
             trace!("Updating {:?} in pages table", &model);
             {
@@ -341,7 +333,7 @@ impl PageManager {
         .await
     }
 
-    pub async fn remove(&self, commit: PageCommit<'_>) -> Result<RevisionId> {
+    pub async fn remove(&self, commit: PageCommit<'_>, page_id: PageId) -> Result<RevisionId> {
         info!("Removing page {:?}", commit);
 
         let PageCommit {
@@ -353,11 +345,6 @@ impl PageManager {
 
         self.transaction(async {
             use diesel::dsl::now;
-
-            let page_id = self
-                .get_page_id(wiki_id, slug)
-                .await?
-                .ok_or(Error::PageNotFound)?;
 
             trace!("Marking page as deleted in table");
             {
