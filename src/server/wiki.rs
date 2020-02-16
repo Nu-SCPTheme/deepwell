@@ -79,4 +79,18 @@ impl Server {
 
         Ok((wiki, settings))
     }
+
+    /// Edits the settings for the given wiki.
+    pub async fn edit_wiki_settings(
+        &self,
+        id: WikiId,
+        page_lock_duration: Option<i16>,
+    ) -> Result<()> {
+        info!(
+            "Changing settings for wiki ID {}: page_lock_duration {:?}",
+            id, page_lock_duration,
+        );
+
+        self.wiki.edit_settings(id, page_lock_duration).await
+    }
 }
