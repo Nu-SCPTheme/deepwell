@@ -62,6 +62,18 @@ INSERT INTO users (user_id, name, email, is_verified, is_bot, website, about, lo
 INSERT INTO users (user_id, name, email, is_verified, is_bot, website, about, location)
     VALUES (
         5,
+        'guest',
+        'guest@example.com',
+        true,
+        true,
+        'https://example.com/',
+        'Standard account for guest users',
+        'anywhere'
+    );
+
+INSERT INTO users (user_id, name, email, is_verified, is_bot, website, about, location)
+    VALUES (
+        6,
         'nobody',
         'nobody@example.com',
         true,
@@ -125,6 +137,16 @@ INSERT INTO passwords (user_id, hash, salt, logn, param_r, param_p)
 INSERT INTO passwords (user_id, hash, salt, logn, param_r, param_p)
     VALUES (
         5,
+        E'\\x0000000000000000000000000000000000000000000000000000000000000000',
+        E'\\x00000000000000000000000000000000',
+        1,
+        1,
+        1
+    );
+
+INSERT INTO passwords (user_id, hash, salt, logn, param_r, param_p)
+    VALUES (
+        6,
         E'\\x0000000000000000000000000000000000000000000000000000000000000000',
         E'\\x00000000000000000000000000000000',
         1,
