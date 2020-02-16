@@ -87,7 +87,7 @@ async fn spawn_inner(
         TIMEOUT.as_millis(),
     );
 
-    match timeout(TIMEOUT, PopenAsync::from(popen)).await {
+    match timeout(TIMEOUT, PopenAsync::from(&mut popen)).await {
         Ok(status) if status.success() => {
             trace!("Command succeeded, gathering stdout");
 
@@ -165,22 +165,24 @@ async fn spawn_inner(
 }
 
 #[derive(Debug)]
-struct PopenAsync {
-    inner: Popen,
+struct PopenAsync<'p> {
+    inner: &'p mut Popen,
 }
 
-impl From<Popen> for PopenAsync {
+impl<'p> From<&'p mut Popen> for PopenAsync<'p> {
     #[inline]
-    fn from(inner: Popen) -> Self {
+    fn from(inner: &'p mut Popen) -> Self {
         PopenAsync { inner }
     }
 }
 
-impl Future for PopenAsync {
+impl<'p> Future for PopenAsync<'p> {
     type Output = ExitStatus;
 
     fn poll(mut self: Pin<&mut Self>, _: &mut Context) -> Poll<Self::Output> {
-        match self.as_mut().inner.poll() {
+        let popen = &mut self.as_mut().inner;
+
+        match popen.poll() {
             Some(status) => Poll::Ready(status),
             None => Poll::Pending,
         }
