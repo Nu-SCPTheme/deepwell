@@ -7,7 +7,6 @@ rust:
 os:
   - linux
   - osx
-  - windows
 
 env:
   - DATABASE_URL=postgres://overseer:blackmoon@localhost/deepwell
