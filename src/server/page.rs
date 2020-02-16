@@ -31,6 +31,8 @@ impl Server {
     ) -> Result<PageId> {
         trace!("Checking page lock for wiki ID {} / slug {}", wiki_id, slug,);
 
+        self.lock.invalidate_expired().await?;
+
         let page_id = self
             .page
             .get_page_id(wiki_id, slug)

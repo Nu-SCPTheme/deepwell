@@ -58,6 +58,8 @@ impl Server {
             wiki_id, slug, user_id,
         );
 
+        self.lock.invalidate_expired().await?;
+
         self.transaction(async {
             let page_id = self.lock_page_id(wiki_id, &slug).await?;
 
@@ -87,6 +89,8 @@ impl Server {
             wiki_id, slug, user_id,
         );
 
+        self.lock.invalidate_expired().await?;
+
         self.transaction(async {
             let page_id = self.lock_page_id(wiki_id, &slug).await?;
 
@@ -110,6 +114,8 @@ impl Server {
             "Removing page lock for wiki ID {} / slug '{}'",
             wiki_id, slug,
         );
+
+        // Don't prune old locks to avoid a race condition with this lock
 
         let page_id = self.lock_page_id(wiki_id, &slug).await?;
 
