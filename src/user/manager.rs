@@ -18,11 +18,13 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use super::models::{NewUser, UpdateUser};
+use super::models::{NewUser, NewUserVerification, UpdateUser};
 use crate::manager_prelude::*;
 use crate::schema::{user_verification, users};
 use crate::utils::rows_to_result;
 use diesel::pg::expression::dsl::any;
+use rand::distributions::Alphanumeric;
+use rand::{thread_rng, Rng};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct UserMetadata<'a> {
@@ -262,7 +264,18 @@ impl UserManager {
     pub async fn create_token(&self, id: UserId) -> Result<String> {
         info!("Creating new verification token for user ID {}", id);
 
-        unimplemented!()
+        let token: String = thread_rng().sample_iter(&Alphanumeric).take(64).collect();
+
+        let model = NewUserVerification {
+            user_id: id.into(),
+            token: &token,
+        };
+
+        diesel::insert_into(user_verification::table)
+            .values(&model)
+            .execute(&*self.conn)?;
+
+        Ok(token)
     }
 
     pub async fn mark_inactive(&self, id: UserId, value: bool) -> Result<()> {

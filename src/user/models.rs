@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::schema::users;
+use crate::schema::{user_verification, users};
 use chrono::prelude::*;
 
 #[derive(Debug, Insertable)]
@@ -42,4 +42,11 @@ pub struct UpdateUser<'a> {
     pub gender: Option<&'a str>,
     pub location: Option<&'a str>,
     pub deleted_at: Option<Nullable<DateTime<Utc>>>,
+}
+
+#[derive(Debug, Insertable)]
+#[table_name = "user_verification"]
+pub struct NewUserVerification<'a> {
+    pub user_id: i64,
+    pub token: &'a str,
 }
