@@ -33,18 +33,14 @@ macro_rules! check_err {
 fn session() {
     run(|server| {
         task::block_on(async {
-            let user_id = server
-                .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
-                .await
-                .expect("Unable to create user");
-
-            session_internal(server, user_id).await;
-            session_end_other(server, user_id).await;
+            join!(session_internal(server), session_end_other(server));
         })
     });
 }
 
-async fn session_internal(server: &Server, user_id: UserId) {
+async fn session_internal(server: &Server) {
+    let (user_id, _, _) = create_user_full(server, "blackmoonhowls").await;
+
     // Login with user ID
     let session_1 = server
         .try_login_id(user_id, "blackmoonhowls", None)
@@ -132,7 +128,9 @@ async fn session_internal(server: &Server, user_id: UserId) {
     check_err!(error);
 }
 
-async fn session_end_other(server: &Server, user_id: UserId) {
+async fn session_end_other(server: &Server) {
+    let (user_id, _, _) = create_user_full(server, "blackmoonhowls").await;
+
     // Create multiple sessions
     let session_1 = server
         .try_login_id(user_id, "blackmoonhowls", None)

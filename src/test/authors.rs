@@ -32,33 +32,17 @@ async fn author_manager_internal(server: &Server) {
         .await
         .expect("Unable to create wiki");
 
-    let user_1 = {
-        let user_id = server
-            .create_user("superpersonyeah", "ralph@example.net", "blackmoonhowls")
-            .await
-            .expect("Unable to create user");
+    let user_id_1 = create_user(server).await;
+    let user_1 = server
+        .get_user_from_id(user_id_1)
+        .await
+        .expect("Unable to get user");
 
-        server
-            .get_user_from_id(user_id)
-            .await
-            .expect("Unable to get user")
-    };
-
-    let user_2 = {
-        let user_id = server
-            .create_user(
-                "so many forgotten accounts",
-                "smfa@example.net",
-                "ribbon-person",
-            )
-            .await
-            .expect("Unable to create user");
-
-        server
-            .get_user_from_id(user_id)
-            .await
-            .expect("Unable to get user")
-    };
+    let user_id_2 = create_user(server).await;
+    let user_2 = server
+        .get_user_from_id(user_id_2)
+        .await
+        .expect("Unable to get user");
 
     let user_3 = server
         .get_user_from_name("unknown")

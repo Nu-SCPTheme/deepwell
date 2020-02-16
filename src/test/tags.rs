@@ -32,17 +32,11 @@ async fn tags_internal(server: &Server) {
         .expect("Unable to get user")
         .expect("Default user not found");
 
-    let user_2 = {
-        let user_id = server
-            .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
-            .await
-            .expect("Unable to create user");
-
-        server
-            .get_user_from_id(user_id)
-            .await
-            .expect("Unable to get user")
-    };
+    let user_2_id = create_user(server).await;
+    let user_2 = server
+        .get_user_from_id(user_2_id)
+        .await
+        .expect("Unable to get user");
 
     let wiki_id = server
         .create_wiki("Test", "test", "example.org")

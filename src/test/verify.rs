@@ -27,11 +27,7 @@ fn verify() {
 
 async fn verify_internal(server: &Server) {
     // Test verify_token
-    let user_id = server
-        .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
-        .await
-        .expect("Unable to create user");
-
+    let user_id = create_user(server).await;
     let user = server
         .get_user_from_id(user_id)
         .await
@@ -57,11 +53,7 @@ async fn verify_internal(server: &Server) {
     assert_eq!(user.is_verified(), true, "User is not verified after token");
 
     // Test verify_user
-    let user_id = server
-        .create_user("amazingauthor", "author@example.org", "mypassword111")
-        .await
-        .expect("Unable to create user");
-
+    let user_id = create_user(server).await;
     let user = server
         .get_user_from_id(user_id)
         .await

@@ -40,33 +40,18 @@ fn start_time() -> DateTime<Utc> {
 }
 
 #[test]
-fn login_manager_id() {
+fn login_manager() {
     run(|server| {
         task::block_on(async {
-            let user_id = setup(server).await;
-            login_manager_internal_id(server, user_id).await;
-        })
-    });
-}
-
-#[test]
-fn login_manager_name() {
-    run(|server| {
-        task::block_on(async {
-            setup(server).await;
+            login_manager_internal_id(server).await;
             login_manager_internal_name(server).await;
         })
     });
 }
 
-async fn setup(server: &Server) -> UserId {
-    server
-        .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
-        .await
-        .expect("Unable to create user")
-}
+async fn login_manager_internal_id(server: &Server) {
+    let (user_id, _, _) = create_user_full(server, "blackmoonhowls").await;
 
-async fn login_manager_internal_id(server: &Server, user_id: UserId) {
     // Login
     let error = server
         .try_login_id(user_id, "letmein", IP_ADDRESS_2)
@@ -116,44 +101,47 @@ async fn login_manager_internal_id(server: &Server, user_id: UserId) {
 }
 
 async fn login_manager_internal_name(server: &Server) {
+    let password = "blackmoonhowls";
+    let (_, username, email) = create_user_full(server, password).await;
+
     // Login
     let error = server
-        .try_login("squirrel", "blackmoonhowls", IP_ADDRESS_3)
+        .try_login("user_1", password, IP_ADDRESS_3)
         .await
         .expect_err("Allowed invalid login");
 
     check_err!(error);
 
     let error = server
-        .try_login("squirrelbird", "letmein", IP_ADDRESS_1)
+        .try_login(&username, "letmein", IP_ADDRESS_1)
         .await
         .expect_err("Allowed invalid login");
 
     check_err!(error);
 
     server
-        .try_login("squirrelbird", "blackmoonhowls", IP_ADDRESS_2)
+        .try_login(&username, password, IP_ADDRESS_2)
         .await
-        .expect("Unable to login");
+        .expect("Unable to login with username");
 
     let error = server
-        .try_login("jenny@gmail.com", "blackmoonhowls", IP_ADDRESS_1)
+        .try_login("invalid_email", "password", IP_ADDRESS_1)
         .await
         .expect_err("Allowed invalid login");
 
     check_err!(error);
 
     let error = server
-        .try_login("jenny@example.net", "letmein", IP_ADDRESS_3)
+        .try_login(&email, "letmein", IP_ADDRESS_3)
         .await
         .expect_err("Allowed invalid login");
 
     check_err!(error);
 
     server
-        .try_login("jenny@example.net", "blackmoonhowls", IP_ADDRESS_2)
+        .try_login(&email, password, IP_ADDRESS_2)
         .await
-        .expect("Unable to login");
+        .expect("Unable to login with email");
 
     // Check all login attempts
     let attempts = server

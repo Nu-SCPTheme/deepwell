@@ -26,11 +26,7 @@ fn user_manager() {
 }
 
 async fn user_manager_internal(server: &Server) {
-    let user_id = server
-        .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
-        .await
-        .expect("Unable to create user");
-
+    let user_id = create_user(server).await;
     let metadata = UserMetadata {
         name: Some("Jenny Person"),
         email: None,
@@ -61,11 +57,7 @@ async fn user_manager_internal(server: &Server) {
         .await
         .expect("Unable to reactivate user");
 
-    let user_id_2 = server
-        .create_user("otheruser", "jeremy@example.net", "superstrongpassword")
-        .await
-        .expect("Unable to create second user");
-
+    let user_id_2 = create_user(server).await;
     let metadata = UserMetadata {
         name: None,
         email: None,

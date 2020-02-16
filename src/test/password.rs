@@ -49,11 +49,7 @@ async fn password_manager_internal(server: &Server) {
     bad_password!(bad_user_id, "rustybirb1");
     bad_password!(bad_user_id, "letmein");
 
-    let user_id = server
-        .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
-        .await
-        .expect("Unable to create user");
-
+    let (user_id, _, _) = create_user_full(server, "blackmoonhowls").await;
     good_password!(user_id, "blackmoonhowls");
     bad_password!(user_id, "blackmonhowls");
     bad_password!(user_id, "rustybirb1");
