@@ -19,9 +19,12 @@
  */
 
 use crate::{Error, Result};
+use futures::future::Future;
+use futures::task::{Context, Poll};
 use std::ffi::{OsStr, OsString};
 use std::fmt::Write;
 use std::io::Read;
+use std::pin::Pin;
 use std::time::Duration;
 use subprocess::{ExitStatus, Popen, PopenConfig, Redirection};
 
@@ -35,16 +38,20 @@ macro_rules! mut_borrow {
 
 /// Runs a process to completion, returning `Err` if it fails.
 pub fn spawn(repo: OsString, arguments: &[&OsStr]) -> Result<()> {
-    debug!("Running process: {:?} (no capture)", arguments);
-    trace!("Running command in {:?}", repo);
+    debug!(
+        "Running process: (in {:?}) {:?} (no capture)",
+        repo, arguments,
+    );
 
     spawn_inner(repo, arguments, false).map(|_| ())
 }
 
 /// Runs a process to completion, returning its `stdout`, or `Err` if it fails.
 pub fn spawn_output(repo: OsString, arguments: &[&OsStr]) -> Result<Box<[u8]>> {
-    debug!("Running process: {:?} (capturing stdout)", arguments);
-    trace!("Running command in {:?}", repo);
+    debug!(
+        "Running process: (in {:?}) {:?} (capturing stdout)",
+        repo, arguments,
+    );
 
     spawn_inner(repo, arguments, true).map(|out| out.unwrap())
 }
@@ -146,6 +153,22 @@ fn spawn_inner(repo: OsString, arguments: &[&OsStr], output: bool) -> Result<Opt
 
             let message = format!("command timed out ({} ms)", TIMEOUT.as_millis());
             Err(Error::CommandFailed(message))
+        }
+    }
+}
+
+#[derive(Debug)]
+struct PopenAsync {
+    inner: Popen,
+}
+
+impl Future for PopenAsync {
+    type Output = ExitStatus;
+
+    fn poll(mut self: Pin<&mut Self>, _: &mut Context) -> Poll<Self::Output> {
+        match self.as_mut().inner.poll() {
+            Some(status) => Poll::Ready(status),
+            None => Poll::Pending,
         }
     }
 }
