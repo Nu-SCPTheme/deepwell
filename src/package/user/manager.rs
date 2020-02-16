@@ -64,7 +64,7 @@ impl UserManager {
         //
         // Already in a transaction at the server level
         let result = users::table
-            .filter(users::name.eq(name))
+            .filter(lower(users::name).eq(lower(name)))
             .or_filter(users::email.eq(&email))
             .select((dsl::user_id, dsl::name, dsl::email))
             .get_result::<(UserId, String, String)>(&*self.conn)
@@ -145,7 +145,7 @@ impl UserManager {
         info!("Getting user ID for username or email '{}'", name_or_email);
 
         let result = users::table
-            .filter(users::name.eq(name_or_email))
+            .filter(lower(users::name).eq(lower(name_or_email)))
             .or_filter(users::email.eq(lower(name_or_email)))
             .select(users::dsl::user_id)
             .first::<UserId>(&*self.conn)
@@ -169,7 +169,7 @@ impl UserManager {
         info!("Getting user for name '{}'", name);
 
         let result = users::table
-            .filter(users::name.eq(name))
+            .filter(lower(users::name).eq(lower(name)))
             .first::<User>(&*self.conn)
             .optional()?;
 
