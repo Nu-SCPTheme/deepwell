@@ -30,19 +30,21 @@ macro_rules! check_err {
 }
 
 #[test]
-fn session_manager() {
+fn session() {
     run(|server| {
-        task::block_on(session_manager_internal(server));
+        task::block_on(async {
+            let user_id = server
+                .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
+                .await
+                .expect("Unable to create user");
+
+            session_internal(server, user_id).await;
+            session_end_other(server, user_id).await;
+        })
     });
 }
 
-async fn session_manager_internal(server: &Server) {
-    // Setup
-    let user_id = server
-        .create_user("squirrelbird", "jenny@example.net", "blackmoonhowls")
-        .await
-        .expect("Unable to create user");
-
+async fn session_internal(server: &Server, user_id: UserId) {
     // Login with user ID
     let session_1 = server
         .try_login_id(user_id, "blackmoonhowls", None)
@@ -121,6 +123,65 @@ async fn session_manager_internal(server: &Server) {
         .end_session(session_3.session_id(), session_3.user_id())
         .await
         .expect("Unable to end session");
+
+    let error = server
+        .check_session(session_3.session_id(), session_3.user_id())
+        .await
+        .expect_err("Session still valid");
+
+    check_err!(error);
+}
+
+async fn session_end_other(server: &Server, user_id: UserId) {
+    // Create multiple sessions
+    let session_1 = server
+        .try_login_id(user_id, "blackmoonhowls", None)
+        .await
+        .expect("Unable to login");
+
+    server
+        .check_session(session_1.session_id(), session_1.user_id())
+        .await
+        .expect("Session was invalid");
+
+    let session_2 = server
+        .try_login_id(user_id, "blackmoonhowls", None)
+        .await
+        .expect("Unable to login");
+
+    server
+        .check_session(session_2.session_id(), session_2.user_id())
+        .await
+        .expect("Session was invalid");
+
+    let session_3 = server
+        .try_login_id(user_id, "blackmoonhowls", None)
+        .await
+        .expect("Unable to login");
+
+    server
+        .check_session(session_3.session_id(), session_3.user_id())
+        .await
+        .expect("Session was invalid");
+
+    // Invalidate all other sessions
+    server
+        .end_other_sessions(session_1.session_id(), session_1.user_id())
+        .await
+        .expect("Unable to end all other sessions");
+
+    // Check sessions for validity
+    server
+        .check_session(session_1.session_id(), session_1.user_id())
+        .await
+        .expect("Session was invalid");
+
+    let error = server
+        .check_session(session_2.session_id(), session_2.user_id())
+        .await
+        .expect_err("Session still valid");
+
+    check_err!(error);
 
     let error = server
         .check_session(session_3.session_id(), session_3.user_id())
