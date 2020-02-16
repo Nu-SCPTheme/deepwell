@@ -73,7 +73,7 @@ pub async fn create_user_full(server: &Server, password: &str) -> (UserId, Strin
         chars
     };
 
-    let email = format!("{}@example.com", &username);
+    let email = format!("{}@example.com", username);
 
     println!("Creating test user '{}'", username);
     let id = server
@@ -86,4 +86,21 @@ pub async fn create_user_full(server: &Server, password: &str) -> (UserId, Strin
 
 pub async fn create_user(server: &Server) -> UserId {
     create_user_full(server, "defaultpasswordhere2").await.0
+}
+
+pub async fn create_wiki(server: &Server) -> WikiId {
+    let slug = {
+        let mut chars: String = thread_rng().sample_iter(&Alphanumeric).take(8).collect();
+
+        chars.insert_str(0, "wiki-");
+        chars
+    };
+
+    let domain = format!("{}.example.com", slug);
+
+    println!("Creating test wiki '{}'", slug);
+    server
+        .create_wiki(&slug, &slug, &domain)
+        .await
+        .expect("Unable to create wiki")
 }
