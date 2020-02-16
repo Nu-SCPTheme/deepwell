@@ -52,6 +52,7 @@ pub async fn create_wiki_full(server: &Server) -> (WikiId, String) {
     let slug = {
         let mut chars: String = thread_rng().sample_iter(&Alphanumeric).take(8).collect();
 
+        chars.make_ascii_lowercase();
         chars.insert_str(0, "wiki-");
         chars
     };
