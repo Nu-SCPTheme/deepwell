@@ -28,6 +28,7 @@ mod password;
 mod session;
 mod tags;
 mod user;
+mod verify;
 mod wiki;
 
 use self::prelude::*;
