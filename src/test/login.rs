@@ -39,19 +39,23 @@ fn start_time() -> DateTime<Utc> {
     DateTime::from_utc(date, Utc)
 }
 
+// Runs separately due to the login_attempts table check
+
 #[test]
-fn login_manager() {
+fn login_id() {
     run(|server| {
-        task::block_on(async {
-            join!(
-                login_manager_internal_id(server),
-                login_manager_internal_name(server),
-            );
-        })
+        task::block_on(login_id_internal(server));
     });
 }
 
-async fn login_manager_internal_id(server: &Server) {
+#[test]
+fn login_name() {
+    run(|server| {
+        task::block_on(login_name_internal(server));
+    });
+}
+
+async fn login_id_internal(server: &Server) {
     let (user_id, _, _) = create_user_full(server, "blackmoonhowls").await;
 
     // Login
@@ -102,7 +106,7 @@ async fn login_manager_internal_id(server: &Server) {
     assert_eq!(third.success(), true);
 }
 
-async fn login_manager_internal_name(server: &Server) {
+async fn login_name_internal(server: &Server) {
     let password = "blackmoonhowls";
     let (_, username, email) = create_user_full(server, password).await;
 
