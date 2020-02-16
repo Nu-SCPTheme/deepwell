@@ -94,7 +94,7 @@ impl WikiManager {
     pub async fn get_by_slug(&self, slug: &str) -> Result<Wiki> {
         fn get<'a>(wikis: &'a HashMap<WikiId, Wiki>, slug: &'_ str) -> Option<&'a Wiki> {
             for wiki in wikis.values() {
-                if wiki.slug() == slug {
+                if wiki.slug().eq_ignore_ascii_case(slug) {
                     return Some(wiki);
                 }
             }
