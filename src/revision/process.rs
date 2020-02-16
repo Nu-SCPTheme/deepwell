@@ -87,7 +87,13 @@ async fn spawn_inner(
         TIMEOUT.as_millis(),
     );
 
-    match timeout(TIMEOUT, PopenAsync::from(&mut popen)).await {
+    macro_rules! await_exit {
+        ($popen:expr, $timeout:expr) => {
+            timeout($timeout, PopenAsync::from(&mut $popen)).await
+        };
+    }
+
+    match await_exit!(popen, TIMEOUT) {
         Ok(status) if status.success() => {
             trace!("Command succeeded, gathering stdout");
 
@@ -146,16 +152,9 @@ async fn spawn_inner(
                 return Err(Error::Io(error));
             }
 
-            match popen.wait_timeout(KILL_TIMEOUT) {
-                Ok(Some(_)) => (),
-                Ok(None) => {
-                    warn!("Process did not exit after termination, killing");
-                    popen.kill()?;
-                }
-                Err(error) => {
-                    warn!("Failed to wait on terminating process: {}", error);
-                    return Err(Error::Subprocess(error));
-                }
+            if let Err(_) = await_exit!(popen, KILL_TIMEOUT) {
+                warn!("Process did not exit after termination, killing");
+                popen.kill()?;
             }
 
             let message = format!("command timed out ({} ms)", TIMEOUT.as_millis());
