@@ -60,6 +60,7 @@ impl Wiki {
 #[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
 pub struct WikiSettings {
     id: WikiId,
+    default_domain: String,
     page_lock_duration: i16,
 }
 
@@ -67,6 +68,11 @@ impl WikiSettings {
     #[inline]
     pub fn id(&self) -> WikiId {
         self.id
+    }
+
+    #[inline]
+    pub fn default_domain(&self) -> &str {
+        &self.default_domain
     }
 
     #[inline]

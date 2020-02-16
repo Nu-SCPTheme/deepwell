@@ -193,6 +193,7 @@ table! {
 table! {
     wiki_settings (wiki_id) {
         wiki_id -> Int8,
+        default_domain -> Text,
         page_lock_duration -> Int2,
     }
 }
@@ -224,7 +225,6 @@ joinable!(tag_history -> revisions (revision_id));
 joinable!(user_verification -> users (user_id));
 joinable!(wiki_membership -> users (user_id));
 joinable!(wiki_membership -> wikis (wiki_id));
-joinable!(wiki_settings -> wikis (wiki_id));
 
 allow_tables_to_appear_in_same_query!(
     audit_log,

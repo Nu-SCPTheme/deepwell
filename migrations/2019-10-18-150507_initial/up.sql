@@ -27,6 +27,7 @@ CREATE TABLE wikis (
 
 CREATE TABLE wiki_settings (
     wiki_id BIGINT PRIMARY KEY REFERENCES wikis(wiki_id),
+    default_domain TEXT NOT NULL REFERENCES wikis(domain),
     page_lock_duration SMALLINT NOT NULL CHECK (page_lock_duration > 0)
 );
 
