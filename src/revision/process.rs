@@ -37,26 +37,32 @@ macro_rules! mut_borrow {
 }
 
 /// Runs a process to completion, returning `Err` if it fails.
-pub fn spawn(repo: OsString, arguments: &[&OsStr]) -> Result<()> {
+pub async fn spawn(repo: OsString, arguments: &[&OsStr]) -> Result<()> {
     debug!(
         "Running process: (in {:?}) {:?} (no capture)",
         repo, arguments,
     );
 
-    spawn_inner(repo, arguments, false).map(|_| ())
+    spawn_inner(repo, arguments, false).await.map(|_| ())
 }
 
 /// Runs a process to completion, returning its `stdout`, or `Err` if it fails.
-pub fn spawn_output(repo: OsString, arguments: &[&OsStr]) -> Result<Box<[u8]>> {
+pub async fn spawn_output(repo: OsString, arguments: &[&OsStr]) -> Result<Box<[u8]>> {
     debug!(
         "Running process: (in {:?}) {:?} (capturing stdout)",
         repo, arguments,
     );
 
-    spawn_inner(repo, arguments, true).map(|out| out.unwrap())
+    spawn_inner(repo, arguments, true)
+        .await
+        .map(|out| out.unwrap())
 }
 
-fn spawn_inner(repo: OsString, arguments: &[&OsStr], output: bool) -> Result<Option<Box<[u8]>>> {
+async fn spawn_inner(
+    repo: OsString,
+    arguments: &[&OsStr],
+    output: bool,
+) -> Result<Option<Box<[u8]>>> {
     let config = PopenConfig {
         stdin: Redirection::Pipe,
         stdout: Redirection::Pipe,

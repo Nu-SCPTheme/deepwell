@@ -210,8 +210,7 @@ impl RevisionStore {
     }
 
     async fn spawn(&self, _guard: &mut RevisionBlock, arguments: &[&OsStr]) -> Result<()> {
-        // TODO async-ify
-        super::spawn(self.repo(), arguments)
+        super::spawn(self.repo(), arguments).await
     }
 
     async fn spawn_output(
@@ -219,8 +218,7 @@ impl RevisionStore {
         _guard: &mut RevisionBlock,
         arguments: &[&OsStr],
     ) -> Result<Box<[u8]>> {
-        // TODO async-ify
-        super::spawn_output(self.repo(), arguments)
+        super::spawn_output(self.repo(), arguments).await
     }
 
     // Git helpers
