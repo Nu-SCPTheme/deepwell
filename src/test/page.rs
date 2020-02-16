@@ -33,10 +33,7 @@ async fn page_manager_internal(server: &Server) {
         .expect("Unable to get user")
         .expect("Default user not found");
 
-    let wiki_id = server
-        .create_wiki("Test", "test", "example.org")
-        .await
-        .expect("Unable to create wiki");
+    let wiki_id = create_wiki(server).await;
 
     let has_page = server.check_page(wiki_id, "tale-here").await.unwrap();
     assert_eq!(has_page, false);

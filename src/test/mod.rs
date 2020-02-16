@@ -38,7 +38,7 @@ use std::env;
 use tempfile::tempdir;
 
 mod prelude {
-    pub use super::{create_user, create_user_full, run};
+    pub use super::{create_user, create_user_full, create_wiki, create_wiki_full, run};
     pub use crate::prelude::*;
     pub use async_std::task;
     pub use either::*;
@@ -84,11 +84,12 @@ pub async fn create_user_full(server: &Server, password: &str) -> (UserId, Strin
     (id, username, email)
 }
 
+#[inline]
 pub async fn create_user(server: &Server) -> UserId {
     create_user_full(server, "defaultpasswordhere2").await.0
 }
 
-pub async fn create_wiki(server: &Server) -> WikiId {
+pub async fn create_wiki_full(server: &Server) -> (WikiId, String) {
     let slug = {
         let mut chars: String = thread_rng().sample_iter(&Alphanumeric).take(8).collect();
 
@@ -99,8 +100,15 @@ pub async fn create_wiki(server: &Server) -> WikiId {
     let domain = format!("{}.example.com", slug);
 
     println!("Creating test wiki '{}'", slug);
-    server
+    let id = server
         .create_wiki(&slug, &slug, &domain)
         .await
-        .expect("Unable to create wiki")
+        .expect("Unable to create wiki");
+
+    (id, slug)
+}
+
+#[inline]
+pub async fn create_wiki(server: &Server) -> WikiId {
+    create_wiki_full(server).await.0
 }

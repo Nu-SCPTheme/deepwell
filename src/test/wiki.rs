@@ -26,10 +26,7 @@ fn wiki_manager() {
 }
 
 async fn wiki_manager_internal(server: &Server) {
-    let wiki_id = server
-        .create_wiki("Test Wiki", "test", "example.com")
-        .await
-        .expect("Unable to create wiki");
+    let (wiki_id, slug) = create_wiki_full(server).await;
 
     server
         .rename_wiki(wiki_id, "NUTTEST")
@@ -43,7 +40,7 @@ async fn wiki_manager_internal(server: &Server) {
 
     {
         let (wiki, _) = server
-            .get_wiki_by_slug("test")
+            .get_wiki_by_slug(&slug)
             .await
             .expect("Couldn't find wiki");
 

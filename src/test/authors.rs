@@ -27,10 +27,7 @@ fn author_manager() {
 }
 
 async fn author_manager_internal(server: &Server) {
-    let wiki_id = server
-        .create_wiki("Test", "test", "example.org")
-        .await
-        .expect("Unable to create wiki");
+    let wiki_id = create_wiki(server).await;
 
     let user_id_1 = create_user(server).await;
     let user_1 = server

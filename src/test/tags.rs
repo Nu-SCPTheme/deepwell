@@ -38,10 +38,7 @@ async fn tags_internal(server: &Server) {
         .await
         .expect("Unable to get user");
 
-    let wiki_id = server
-        .create_wiki("Test", "test", "example.org")
-        .await
-        .expect("Unable to create wiki");
+    let wiki_id = create_wiki(server).await;
 
     let commit = PageCommit {
         wiki_id,
