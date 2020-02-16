@@ -43,8 +43,10 @@ fn start_time() -> DateTime<Utc> {
 fn login_manager() {
     run(|server| {
         task::block_on(async {
-            login_manager_internal_id(server).await;
-            login_manager_internal_name(server).await;
+            join!(
+                login_manager_internal_id(server),
+                login_manager_internal_name(server),
+            );
         })
     });
 }
