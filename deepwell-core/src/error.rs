@@ -56,6 +56,9 @@ pub enum Error {
     #[error("invalid password: {0}")]
     NewPasswordInvalid(&'static str),
 
+    #[error("invalid verification token")]
+    InvalidVerificationToken,
+
     #[error("the given wiki was not found")]
     WikiNotFound,
 
@@ -102,6 +105,7 @@ impl Error {
             InvalidToken => "invalid-token",
             NotLoggedIn => "not-logged-in",
             NewPasswordInvalid(_) => "invalid-password",
+            InvalidVerificationToken => "invalid-verification-token",
             WikiNotFound => "wiki-not-found",
             PageNotFound => "page-not-found",
             PageExists => "page-exists",

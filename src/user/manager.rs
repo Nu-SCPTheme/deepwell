@@ -20,7 +20,7 @@
 
 use super::models::{NewUser, UpdateUser};
 use crate::manager_prelude::*;
-use crate::schema::users;
+use crate::schema::{user_verification, users};
 use diesel::pg::expression::dsl::any;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -226,6 +226,33 @@ impl UserManager {
             .execute(&*self.conn)?;
 
         Ok(())
+    }
+
+    pub async fn verify_token(&self, token: &str) -> Result<()> {
+        debug!("Marking user associated with token '{}' as verified", token);
+
+        self.transaction(async {
+            let user_id = user_verification::table
+                .filter(user_verification::token.eq(token))
+                .select(user_verification::dsl::user_id)
+                .first::<UserId>(&*self.conn)
+                .optional()?;
+
+            match user_id {
+                None => Err(Error::InvalidVerificationToken),
+                Some(id) => {
+                    self.verify(id).await?;
+                    Ok(())
+                }
+            }
+        })
+        .await
+    }
+
+    pub async fn create_token(&self, id: UserId) -> Result<String> {
+        info!("Creating new verification token for user ID {}", id);
+
+        unimplemented!()
     }
 
     pub async fn mark_inactive(&self, id: UserId, value: bool) -> Result<()> {

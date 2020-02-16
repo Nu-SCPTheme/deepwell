@@ -71,6 +71,19 @@ impl Server {
         self.user.verify(id).await
     }
 
+    /// Marks the associated user as having a verified email.
+    /// Also removes the given verification token.
+    #[inline]
+    pub async fn verify_token(&self, token: &str) -> Result<()> {
+        self.user.verify_token(token).await
+    }
+
+    /// Request a verification token so a user can verify their email.
+    #[inline]
+    pub async fn new_verification_token(&self, id: UserId) -> Result<String> {
+        self.user.create_token(id).await
+    }
+
     /// Marks the user as "inactive", effectively deleting them.
     #[inline]
     pub async fn mark_user_inactive(&self, id: UserId) -> Result<()> {
