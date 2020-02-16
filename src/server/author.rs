@@ -19,8 +19,8 @@
  */
 
 use super::utils::normalize_slug;
-use crate::author::{Author, AuthorType};
 use crate::manager_prelude::*;
+use crate::package::author::{Author, AuthorType};
 
 impl Server {
     async fn get_page_id<S: Into<String>>(

@@ -20,7 +20,7 @@
 
 use super::{ChangeType, NewPage, NewRevision, NewTagChange, UpdatePage};
 use crate::manager_prelude::*;
-use crate::revision::{CommitInfo, RevisionStore};
+use crate::package::revision::{CommitInfo, RevisionStore};
 use crate::schema::{pages, revisions, tag_history};
 use async_std::fs;
 use async_std::sync::RwLockReadGuard;

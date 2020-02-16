@@ -52,26 +52,18 @@ extern crate wikidot_normalize;
 #[macro_use]
 mod macros;
 
-mod author;
-mod lock;
-mod page;
-mod password;
-mod rating;
-mod revision;
+mod package;
 mod schema;
 mod server;
-mod session;
-mod user;
 mod utils;
-mod wiki;
 
 #[cfg(test)]
 mod test;
 
 pub mod prelude {
-    pub use crate::page::PageCommit;
+    pub use crate::package::page::PageCommit;
+    pub use crate::package::user::UserMetadata;
     pub use crate::server::{Config, Server};
-    pub use crate::user::UserMetadata;
     pub use crate::{Error, Result, StdResult};
     pub use deepwell_core::*;
 }

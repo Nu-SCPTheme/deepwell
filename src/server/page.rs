@@ -19,8 +19,8 @@
  */
 
 use super::utils::normalize_slug;
-use crate::author::AuthorType;
 use crate::manager_prelude::*;
+use crate::package::author::AuthorType;
 
 impl Server {
     /// Creates a new page with the given contents and metadata.

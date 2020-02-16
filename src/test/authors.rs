@@ -19,7 +19,7 @@
  */
 
 use super::prelude::*;
-use crate::author::AuthorType;
+use crate::package::author::AuthorType;
 
 #[test]
 fn author_manager() {
