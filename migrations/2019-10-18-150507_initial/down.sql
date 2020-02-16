@@ -5,7 +5,6 @@ DROP TABLE tag_history;
 DROP TABLE revisions;
 DROP TABLE authors;
 DROP TABLE files;
-DROP TABLE audit_log;
 DROP TABLE role_membership;
 DROP TABLE roles;
 DROP TABLE page_locks;
