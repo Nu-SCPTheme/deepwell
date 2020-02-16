@@ -38,10 +38,8 @@ async fn page_manager_internal(server: &Server) {
         .await
         .expect("Unable to create wiki");
 
-    assert_eq!(
-        server.check_page(wiki_id, "tale-here").await.unwrap(),
-        false
-    );
+    let has_page = server.check_page(wiki_id, "tale-here").await.unwrap();
+    assert_eq!(has_page, false);
 
     // Create page
     let commit = PageCommit {
@@ -56,7 +54,8 @@ async fn page_manager_internal(server: &Server) {
         .await
         .expect("Unable to create page");
 
-    assert_eq!(server.check_page(wiki_id, "tale-here").await.unwrap(), true);
+    let has_page = server.check_page(wiki_id, "tale-here").await.unwrap();
+    assert_eq!(has_page, true);
 
     // Rename and edits
     server
@@ -87,14 +86,11 @@ async fn page_manager_internal(server: &Server) {
         .await
         .expect("Unable to edit page");
 
-    assert_eq!(
-        server.check_page(wiki_id, "tale-here").await.unwrap(),
-        false
-    );
-    assert_eq!(
-        server.check_page(wiki_id, "amazing-battle").await.unwrap(),
-        true
-    );
+    let has_page = server.check_page(wiki_id, "tale-here").await.unwrap();
+    assert_eq!(has_page, false);
+
+    let has_page = server.check_page(wiki_id, "amazing-battle").await.unwrap();
+    assert_eq!(has_page, true);
 
     let commit = PageCommit {
         wiki_id,
@@ -138,18 +134,14 @@ async fn page_manager_internal(server: &Server) {
         .await
         .expect("Unable to remove page");
 
-    assert_eq!(
-        server.check_page(wiki_id, "nonexistent").await.unwrap(),
-        false
-    );
-    assert_eq!(
-        server.check_page(wiki_id, "tale-here").await.unwrap(),
-        false
-    );
-    assert_eq!(
-        server.check_page(wiki_id, "amazing-battle").await.unwrap(),
-        false
-    );
+    let has_page = server.check_page(wiki_id, "nonexistent").await.unwrap();
+    assert_eq!(has_page, false);
+
+    let has_page = server.check_page(wiki_id, "tale-here").await.unwrap();
+    assert_eq!(has_page, false);
+
+    let has_page = server.check_page(wiki_id, "amazing-battle").await.unwrap();
+    assert_eq!(has_page, false);
 
     let commit = PageCommit {
         wiki_id,
@@ -164,12 +156,9 @@ async fn page_manager_internal(server: &Server) {
         .await
         .expect("Unable to restore page");
 
-    assert_eq!(
-        server.check_page(wiki_id, "tale-here").await.unwrap(),
-        false
-    );
-    assert_eq!(
-        server.check_page(wiki_id, "amazing-battle").await.unwrap(),
-        true
-    );
+    let has_page = server.check_page(wiki_id, "tale-here").await.unwrap();
+    assert_eq!(has_page, false);
+
+    let has_page = server.check_page(wiki_id, "amazing-battle").await.unwrap();
+    assert_eq!(has_page, true);
 }
