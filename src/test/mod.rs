@@ -22,6 +22,7 @@ extern crate color_backtrace;
 extern crate tempfile;
 
 mod authors;
+mod factory;
 mod login;
 mod page;
 mod password;
@@ -32,13 +33,12 @@ mod verify;
 mod wiki;
 
 use self::prelude::*;
-use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
 use std::env;
 use tempfile::tempdir;
 
 mod prelude {
-    pub use super::{create_user, create_user_full, create_wiki, create_wiki_full, run};
+    pub use super::factory::*;
+    pub use super::run;
     pub use crate::prelude::*;
     pub use async_std::task;
     pub use either::*;
@@ -63,52 +63,4 @@ pub fn run(f: fn(&Server)) {
         f(&server);
         Ok(())
     });
-}
-
-pub async fn create_user_full(server: &Server, password: &str) -> (UserId, String, String) {
-    let username = {
-        let mut chars: String = thread_rng().sample_iter(&Alphanumeric).take(16).collect();
-
-        chars.insert_str(0, "user_");
-        chars
-    };
-
-    let email = format!("{}@example.com", username);
-
-    println!("Creating test user '{}'", username);
-    let id = server
-        .create_user(&username, &email, password)
-        .await
-        .expect("Unable to create user");
-
-    (id, username, email)
-}
-
-#[inline]
-pub async fn create_user(server: &Server) -> UserId {
-    create_user_full(server, "defaultpasswordhere2").await.0
-}
-
-pub async fn create_wiki_full(server: &Server) -> (WikiId, String) {
-    let slug = {
-        let mut chars: String = thread_rng().sample_iter(&Alphanumeric).take(8).collect();
-
-        chars.insert_str(0, "wiki-");
-        chars
-    };
-
-    let domain = format!("{}.example.com", slug);
-
-    println!("Creating test wiki '{}'", slug);
-    let id = server
-        .create_wiki(&slug, &slug, &domain)
-        .await
-        .expect("Unable to create wiki");
-
-    (id, slug)
-}
-
-#[inline]
-pub async fn create_wiki(server: &Server) -> WikiId {
-    create_wiki_full(server).await.0
 }
