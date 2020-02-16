@@ -171,6 +171,9 @@ CREATE TABLE login_attempts (
     attempted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+-- disallow deletions of login attempts
+REVOKE DELETE, TRUNCATE ON TABLE login_attempts FROM public;
+
 CREATE TABLE sessions (
     session_id BIGSERIAL PRIMARY KEY,
     user_id BIGINT NOT NULL REFERENCES users(user_id),
