@@ -109,21 +109,6 @@ impl WikiManager {
         }
     }
 
-    pub async fn get_settings(&self, wiki_id: WikiId) -> Result<WikiSettings> {
-        info!("Getting settings for wiki ID {}", wiki_id);
-
-        let id: i64 = wiki_id.into();
-        let result = wiki_settings::table
-            .find(id)
-            .first::<WikiSettings>(&*self.conn)
-            .optional()?;
-
-        match result {
-            Some(settings) => Ok(settings),
-            None => Err(Error::WikiNotFound),
-        }
-    }
-
     pub async fn edit(&self, id: WikiId, name: Option<&str>, domain: Option<&str>) -> Result<()> {
         use self::wikis::dsl;
 
@@ -139,6 +124,21 @@ impl WikiManager {
         }
 
         Ok(())
+    }
+
+    pub async fn get_settings(&self, wiki_id: WikiId) -> Result<WikiSettings> {
+        info!("Getting settings for wiki ID {}", wiki_id);
+
+        let id: i64 = wiki_id.into();
+        let result = wiki_settings::table
+            .find(id)
+            .first::<WikiSettings>(&*self.conn)
+            .optional()?;
+
+        match result {
+            Some(settings) => Ok(settings),
+            None => Err(Error::WikiNotFound),
+        }
     }
 }
 
