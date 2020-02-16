@@ -26,5 +26,5 @@ log = "0.4"
 ref-map = "0.1"
 regex = "1"
 serde = { version = "1", features = ["derive"] }
-subprocess = "0.1"
+subprocess = "0.2"
 thiserror = "1"
