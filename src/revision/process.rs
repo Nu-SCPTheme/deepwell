@@ -178,12 +178,16 @@ impl<'p> From<&'p mut Popen> for PopenAsync<'p> {
 impl<'p> Future for PopenAsync<'p> {
     type Output = ExitStatus;
 
-    fn poll(mut self: Pin<&mut Self>, _: &mut Context) -> Poll<Self::Output> {
+    fn poll(mut self: Pin<&mut Self>, ctx: &mut Context) -> Poll<Self::Output> {
         let popen = &mut self.as_mut().inner;
 
         match popen.poll() {
             Some(status) => Poll::Ready(status),
-            None => Poll::Pending,
+            None => {
+                ctx.waker().wake_by_ref();
+
+                Poll::Pending
+            }
         }
     }
 }
