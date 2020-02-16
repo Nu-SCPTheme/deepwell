@@ -154,6 +154,42 @@ impl SessionManager {
         }
     }
 
+    pub async fn get_sessions(
+        &self,
+        session_id: SessionId,
+        user_id: UserId,
+    ) -> Result<(Session, Vec<Session>)> {
+        debug!(
+            "Getting all sessions for user ID {} (current session ID {})",
+            user_id, session_id
+        );
+
+        // Get all sessions for a user
+        let id: i64 = user_id.into();
+        let mut sessions = sessions::table
+            .filter(sessions::user_id.eq(id))
+            .get_results::<Session>(&*self.conn)?;
+
+        // Pick out the current session
+        let mut current = None;
+        for (idx, session) in sessions.iter().enumerate() {
+            if session.session_id() == session_id {
+                current = Some(idx);
+                break;
+            }
+        }
+
+        // Return an error if there is no current session
+        match current {
+            None => Err(Error::InvalidSession),
+            Some(idx) => {
+                let current = sessions.remove(idx);
+
+                Ok((current, sessions))
+            }
+        }
+    }
+
     pub async fn get_login_attempt(
         &self,
         login_attempt_id: LoginAttemptId,
