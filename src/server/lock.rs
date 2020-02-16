@@ -55,7 +55,7 @@ impl Server {
 
         info!(
             "Creating page lock for wiki ID {} / slug '{}' for user ID {}",
-            wiki_id, &slug, user_id,
+            wiki_id, slug, user_id,
         );
 
         self.transaction(async {
@@ -84,7 +84,7 @@ impl Server {
 
         info!(
             "Updating page lock for wiki ID {} / slug '{}' for user ID {}",
-            wiki_id, &slug, user_id,
+            wiki_id, slug, user_id,
         );
 
         self.transaction(async {
@@ -108,7 +108,7 @@ impl Server {
 
         info!(
             "Removing page lock for wiki ID {} / slug '{}'",
-            wiki_id, &slug,
+            wiki_id, slug,
         );
 
         let page_id = self.lock_page_id(wiki_id, &slug).await?;

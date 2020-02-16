@@ -23,6 +23,7 @@ extern crate tempfile;
 
 mod authors;
 mod factory;
+mod lock;
 mod login;
 mod page;
 mod password;
