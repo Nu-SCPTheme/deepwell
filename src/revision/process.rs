@@ -19,6 +19,7 @@
  */
 
 use crate::{Error, Result};
+use async_std::future::timeout;
 use futures::future::Future;
 use futures::task::{Context, Poll};
 use std::ffi::{OsStr, OsString};
@@ -86,8 +87,8 @@ async fn spawn_inner(
         TIMEOUT.as_millis(),
     );
 
-    match popen.wait_timeout(TIMEOUT)? {
-        Some(status) if status.success() => {
+    match timeout(TIMEOUT, PopenAsync::from(popen)).await {
+        Ok(status) if status.success() => {
             trace!("Command succeeded, gathering stdout");
 
             if output {
@@ -102,7 +103,7 @@ async fn spawn_inner(
                 Ok(None)
             }
         }
-        Some(status) => {
+        Ok(status) => {
             trace!("Command failed, status {:?}", status);
 
             let mut buffer = String::new();
@@ -132,7 +133,7 @@ async fn spawn_inner(
 
             Err(Error::CommandFailed(buffer))
         }
-        None => {
+        Err(_) => {
             warn!(
                 "Process timed out after {} ms, terminating",
                 TIMEOUT.as_millis(),
@@ -166,6 +167,13 @@ async fn spawn_inner(
 #[derive(Debug)]
 struct PopenAsync {
     inner: Popen,
+}
+
+impl From<Popen> for PopenAsync {
+    #[inline]
+    fn from(inner: Popen) -> Self {
+        PopenAsync { inner }
+    }
 }
 
 impl Future for PopenAsync {
