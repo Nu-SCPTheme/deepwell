@@ -39,11 +39,12 @@ fn session() {
 }
 
 async fn session_internal(server: &Server) {
-    let (user_id, _, _) = create_user_full(server, "blackmoonhowls").await;
+    let password = "blackmoonhowls";
+    let (user_id, username, email) = create_user_full(server, password).await;
 
     // Login with user ID
     let session_1 = server
-        .try_login_id(user_id, "blackmoonhowls", None)
+        .try_login_id(user_id, password, None)
         .await
         .expect("Unable to login");
 
@@ -56,7 +57,7 @@ async fn session_internal(server: &Server) {
 
     // Login with username
     let session_2 = server
-        .try_login("squirrelbird", "blackmoonhowls", None)
+        .try_login(&username, password, None)
         .await
         .expect("Unable to login");
 
@@ -69,7 +70,7 @@ async fn session_internal(server: &Server) {
 
     // Login with email
     let session_3 = server
-        .try_login("jenny@example.net", "blackmoonhowls", None)
+        .try_login(&email, password, None)
         .await
         .expect("Unable to login");
 
