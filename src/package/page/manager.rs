@@ -586,22 +586,22 @@ impl PageManager {
         .await
     }
 
-    pub async fn tags(&self, commit: PageCommit<'_>, tags: &mut [&str]) -> Result<RevisionId> {
+    pub async fn tags(
+        &self,
+        commit: PageCommit<'_>,
+        page_id: PageId,
+        tags: &mut [&str],
+    ) -> Result<RevisionId> {
         info!("Modifying tags for {:?}: {:?}", commit, tags);
 
         let PageCommit {
             wiki_id,
-            slug,
             message,
             user,
+            ..
         } = commit;
 
         self.transaction(async {
-            let page_id = self
-                .get_page_id(wiki_id, slug)
-                .await?
-                .ok_or(Error::PageNotFound)?;
-
             trace!("Getting tag difference");
             let current_tags = {
                 let id: i64 = page_id.into();

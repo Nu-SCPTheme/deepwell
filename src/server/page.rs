@@ -230,16 +230,27 @@ impl Server {
     }
 
     /// Sets all the tags for a given page.
-    #[inline]
     pub async fn set_page_tags<S: AsRef<str>>(
         &self,
         commit: PageCommit<'_>,
         tags: &[S],
     ) -> Result<RevisionId> {
+        let PageCommit {
+            wiki_id,
+            slug,
+            user,
+            ..
+        } = commit;
+
         // Allow tags to be sorted before insertion
         let mut tags = tags.iter().map(|tag| tag.as_ref()).collect::<Vec<&str>>();
 
-        self.page.tags(commit, &mut tags).await
+        self.transaction(async {
+            let page_id = self.check_page_lock(wiki_id, slug, user.id()).await?;
+
+            self.page.tags(commit, page_id, &mut tags).await
+        })
+        .await
     }
 
     /// Gets all pages which have at least the given tags.
