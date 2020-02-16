@@ -159,7 +159,13 @@ async fn locks_internal(server: &Server) {
 
     // Rename page (success)
     server
-        .rename_page(wiki_id, "tale-here", "my-tale-here", "Renaming page", &other_user)
+        .rename_page(
+            wiki_id,
+            "tale-here",
+            "my-tale-here",
+            "Renaming page",
+            &other_user,
+        )
         .await
         .expect("Unable to rename page");
 
