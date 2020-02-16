@@ -48,7 +48,7 @@ pub enum Error {
     AuthenticationFailed,
 
     #[error("session expired or invalid")]
-    InvalidToken,
+    SessionExpired,
 
     #[error("not logged in")]
     NotLoggedIn,
@@ -102,7 +102,7 @@ impl Error {
             Subprocess(_) => "subprocess",
             CommandFailed(_) => "command-failed",
             AuthenticationFailed => "authentication-failed",
-            InvalidToken => "invalid-token",
+            SessionExpired => "invalid-session",
             NotLoggedIn => "not-logged-in",
             NewPasswordInvalid(_) => "invalid-password",
             InvalidVerificationToken => "invalid-verification-token",
