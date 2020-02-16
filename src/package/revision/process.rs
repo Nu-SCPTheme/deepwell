@@ -152,7 +152,7 @@ async fn spawn_inner(
                 return Err(Error::Io(error));
             }
 
-            if let Err(_) = await_exit!(popen, KILL_TIMEOUT) {
+            if await_exit!(popen, KILL_TIMEOUT).is_err() {
                 warn!("Process did not exit after termination, killing");
                 popen.kill()?;
             }
