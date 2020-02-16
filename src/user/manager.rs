@@ -21,6 +21,7 @@
 use super::models::{NewUser, UpdateUser};
 use crate::manager_prelude::*;
 use crate::schema::{user_verification, users};
+use crate::utils::rows_to_result;
 use diesel::pg::expression::dsl::any;
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
@@ -242,7 +243,16 @@ impl UserManager {
                 None => Err(Error::InvalidVerificationToken),
                 Some(id) => {
                     self.verify(id).await?;
-                    Ok(())
+
+                    let rows = diesel::delete(user_verification::table)
+                        .filter(user_verification::token.eq(token))
+                        .execute(&*self.conn)?;
+
+                    if rows_to_result(rows) {
+                        Ok(())
+                    } else {
+                        Err(Error::InvalidVerificationToken)
+                    }
                 }
             }
         })
