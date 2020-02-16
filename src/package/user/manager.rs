@@ -54,49 +54,48 @@ impl UserManager {
         use self::users::dsl;
 
         info!(
-            "Starting transaction to create new user with name '{}' with email '{}'",
+            "Creating new user with name '{}' with email '{}'",
             name, email,
         );
 
         let email = email.to_ascii_lowercase();
 
-        self.transaction(async {
-            // Check if there any existing users
-            let result = users::table
-                .filter(users::name.eq(name))
-                .or_filter(users::email.eq(&email))
-                .select((dsl::user_id, dsl::name, dsl::email))
-                .get_result::<(UserId, String, String)>(&*self.conn)
-                .optional()?;
+        // Check if there any existing users
+        //
+        // Already in a transaction at the server level
+        let result = users::table
+            .filter(users::name.eq(name))
+            .or_filter(users::email.eq(email))
+            .select((dsl::user_id, dsl::name, dsl::email))
+            .get_result::<(UserId, String, String)>(&*self.conn)
+            .optional()?;
 
-            if let Some((user_id, conflict_name, conflict_email)) = result {
-                if name == conflict_name {
-                    warn!("Cannot create user, name conflicts with ID {}", user_id);
-                    return Err(Error::UserNameExists);
-                }
-
-                if email == conflict_email {
-                    warn!("Cannot create user, email conflicts with ID {}", user_id);
-                    return Err(Error::UserEmailExists);
-                }
-
-                unreachable!()
+        if let Some((user_id, conflict_name, conflict_email)) = result {
+            if name == conflict_name {
+                warn!("Cannot create user, name conflicts with ID {}", user_id);
+                return Err(Error::UserNameExists);
             }
 
-            // If not, insert into database
-            let model = NewUser {
-                name,
-                email: &email,
-            };
+            if email == conflict_email {
+                warn!("Cannot create user, email conflicts with ID {}", user_id);
+                return Err(Error::UserEmailExists);
+            }
 
-            let id = diesel::insert_into(users::table)
-                .values(&model)
-                .returning(users::dsl::user_id)
-                .get_result::<UserId>(&*self.conn)?;
+            unreachable!()
+        }
 
-            Ok(id)
-        })
-        .await
+        // If not, insert into database
+        let model = NewUser {
+            name,
+            email: &email,
+        };
+
+        let id = diesel::insert_into(users::table)
+            .values(&model)
+            .returning(users::dsl::user_id)
+            .get_result::<UserId>(&*self.conn)?;
+
+        Ok(id)
     }
 
     pub async fn get_from_id(&self, id: UserId) -> Result<Option<User>> {
