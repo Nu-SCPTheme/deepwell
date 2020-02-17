@@ -19,14 +19,12 @@
  */
 
 use crate::prelude::*;
-use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
+use crate::utils::rand_alphanum;
 
 // User
 pub async fn create_user_full(server: &Server, password: &str) -> (UserId, String, String) {
     let username = {
-        let mut chars: String = thread_rng().sample_iter(&Alphanumeric).take(16).collect();
-
+        let mut chars = rand_alphanum(16);
         chars.insert_str(0, "user_");
         chars
     };
@@ -50,8 +48,7 @@ pub async fn create_user(server: &Server) -> UserId {
 // Wiki
 pub async fn create_wiki_full(server: &Server) -> (WikiId, String) {
     let slug = {
-        let mut chars: String = thread_rng().sample_iter(&Alphanumeric).take(8).collect();
-
+        let mut chars = rand_alphanum(8);
         chars.make_ascii_lowercase();
         chars.insert_str(0, "wiki-");
         chars

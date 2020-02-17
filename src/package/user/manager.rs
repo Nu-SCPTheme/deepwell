@@ -21,10 +21,8 @@
 use super::models::{NewUser, NewUserVerification, UpdateUser};
 use crate::manager_prelude::*;
 use crate::schema::{user_verification, users};
-use crate::utils::{lower, rows_to_result};
+use crate::utils::{lower, rand_alphanum, rows_to_result};
 use diesel::pg::expression::dsl::any;
-use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub struct UserMetadata<'a> {
@@ -263,8 +261,7 @@ impl UserManager {
     pub async fn create_token(&self, id: UserId) -> Result<String> {
         info!("Creating new verification token for user ID {}", id);
 
-        let token: String = thread_rng().sample_iter(&Alphanumeric).take(64).collect();
-
+        let token = rand_alphanum(64);
         let model = NewUserVerification {
             user_id: id.into(),
             token: &token,
