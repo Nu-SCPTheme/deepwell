@@ -1,7 +1,7 @@
 ## DEEPWELL
 [![Travis CI Build Status](https://travis-ci.org/Nu-SCPTheme/deepwell.svg?branch=master)](https://travis-ci.org/Nu-SCPTheme/deepwell)
 
-Wikidot-like storage and maintenance system. Tracks wikis, users, passwords, pages, files, and manages a Postgres database. Its schema and migrations are handled by [Diesel](https://diesel.rs/).
+Wikidot-like storage and maintenance system. Tracks wikis, users, passwords, pages, files, and manages the database. Requires Postgres 11 or later. Its schema and migrations are handled by [Diesel](https://diesel.rs/).
 
 DEEPWELL provides logical, CRUD-like operations for handling low-level abstracted data such as individual page revisions.
 Verification and permissions checking needs to be handled by the consumer.
