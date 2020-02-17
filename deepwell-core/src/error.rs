@@ -149,7 +149,7 @@ impl SendableError {
 
 impl Display for SendableError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "[{}] {}", self.name, self.message)
+        write!(f, "{} [{}]", self.message, self.name)
     }
 }
 
