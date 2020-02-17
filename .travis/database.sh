@@ -29,6 +29,6 @@ case "$1" in
 		diesel migration run
 		;;
 	test)
-		cargo test --release -- --nocapture
+		RUST_BACKTRACE=full cargo test --release -- --nocapture
 		;;
 esac
