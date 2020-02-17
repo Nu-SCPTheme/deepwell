@@ -29,6 +29,8 @@ case "$1" in
 		diesel migration run
 		;;
 	test)
-		RUST_BACKTRACE=full cargo test --release -- --nocapture
+		# Run with backtrace for debuggin
+		# Use a single thread to avoid postgres race atomicity issue with BIGSERIAL
+		RUST_BACKTRACE=full cargo test --release -- --nocapture --test-threads 1
 		;;
 esac
