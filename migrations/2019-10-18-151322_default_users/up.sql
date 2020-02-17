@@ -155,4 +155,4 @@ INSERT INTO passwords (user_id, hash, salt, logn, param_r, param_p)
     );
 
 -- Ensure new users don't overrun with existing users
-ALTER SEQUENCE users_user_id_seq RESTART WITH 6;
+ALTER SEQUENCE users_user_id_seq RESTART WITH 7;
