@@ -20,6 +20,7 @@
 
 use crate::UserId;
 use diesel::result::{ConnectionError, Error as DieselError};
+use std::fmt::{self, Display};
 use std::io;
 use subprocess::PopenError;
 
@@ -143,6 +144,12 @@ impl SendableError {
     #[inline]
     pub fn message(&self) -> &str {
         &self.message
+    }
+}
+
+impl Display for SendableError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "[{}] {}", self.name, self.message)
     }
 }
 
