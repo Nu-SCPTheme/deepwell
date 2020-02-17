@@ -15,11 +15,11 @@ services:
   - postgresql
 
 addons:
-  postgresql: '10'
+  postgresql: '12'
   apt:
     packages:
-      - postgresql-10
-      - postgresql-client-10
+      - postgresql-12
+      - postgresql-client-12
 
 before_script:
   # Add rustfmt
