@@ -21,7 +21,12 @@ case "$1" in
 		;;
 	check)
 		diesel migration run
-		diesel migration redo
+
+		for stage in migrations/*; do
+			diesel migration revert
+		done
+
+		diesel migration run
 		;;
 	test)
 		cargo test --release -- --nocapture
