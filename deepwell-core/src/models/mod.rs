@@ -40,5 +40,5 @@ pub use self::login_attempt::LoginAttempt;
 pub use self::page::Page;
 pub use self::rating::Rating;
 pub use self::session::Session;
-pub use self::user::User;
+pub use self::user::{User, UserMetadata, UserMetadataOwned};
 pub use self::wiki::{Wiki, WikiSettings};

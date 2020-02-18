@@ -24,18 +24,6 @@ use crate::schema::{user_verification, users};
 use crate::utils::{lower, rand_alphanum, rows_to_result};
 use diesel::pg::expression::dsl::any;
 
-#[derive(Serialize, Debug, Copy, Clone, Default, PartialEq, Eq)]
-#[serde(default)]
-pub struct UserMetadata<'a> {
-    pub name: Option<&'a str>,
-    pub email: Option<&'a str>,
-    pub author_page: Option<&'a str>,
-    pub website: Option<&'a str>,
-    pub about: Option<&'a str>,
-    pub gender: Option<&'a str>,
-    pub location: Option<&'a str>,
-}
-
 pub struct UserManager {
     conn: Arc<PgConnection>,
 }

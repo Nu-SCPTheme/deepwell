@@ -20,6 +20,70 @@
 
 use super::prelude::*;
 
+#[derive(Serialize, Debug, Copy, Clone, Default, PartialEq, Eq)]
+#[serde(default)]
+pub struct UserMetadata<'a> {
+    pub name: Option<&'a str>,
+    pub email: Option<&'a str>,
+    pub author_page: Option<&'a str>,
+    pub website: Option<&'a str>,
+    pub about: Option<&'a str>,
+    pub gender: Option<&'a str>,
+    pub location: Option<&'a str>,
+}
+
+impl UserMetadata<'_> {
+    pub fn to_owned(&self) -> UserMetadataOwned {
+        macro_rules! clone {
+            ($field:tt) => {
+                self.$field.map(|s| s.into())
+            };
+        }
+
+        UserMetadataOwned {
+            name: clone!(name),
+            email: clone!(email),
+            author_page: clone!(author_page),
+            website: clone!(website),
+            about: clone!(about),
+            gender: clone!(gender),
+            location: clone!(location),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq, Eq)]
+#[serde(default)]
+pub struct UserMetadataOwned {
+    pub name: Option<String>,
+    pub email: Option<String>,
+    pub author_page: Option<String>,
+    pub website: Option<String>,
+    pub about: Option<String>,
+    pub gender: Option<String>,
+    pub location: Option<String>,
+}
+
+impl UserMetadataOwned {
+    pub fn borrow(&self) -> UserMetadata {
+        macro_rules! borrow {
+            ($field:tt) => {
+                self.$field.ref_map(|s| s.as_str())
+            };
+        }
+
+        UserMetadata {
+            name: borrow!(name),
+            email: borrow!(email),
+            author_page: borrow!(author_page),
+            website: borrow!(website),
+            about: borrow!(about),
+            gender: borrow!(gender),
+            location: borrow!(location),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
 pub struct User {
     user_id: UserId,

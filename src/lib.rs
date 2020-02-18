@@ -62,7 +62,6 @@ mod test;
 
 pub mod prelude {
     pub use crate::package::page::PageCommit;
-    pub use crate::package::user::UserMetadata;
     pub use crate::server::{Config, Server};
     pub use crate::{Error, Result, StdResult};
     pub use deepwell_core::*;
