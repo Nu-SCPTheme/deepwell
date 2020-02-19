@@ -183,9 +183,27 @@ impl UserManager {
             location,
         } = changes;
 
+        // Check username and email if those are being changed
+        if name.is_some() || email.is_some() {
+            let user = self //
+                .get_from_id(id)
+                .await?
+                .ok_or(Error::UserNotFound)?;
+
+            let name = name.unwrap_or(user.name());
+            let email = email.unwrap_or(user.email());
+
+            self.check_conflicts(name, email).await?;
+        }
+
+        // Lowercase fields
+        let email = email.map(|s| s.cow_to_ascii_lowercase());
+        let email = email.ref_map(|s| s.as_ref());
+
         let gender = gender.map(|s| s.cow_to_ascii_lowercase());
         let gender = gender.ref_map(|s| s.as_ref());
 
+        // Prepare update model
         let is_verified = if email.is_some() { Some(false) } else { None };
         let model = UpdateUser {
             name,
