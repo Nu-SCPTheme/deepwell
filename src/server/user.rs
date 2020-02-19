@@ -41,8 +41,8 @@ impl Server {
 
     /// Get the model for a user from its ID.
     #[inline]
-    pub async fn get_user_from_id(&self, id: UserId) -> Result<User> {
-        self.user.get_from_id(id).await?.ok_or(Error::UserNotFound)
+    pub async fn get_user_from_id(&self, id: UserId) -> Result<Option<User>> {
+        self.user.get_from_id(id).await
     }
 
     /// Gets the models for users from their IDs.
