@@ -45,6 +45,9 @@ pub enum Error {
     #[error("command failed: {0}")]
     CommandFailed(String),
 
+    #[error("request was too large, {0} > {1}")]
+    RequestTooLarge(usize, usize),
+
     #[error("invalid username or password")]
     AuthenticationFailed,
 
@@ -102,6 +105,7 @@ impl Error {
             DatabaseConnection(_) => "database-connection",
             Subprocess(_) => "subprocess",
             CommandFailed(_) => "command-failed",
+            RequestTooLarge(_, _) => "request-too-large",
             AuthenticationFailed => "authentication-failed",
             InvalidSession => "invalid-session",
             NotLoggedIn => "not-logged-in",

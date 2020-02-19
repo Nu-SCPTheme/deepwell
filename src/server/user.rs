@@ -48,8 +48,13 @@ impl Server {
     /// Gets the models for users from their IDs.
     /// Results are returned in the same order as the IDs, and any missing
     /// users give `None` instead.
-    #[inline]
+    ///
+    /// Rejects any requests with more than 100 IDs.
     pub async fn get_users_from_ids(&self, ids: &[UserId]) -> Result<Vec<Option<User>>> {
+        if ids.len() > 100 {
+            return Err(Error::RequestTooLarge(ids.len(), 100));
+        }
+
         self.user.get_from_ids(ids).await
     }
 
