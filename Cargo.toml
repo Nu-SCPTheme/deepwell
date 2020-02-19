@@ -21,6 +21,7 @@ members = [
 [dependencies]
 async-std = "1"
 chrono = { version = "0.4", features = ["serde"] }
+cow-utils = "0.1"
 deepwell-core = { path = "deepwell-core" }
 diesel = { version = "1", features = ["chrono", "postgres"] }
 either = "1"

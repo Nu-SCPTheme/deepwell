@@ -22,6 +22,7 @@ use super::models::{NewUser, NewUserVerification, UpdateUser};
 use crate::manager_prelude::*;
 use crate::schema::{user_verification, users};
 use crate::utils::{lower, rand_alphanum, rows_to_result};
+use cow_utils::CowUtils;
 use diesel::pg::expression::dsl::any;
 use ref_map::*;
 
@@ -178,8 +179,8 @@ impl UserManager {
             location,
         } = changes;
 
-        let gender = gender.map(|s| s.to_ascii_lowercase());
-        let gender = gender.ref_map(|s| s.as_str());
+        let gender = gender.map(|s| s.cow_to_ascii_lowercase());
+        let gender = gender.ref_map(|s| s.as_ref());
 
         let is_verified = if email.is_some() { Some(false) } else { None };
         let model = UpdateUser {

@@ -23,6 +23,7 @@
 
 extern crate async_std;
 extern crate chrono;
+extern crate cow_utils;
 extern crate crypto;
 extern crate deepwell_core;
 
