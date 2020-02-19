@@ -91,3 +91,99 @@ async fn users_internal(server: &Server) {
 
     assert_eq!(users, vec![Some(user_1), None, Some(user_2)]);
 }
+
+#[test]
+fn users_conflict() {
+    run(|server| task::block_on(users_conflict_internal(server)));
+}
+
+async fn users_conflict_internal(server: &Server) {
+    macro_rules! check_err {
+        ($error:expr, $expected:tt) => {
+            match $error {
+                Error::$expected => (),
+                _ => panic!("Error doesn't match"),
+            }
+        };
+    }
+
+    let user_id_1 = create_user(server).await;
+    let user_id_2 = create_user(server).await;
+
+    // Set initial user info
+    server
+        .edit_user(
+            user_id_1,
+            UserMetadata {
+                name: Some("conflictTest joe"),
+                email: Some("joe@example.net"),
+                ..UserMetadata::default()
+            },
+        )
+        .await
+        .expect("Unable to edit user initially");
+
+    server
+        .edit_user(
+            user_id_2,
+            UserMetadata {
+                name: Some("conflictTest jim"),
+                email: Some("jim@example.net"),
+                ..UserMetadata::default()
+            },
+        )
+        .await
+        .expect("Unable to edit user initially");
+
+    // Check conflicts with username
+    let error = server
+        .edit_user(
+            user_id_1,
+            UserMetadata {
+                name: Some("conflictTest jim"),
+                ..UserMetadata::default()
+            },
+        )
+        .await
+        .expect_err("Conflicted username edit succeeded");
+
+    check_err!(error, UserNameExists);
+
+    // Try changing to same username
+    server
+        .edit_user(
+            user_id_1,
+            UserMetadata {
+                name: Some("conflictTest joe"),
+                ..UserMetadata::default()
+            },
+        )
+        .await
+        .expect("Unable to set username to equivalent value");
+
+    // Check conflicts with email
+    let error = server
+        .edit_user(
+            user_id_1,
+            UserMetadata {
+                email: Some("jim@example.net"),
+                ..UserMetadata::default()
+            },
+        )
+        .await
+        .expect_err("Conflicted username edit succeeded");
+
+    check_err!(error, UserEmailExists);
+
+    // Try changing to same email
+    server
+        .edit_user(
+            user_id_2,
+            UserMetadata {
+                email: Some("jim@example.net"),
+                ..UserMetadata::default()
+            },
+        )
+        .await
+        .expect("Unable to set email to equivalent value");
+}
