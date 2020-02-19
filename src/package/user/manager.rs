@@ -192,8 +192,8 @@ impl UserManager {
 
         // Extract fields from metadata struct
         let UserMetadata {
-            name,
-            email,
+            mut name,
+            mut email,
             author_page,
             website,
             about,
@@ -201,6 +201,26 @@ impl UserManager {
             location,
         } = changes;
 
+        // Always run this to ensure the user exists
+        let user = self //
+            .get_from_id(id)
+            .await?
+            .ok_or(Error::UserNotFound)?;
+
+        // Set username / email to None if they are the same
+        if name == Some(user.name()) {
+            name = None;
+        }
+
+        if email == Some(user.email()) {
+            email = None;
+        }
+
+        // Check if the username or email exists on another user
+        //
+        // This is why we erased unchanged usernames and emails,
+        // since otherwise this would trigger a false positive
+        // on the user itself.
         self.check_conflicts(name, email).await?;
 
         // Lowercase fields
@@ -226,10 +246,12 @@ impl UserManager {
 
         info!("Editing user ID {}, data: {:?}", id, &model);
 
-        let id: i64 = id.into();
-        diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
-            .set(&model)
-            .execute(&*self.conn)?;
+        if model.has_changes() {
+            let id: i64 = id.into();
+            diesel::update(dsl::users.filter(dsl::user_id.eq(id)))
+                .set(&model)
+                .execute(&*self.conn)?;
+        }
 
         Ok(())
     }

@@ -44,6 +44,21 @@ pub struct UpdateUser<'a> {
     pub deleted_at: Option<Nullable<DateTime<Utc>>>,
 }
 
+impl UpdateUser<'_> {
+    pub fn has_changes(&self) -> bool {
+        self.name.is_some()
+            || self.email.is_some()
+            || self.is_verified.is_some()
+            || self.author_page.is_some()
+            || self.author_page.is_some()
+            || self.website.is_some()
+            || self.about.is_some()
+            || self.gender.is_some()
+            || self.location.is_some()
+            || self.deleted_at.is_some()
+    }
+}
+
 #[derive(Debug, Insertable)]
 #[table_name = "user_verification"]
 pub struct NewUserVerification<'a> {
