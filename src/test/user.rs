@@ -21,11 +21,11 @@
 use super::prelude::*;
 
 #[test]
-fn user_manager() {
-    run(|server| task::block_on(user_manager_internal(server)));
+fn users() {
+    run(|server| task::block_on(users_internal(server)));
 }
 
-async fn user_manager_internal(server: &Server) {
+async fn users_internal(server: &Server) {
     let user_id = create_user(server).await;
     let metadata = UserMetadata {
         name: Some("Jenny Person"),
