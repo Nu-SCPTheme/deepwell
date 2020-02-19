@@ -39,12 +39,28 @@ impl UserManager {
         UserManager { conn }
     }
 
-    async fn check_conflicts(&self, name: &str, email: &str) -> Result<()> {
+    async fn check_conflicts(&self, name: Option<&str>, email: Option<&str>) -> Result<()> {
         use self::users::dsl;
 
+        // Disallow empty names and emails
+        if name == Some("") {
+            warn!("Disallowing empty username");
+            return Err(Error::UserNameExists);
+        }
+
+        if email == Some("") {
+            warn!("Disallowing empty email");
+            return Err(Error::UserEmailExists);
+        }
+
+        // Compare against empty string to avoid conflicts with yourself
+        let name = name.unwrap_or("");
+        let email = email.unwrap_or("");
+
+        // Query table for conflicts
         let result = users::table
             .filter(lower(users::name).eq(lower(name)))
-            .or_filter(users::email.eq(&email))
+            .or_filter(users::email.eq(lower(email)))
             .select((dsl::user_id, dsl::name, dsl::email))
             .get_result::<(UserId, String, String)>(&*self.conn)
             .optional()?;
@@ -74,8 +90,10 @@ impl UserManager {
             name, email,
         );
 
+        self.check_conflicts(Some(name), Some(&email)).await?;
+
+        // Lowercase fields
         let email = email.cow_to_ascii_lowercase();
-        self.check_conflicts(name, &email).await?;
 
         // If not, insert into database
         let model = NewUser {
@@ -183,18 +201,7 @@ impl UserManager {
             location,
         } = changes;
 
-        // Check username and email if those are being changed
-        if name.is_some() || email.is_some() {
-            let user = self //
-                .get_from_id(id)
-                .await?
-                .ok_or(Error::UserNotFound)?;
-
-            let name = name.unwrap_or(user.name());
-            let email = email.unwrap_or(user.email());
-
-            self.check_conflicts(name, email).await?;
-        }
+        self.check_conflicts(name, email).await?;
 
         // Lowercase fields
         let email = email.map(|s| s.cow_to_ascii_lowercase());
