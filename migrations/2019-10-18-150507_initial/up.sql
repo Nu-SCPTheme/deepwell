@@ -3,7 +3,7 @@
 CREATE TABLE users (
     user_id BIGSERIAL PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
-    email TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE CHECK (email = LOWER(email)),
     is_verified BOOLEAN NOT NULL DEFAULT false,
     is_bot BOOLEAN NOT NULL DEFAULT false,
     author_page TEXT NOT NULL DEFAULT '',
