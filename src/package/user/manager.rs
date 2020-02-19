@@ -39,19 +39,9 @@ impl UserManager {
         UserManager { conn }
     }
 
-    pub async fn create(&self, name: &str, email: &str) -> Result<UserId> {
+    async fn check_conflicts(&self, name: &str, email: &str) -> Result<()> {
         use self::users::dsl;
 
-        info!(
-            "Creating new user with name '{}' with email '{}'",
-            name, email,
-        );
-
-        let email = email.to_ascii_lowercase();
-
-        // Check if there any existing users
-        //
-        // Already in a transaction at the server level
         let result = users::table
             .filter(lower(users::name).eq(lower(name)))
             .or_filter(users::email.eq(&email))
@@ -70,8 +60,22 @@ impl UserManager {
                 return Err(Error::UserEmailExists);
             }
 
+            // If there's a result then one of the email or name conflicts
             unreachable!()
         }
+
+        // No conflicts
+        Ok(())
+    }
+
+    pub async fn create(&self, name: &str, email: &str) -> Result<UserId> {
+        info!(
+            "Creating new user with name '{}' with email '{}'",
+            name, email,
+        );
+
+        let email = email.cow_to_ascii_lowercase();
+        self.check_conflicts(name, &email).await?;
 
         // If not, insert into database
         let model = NewUser {
