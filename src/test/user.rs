@@ -20,6 +20,15 @@
 
 use super::prelude::*;
 
+macro_rules! check_err {
+    ($error:expr, $expected:pat) => {
+        match $error {
+            $expected => (),
+            _ => panic!("Error doesn't match"),
+        }
+    };
+}
+
 #[test]
 fn users() {
     run(|server| task::block_on(users_internal(server)));
@@ -84,12 +93,20 @@ async fn users_internal(server: &Server) {
         .await
         .expect("Unable to get user from ID");
 
+    let invalid = UserId::from_raw(-1);
     let users = server
-        .get_users_from_ids(&[user_id, UserId::from_raw(9999), user_id_2])
+        .get_users_from_ids(&[user_id, invalid, user_id_2])
         .await
         .expect("Unable to get multiple users");
 
     assert_eq!(users, vec![Some(user_1), None, Some(user_2)]);
+
+    let error = server
+        .get_users_from_ids(&vec![invalid; 198])
+        .await
+        .expect_err("Able to fetch over 100 users");
+
+    check_err!(error, Error::RequestTooLarge(198, 100));
 }
 
 #[test]
@@ -98,15 +115,6 @@ fn users_conflict() {
 }
 
 async fn users_conflict_internal(server: &Server) {
-    macro_rules! check_err {
-        ($error:expr, $expected:tt) => {
-            match $error {
-                Error::$expected => (),
-                _ => panic!("Error doesn't match"),
-            }
-        };
-    }
-
     let user_id_1 = create_user(server).await;
     let user_id_2 = create_user(server).await;
 
@@ -147,7 +155,7 @@ async fn users_conflict_internal(server: &Server) {
         .await
         .expect_err("Conflicted username edit succeeded");
 
-    check_err!(error, UserNameExists);
+    check_err!(error, Error::UserNameExists);
 
     // Try changing to same username
     server
@@ -173,7 +181,7 @@ async fn users_conflict_internal(server: &Server) {
         .await
         .expect_err("Conflicted username edit succeeded");
 
-    check_err!(error, UserEmailExists);
+    check_err!(error, Error::UserEmailExists);
 
     // Try changing to same email
     server
