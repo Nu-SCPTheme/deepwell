@@ -31,7 +31,8 @@ async fn verify_internal(server: &Server) {
     let user = server
         .get_user_from_id(user_id)
         .await
-        .expect("Couldn't find user");
+        .expect("Couldn't find user")
+        .expect("Created user not found");
 
     assert_eq!(user.is_verified(), false, "User is verified on creation");
 
@@ -48,7 +49,8 @@ async fn verify_internal(server: &Server) {
     let user = server
         .get_user_from_id(user_id)
         .await
-        .expect("Couldn't find user");
+        .expect("Couldn't find user")
+        .expect("Created user not found");
 
     assert_eq!(user.is_verified(), true, "User is not verified after token");
 
@@ -57,7 +59,8 @@ async fn verify_internal(server: &Server) {
     let user = server
         .get_user_from_id(user_id)
         .await
-        .expect("Couldn't find user");
+        .expect("Couldn't find user")
+        .expect("Created user not found");
 
     assert_eq!(user.is_verified(), false, "User is verified on creation");
 
@@ -69,7 +72,8 @@ async fn verify_internal(server: &Server) {
     let user = server
         .get_user_from_id(user_id)
         .await
-        .expect("Couldn't find user");
+        .expect("Couldn't find user")
+        .expect("Created user not found");
 
     assert_eq!(user.is_verified(), true, "User is not verified after token");
 }

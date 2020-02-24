@@ -36,7 +36,8 @@ async fn tags_internal(server: &Server) {
     let user_2 = server
         .get_user_from_id(user_2_id)
         .await
-        .expect("Unable to get user");
+        .expect("Unable to get user")
+        .expect("Created user not found");
 
     let wiki_id = create_wiki(server).await;
 

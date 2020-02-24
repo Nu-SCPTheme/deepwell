@@ -91,7 +91,8 @@ async fn users_internal(server: &Server) {
     let user_2 = server
         .get_user_from_id(user_id_2)
         .await
-        .expect("Unable to get user from ID");
+        .expect("Unable to get user from ID")
+        .expect("Created user not found");
 
     let invalid = UserId::from_raw(-1);
     let users = server

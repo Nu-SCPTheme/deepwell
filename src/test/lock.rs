@@ -34,12 +34,14 @@ async fn locks_internal(server: &Server) {
     let user = server
         .get_user_from_id(user_id)
         .await
-        .expect("Unable to get user");
+        .expect("Unable to get user")
+        .expect("Created user not found");
 
     let other_user = server
         .get_user_from_id(other_user_id)
         .await
-        .expect("Unable to get user");
+        .expect("Unable to get user")
+        .expect("Created user not found");
 
     // Setup state
     let mut commit = PageCommit {

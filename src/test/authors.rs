@@ -33,13 +33,15 @@ async fn author_manager_internal(server: &Server) {
     let user_1 = server
         .get_user_from_id(user_id_1)
         .await
-        .expect("Unable to get user");
+        .expect("Unable to get user")
+        .expect("Created user not found");
 
     let user_id_2 = create_user(server).await;
     let user_2 = server
         .get_user_from_id(user_id_2)
         .await
-        .expect("Unable to get user");
+        .expect("Unable to get user")
+        .expect("Created user not found");
 
     let user_3 = server
         .get_user_from_name("unknown")
