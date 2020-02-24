@@ -52,6 +52,10 @@ macro_rules! check_normal {
     };
 }
 
+// Note: this only maintains a lock per DEEPWELL process.
+// If there are multiple processes working on the same repositories,
+// an external locking mechanism (probably based on the exclusive
+// creation of a lock file) will need to be implemented.
 macro_rules! lock {
     ($self:expr) => {
         &mut $self.mutex.lock().await
