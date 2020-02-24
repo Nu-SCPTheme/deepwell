@@ -52,6 +52,12 @@ macro_rules! check_normal {
     };
 }
 
+macro_rules! lock {
+    ($self:expr) => {
+        &mut $self.mutex.lock().await
+    };
+}
+
 fn check_normal(slug: &str) -> Result<()> {
     trace!("Checking slug for normal form: {}", slug);
 
@@ -221,7 +227,7 @@ impl RevisionStore {
         super::spawn_output(self.repo(), arguments).await
     }
 
-    // Git helpers
+    // Git helper
     async fn get_commit(&self, guard: &mut RevisionBlock) -> Result<GitHash> {
         debug!("Getting current HEAD commit");
 
@@ -493,7 +499,7 @@ impl RevisionStore {
         info!("Getting page content for slug '{}'", slug);
 
         check_normal!(slug);
-        let guard = &mut self.mutex.lock().await;
+        let guard = lock!(self);
 
         let contents = self.read_file(guard, slug).await?;
         self.check_clean(guard).await;
@@ -510,7 +516,7 @@ impl RevisionStore {
         );
 
         check_normal!(slug);
-        let guard = &mut self.mutex.lock().await;
+        let guard = lock!(self);
 
         let path = self.get_path(slug, false);
         let spec = format!("{}:{}", hash, path.display());
@@ -540,7 +546,7 @@ impl RevisionStore {
         );
 
         check_normal!(slug);
-        let guard = &mut self.mutex.lock().await;
+        let guard = lock!(self);
         let path = self.get_path(slug, false);
 
         let args = arguments![
@@ -565,7 +571,7 @@ impl RevisionStore {
         info!("Getting blame for slug '{}'", slug);
 
         check_normal!(slug);
-        let guard = &mut self.mutex.lock().await;
+        let guard = lock!(self);
         let path = self.get_path(slug, false);
 
         let args = match hash {
