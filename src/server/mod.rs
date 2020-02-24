@@ -103,6 +103,12 @@ impl Server {
     }
 
     /* Helper methods */
+    pub async fn ping(&self) -> Result<()> {
+        debug!("Pinging database to check connectivity");
+
+        self.conn.execute("SELECT 1")?;
+        Ok(())
+    }
 
     #[cfg(test)]
     #[inline]
