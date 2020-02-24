@@ -81,10 +81,9 @@ pub struct RevisionStore {
 }
 
 impl RevisionStore {
-    /// Creates a new revision store using the given `git2::Repository` and domain name.
+    /// Creates a new revision store using the given repository and domain name.
     ///
-    /// The domain name should not be prefixed with a protocol such as `https://` but does
-    /// permit subdomains.
+    /// The domain name should not have a protocol but allows permit subdomains.
     #[inline]
     pub fn new<P, S>(repo: P, domain: S) -> Self
     where
