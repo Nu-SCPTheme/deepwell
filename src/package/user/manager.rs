@@ -140,8 +140,11 @@ impl UserManager {
             let user = result
                 .iter()
                 .enumerate()
+                // Extract the user ID
                 .map(|(idx, user)| (idx, user.id()))
+                // Find which user corresponds to this ID
                 .find(|(_, user_id)| *user_id == id)
+                // Use the discovered index to remove it
                 .map(|(idx, _)| result.remove(idx));
 
             users.push(user);
