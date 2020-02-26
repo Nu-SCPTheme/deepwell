@@ -25,7 +25,7 @@ use super::prelude::*;
 pub struct UserMetadata<'a> {
     pub name: Option<&'a str>,
     pub email: Option<&'a str>,
-    pub author_page: Option<&'a str>,
+    pub user_page: Option<&'a str>,
     pub website: Option<&'a str>,
     pub about: Option<&'a str>,
     pub gender: Option<&'a str>,
@@ -43,7 +43,7 @@ impl UserMetadata<'_> {
         UserMetadataOwned {
             name: clone!(name),
             email: clone!(email),
-            author_page: clone!(author_page),
+            user_page: clone!(user_page),
             website: clone!(website),
             about: clone!(about),
             gender: clone!(gender),
@@ -57,7 +57,7 @@ impl UserMetadata<'_> {
 pub struct UserMetadataOwned {
     pub name: Option<String>,
     pub email: Option<String>,
-    pub author_page: Option<String>,
+    pub user_page: Option<String>,
     pub website: Option<String>,
     pub about: Option<String>,
     pub gender: Option<String>,
@@ -75,7 +75,7 @@ impl UserMetadataOwned {
         UserMetadata {
             name: borrow!(name),
             email: borrow!(email),
-            author_page: borrow!(author_page),
+            user_page: borrow!(user_page),
             website: borrow!(website),
             about: borrow!(about),
             gender: borrow!(gender),
@@ -92,7 +92,7 @@ pub struct User {
     is_verified: bool,
     is_special: bool,
     is_bot: bool,
-    author_page: String,
+    user_page: String,
     website: String,
     about: String,
     gender: String,
@@ -133,8 +133,8 @@ impl User {
     }
 
     #[inline]
-    pub fn author_page(&self) -> &str {
-        &self.author_page
+    pub fn user_page(&self) -> &str {
+        &self.user_page
     }
 
     #[inline]

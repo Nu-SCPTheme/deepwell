@@ -39,7 +39,7 @@ async fn users_internal(server: &Server) {
     let metadata = UserMetadata {
         name: Some("Jenny Person"),
         email: None,
-        author_page: Some("http://www.scp-wiki.net/authors-pages"),
+        user_page: Some("http://www.scp-wiki.net/authors-pages"),
         website: None,
         about: Some("A totally real person who writes"),
         gender: Some("FEMALE"),
@@ -70,7 +70,7 @@ async fn users_internal(server: &Server) {
     let metadata = UserMetadata {
         name: None,
         email: None,
-        author_page: None,
+        user_page: None,
         website: None,
         about: Some("test user 2"),
         gender: Some("non-binary"),

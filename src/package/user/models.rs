@@ -36,7 +36,7 @@ pub struct UpdateUser<'a> {
     pub name: Option<&'a str>,
     pub email: Option<&'a str>,
     pub is_verified: Option<bool>,
-    pub author_page: Option<&'a str>,
+    pub user_page: Option<&'a str>,
     pub website: Option<&'a str>,
     pub about: Option<&'a str>,
     pub gender: Option<&'a str>,
@@ -49,8 +49,7 @@ impl UpdateUser<'_> {
         self.name.is_some()
             || self.email.is_some()
             || self.is_verified.is_some()
-            || self.author_page.is_some()
-            || self.author_page.is_some()
+            || self.user_page.is_some()
             || self.website.is_some()
             || self.about.is_some()
             || self.gender.is_some()

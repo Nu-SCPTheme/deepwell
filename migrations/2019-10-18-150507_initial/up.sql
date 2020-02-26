@@ -7,7 +7,7 @@ CREATE TABLE users (
     is_verified BOOLEAN NOT NULL DEFAULT false,
     is_special BOOLEAN NOT NULL DEFAULT false,
     is_bot BOOLEAN NOT NULL DEFAULT false,
-    author_page TEXT NOT NULL DEFAULT '',
+    user_page TEXT NOT NULL DEFAULT '',
     website TEXT NOT NULL DEFAULT '',
     about TEXT NOT NULL DEFAULT '',
     gender TEXT NOT NULL DEFAULT '' CHECK (gender = LOWER(gender)),

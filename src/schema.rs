@@ -152,7 +152,7 @@ table! {
         is_verified -> Bool,
         is_special -> Bool,
         is_bot -> Bool,
-        author_page -> Text,
+        user_page -> Text,
         website -> Text,
         about -> Text,
         gender -> Text,
