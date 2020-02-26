@@ -90,6 +90,7 @@ pub struct User {
     name: String,
     email: String,
     is_verified: bool,
+    is_special: bool,
     is_bot: bool,
     author_page: String,
     website: String,
@@ -119,6 +120,11 @@ impl User {
     #[inline]
     pub fn is_verified(&self) -> bool {
         self.is_verified
+    }
+
+    #[inline]
+    pub fn is_special(&self) -> bool {
+        self.is_special
     }
 
     #[inline]

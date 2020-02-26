@@ -150,6 +150,7 @@ table! {
         name -> Text,
         email -> Text,
         is_verified -> Bool,
+        is_special -> Bool,
         is_bot -> Bool,
         author_page -> Text,
         website -> Text,
