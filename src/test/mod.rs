@@ -34,35 +34,8 @@ mod user;
 mod verify;
 mod wiki;
 
-use self::prelude::*;
-use std::env;
-use tempfile::tempdir;
-
 mod prelude {
     pub use super::factory::*;
-    pub use super::run;
     pub use crate::prelude::*;
-    pub use async_std::task;
     pub use either::*;
-}
-
-pub fn run(f: fn(&Server)) {
-    color_backtrace::install();
-
-    let database_url = &env::var("DATABASE_TEST_URL").expect("No DATABASE_TEST_URL specified!");
-    let temp_dir = tempdir().expect("Unable to create temp dir");
-    let revisions_dir = temp_dir.path().into();
-
-    let config = Config {
-        database_url,
-        revisions_dir,
-        password_blacklist: None,
-    };
-
-    let server = Server::new(config).expect("Unable to create deepwell server");
-
-    server.test_transaction(|| {
-        f(&server);
-        Ok(())
-    });
 }
