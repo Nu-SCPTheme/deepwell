@@ -674,8 +674,8 @@ impl PageManager {
 
         let id: i64 = wiki_id.into();
         let pages = pages::table
-            .filter(pages::tags.contains(tags))
             .filter(pages::wiki_id.eq(id))
+            .filter(pages::tags.contains(tags))
             .filter(pages::deleted_at.is_null())
             .get_results::<Page>(&*self.conn)?;
 
@@ -688,9 +688,9 @@ impl PageManager {
             wiki_id, slug,
         );
 
-        let wiki_id: i64 = wiki_id.into();
+        let id: i64 = wiki_id.into();
         let result = pages::table
-            .filter(pages::wiki_id.eq(wiki_id))
+            .filter(pages::wiki_id.eq(id))
             .filter(pages::slug.eq(slug))
             .filter(pages::deleted_at.is_null())
             .select(pages::page_id)
@@ -703,9 +703,9 @@ impl PageManager {
     pub async fn get_page(&self, wiki_id: WikiId, slug: &str) -> Result<Option<Page>> {
         info!("Getting page for wiki ID {}, slug {}", wiki_id, slug);
 
-        let wiki_id: i64 = wiki_id.into();
+        let id: i64 = wiki_id.into();
         let page = pages::table
-            .filter(pages::wiki_id.eq(wiki_id))
+            .filter(pages::wiki_id.eq(id))
             .filter(pages::slug.eq(slug))
             .filter(pages::deleted_at.is_null())
             .first::<Page>(&*self.conn)
