@@ -155,8 +155,21 @@ impl PasswordManager {
         match self.check_internal(user_id, password).await {
             Ok(_) => Ok(()),
             Err(error) => {
+                // Normally at this point we would delay execution for a period.
+                //
+                // This limits the effectiveness of brute-force attacks,
+                // as the uncommon case (mistyping a password) becomes the typical
+                // case and the attacker is significantly delayed.
+                //
+                // However we are not adding the pause here at the deepwell layer.
+                //
+                // At the web server layer, execution may end earlier if the user
+                // is found to be invalid, which will cause execution to end earlier.
+                // This difference in behavior leaks inside information about
+                // what credentials are possibly valid and should be avoided. As such,
+                // sleeping occurs within the web server.
+
                 warn!("Authentication failure by user ID {}", user_id);
-                password_pause().await;
                 Err(error)
             }
         }
@@ -192,18 +205,4 @@ impl Debug for PasswordManager {
             .field("conn", &"PgConnection { .. }")
             .finish()
     }
-}
-
-#[cfg(test)]
-#[inline]
-async fn password_pause() {}
-
-#[cfg(not(test))]
-async fn password_pause() {
-    use async_std::task;
-    use std::time::Duration;
-
-    const PAUSE: Duration = Duration::from_millis(500);
-
-    task::sleep(PAUSE).await;
 }
