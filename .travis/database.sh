@@ -30,6 +30,9 @@ case "$1" in
 		diesel migration run
 		;;
 	test)
+		# Run multiple times to check for conflict issues with persistent test data
+		cargo test --release -- --nocapture
+		cargo test --release -- --nocapture
 		cargo test --release -- --nocapture
 		;;
 esac
