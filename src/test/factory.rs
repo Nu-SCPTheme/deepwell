@@ -21,13 +21,29 @@
 use crate::prelude::*;
 use crate::utils::rand_alphanum;
 use std::env;
-use tempfile::tempdir;
+use std::ops::Deref;
+use tempfile::TempDir;
 
-pub async fn create_server() -> Server {
+#[derive(Debug)]
+pub struct ServerWrap {
+    server: Server,
+    temp_dir: TempDir,
+}
+
+impl Deref for ServerWrap {
+    type Target = Server;
+
+    #[inline]
+    fn deref(&self) -> &Server {
+        &self.server
+    }
+}
+
+pub async fn create_server() -> ServerWrap {
     color_backtrace::install();
 
     let database_url = &env::var("DATABASE_TEST_URL").expect("No DATABASE_TEST_URL specified!");
-    let temp_dir = tempdir().expect("Unable to create temp dir");
+    let temp_dir = TempDir::new().expect("Unable to create temp dir");
     let revisions_dir = temp_dir.path().into();
 
     let config = Config {
@@ -36,7 +52,9 @@ pub async fn create_server() -> Server {
         password_blacklist: None,
     };
 
-    Server::new(config).expect("Unable to create deepwell server")
+    let server = Server::new(config).expect("Unable to create deepwell server");
+
+    ServerWrap { server, temp_dir }
 }
 
 // User
