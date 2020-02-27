@@ -28,6 +28,7 @@ case "$1" in
 		done
 
 		diesel migration run
+		diesel migration run --database-url "$DATABASE_TEST_URL"
 		;;
 	test)
 		# Run multiple times to check for conflict issues with persistent test data
