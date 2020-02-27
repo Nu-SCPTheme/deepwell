@@ -24,8 +24,12 @@ You will need the `diesel_cli` crate installed. For all commands you will need t
 ### Compilation
 This library targets the latest stable Rust. At time of writing, that is 1.41.0
 
+The environment variable `DATABASE_URL` must be set in order to use diesel.
+Additionally the variable `DATABASE_TEST_URL` must be set if you want to run tests.
+
 ```sh
 $ diesel migration run
+$ diesel migration run --database-url="$DATABASE_TEST_URL"
 $ cargo build --release
 ```
 
