@@ -115,6 +115,19 @@ async fn users_conflict() {
     let user_id_1 = create_user(server).await;
     let user_id_2 = create_user(server).await;
 
+    // Get original users
+    let user_1 = server
+        .get_user_from_id(user_id_1)
+        .await
+        .expect("Unable to get user")
+        .expect("Created user not found");
+
+    let user_2 = server
+        .get_user_from_id(user_id_2)
+        .await
+        .expect("Unable to get user")
+        .expect("Created user not found");
+
     // Set initial user info
     server
         .edit_user(
@@ -191,4 +204,29 @@ async fn users_conflict() {
         )
         .await
         .expect("Unable to set email to equivalent value");
+
+    // Set them both to the original values
+    server
+        .edit_user(
+            user_id_1,
+            UserMetadata {
+                name: Some(user_1.name()),
+                email: Some(user_1.email()),
+                ..UserMetadata::default()
+            },
+        )
+        .await
+        .expect("Unable to edit user to original");
+
+    server
+        .edit_user(
+            user_id_2,
+            UserMetadata {
+                name: Some(user_2.name()),
+                email: Some(user_2.email()),
+                ..UserMetadata::default()
+            },
+        )
+        .await
+        .expect("Unable to edit user initially");
 }
