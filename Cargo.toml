@@ -39,3 +39,4 @@ wikidot-normalize = "0.4"
 [dev-dependencies]
 color-backtrace = "0.3"
 tempfile = "3"
+tokio = { version = "0.2", features = ["full"] }

@@ -29,6 +29,10 @@ macro_rules! check_err {
     };
 }
 
+#[tokio::test]
+async fn test_async() {
+}
+
 #[test]
 fn users() {
     run(|server| task::block_on(users_internal(server)));
