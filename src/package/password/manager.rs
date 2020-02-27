@@ -161,13 +161,12 @@ impl PasswordManager {
                 // as the uncommon case (mistyping a password) becomes the typical
                 // case and the attacker is significantly delayed.
                 //
-                // However we are not adding the pause here at the deepwell layer.
+                // However we are not adding the pause here.
                 //
-                // At the RPC server layer, execution may end earlier if the user
-                // is found to be invalid, which will cause execution to end earlier.
+                // Instead we are doing it at the "server" layer within this code.
+                // Execution may end earlier if the user is found to be invalid.
                 // This difference in behavior leaks inside information about
-                // what credentials are possibly valid and should be avoided. As such,
-                // sleeping occurs within the deepwell-rpc server.
+                // what credentials are possibly valid and should be avoided.
 
                 warn!("Authentication failure by user ID {}", user_id);
                 Err(error)
