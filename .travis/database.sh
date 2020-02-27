@@ -18,6 +18,7 @@ case "$1" in
 		cargo install diesel_cli --no-default-features --features postgres
 		psql -c "CREATE USER overseer PASSWORD 'blackmoon';" -U postgres
 		psql -c "CREATE DATABASE deepwell OWNER overseer;" -U postgres
+		psql -c "CREATE DATABASE deepwell_test OWNER overseer;" -U postgres
 		;;
 	check)
 		diesel migration run

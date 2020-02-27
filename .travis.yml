@@ -9,7 +9,7 @@ os:
   - osx
 
 env:
-  - DATABASE_URL=postgres://overseer:blackmoon@localhost/deepwell
+  - DATABASE_URL=postgres://overseer:blackmoon@localhost/deepwell DATABASE_TEST_URL=postgres://overseer:blackmoon@localhost/deepwell_test
 
 services:
   - postgresql
