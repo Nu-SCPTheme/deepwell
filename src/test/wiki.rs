@@ -25,6 +25,12 @@ async fn wikis() {
     let server = &create_server().await;
     let (wiki_id, slug) = create_wiki_full(server).await;
 
+    let (wiki, _) = server
+        .get_wiki_by_id(wiki_id)
+        .await
+        .expect("Unable to get wiki");
+
+    // Test setting wiki metadata
     server
         .rename_wiki(wiki_id, "NUTTEST")
         .await
@@ -55,4 +61,15 @@ async fn wikis() {
             _ => panic!("Error doesn't match"),
         }
     }
+
+    // Reset wiki metadata
+    server
+        .rename_wiki(wiki_id, wiki.name())
+        .await
+        .expect("Unable to rename wiki");
+
+    server
+        .set_wiki_domain(wiki_id, wiki.domain())
+        .await
+        .expect("Unable to change domain");
 }
