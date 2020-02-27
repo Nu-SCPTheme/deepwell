@@ -20,6 +20,24 @@
 
 use crate::prelude::*;
 use crate::utils::rand_alphanum;
+use std::env;
+use tempfile::tempdir;
+
+pub async fn create_server() -> Server {
+    color_backtrace::install();
+
+    let database_url = &env::var("DATABASE_TEST_URL").expect("No DATABASE_TEST_URL specified!");
+    let temp_dir = tempdir().expect("Unable to create temp dir");
+    let revisions_dir = temp_dir.path().into();
+
+    let config = Config {
+        database_url,
+        revisions_dir,
+        password_blacklist: None,
+    };
+
+    Server::new(config).expect("Unable to create deepwell server")
+}
 
 // User
 pub async fn create_user_full(server: &Server, password: &str) -> (UserId, String, String) {

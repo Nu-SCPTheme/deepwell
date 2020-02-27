@@ -48,7 +48,7 @@ mod prelude {
 pub fn run(f: fn(&Server)) {
     color_backtrace::install();
 
-    let database_url = &env::var("DATABASE_URL").expect("No DATABASE_URL specified!");
+    let database_url = &env::var("DATABASE_TEST_URL").expect("No DATABASE_TEST_URL specified!");
     let temp_dir = tempdir().expect("Unable to create temp dir");
     let revisions_dir = temp_dir.path().into();
 
