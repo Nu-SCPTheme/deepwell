@@ -31,9 +31,9 @@ macro_rules! check_err {
 
 #[tokio::test]
 async fn users() {
-    let server = create_server().await;
+    let server = &create_server().await;
 
-    let user_id = create_user(&server).await;
+    let user_id = create_user(server).await;
     let metadata = UserMetadata {
         name: Some("Jenny Person"),
         email: None,
@@ -64,7 +64,7 @@ async fn users() {
         .await
         .expect("Unable to reactivate user");
 
-    let user_id_2 = create_user(&server).await;
+    let user_id_2 = create_user(server).await;
     let metadata = UserMetadata {
         name: None,
         email: None,
@@ -108,12 +108,10 @@ async fn users() {
     check_err!(error, Error::RequestTooLarge(198, 100));
 }
 
-#[test]
-fn users_conflict() {
-    run(|server| task::block_on(users_conflict_internal(server)));
-}
+#[tokio::test]
+async fn users_conflict() {
+    let server = &create_server().await;
 
-async fn users_conflict_internal(server: &Server) {
     let user_id_1 = create_user(server).await;
     let user_id_2 = create_user(server).await;
 
