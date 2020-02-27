@@ -20,8 +20,8 @@
 
 use crate::{Error, Result};
 use async_std::future::timeout;
-use futures::future::Future;
 use futures::task::{Context, Poll};
+use futures::Future;
 use std::ffi::{OsStr, OsString};
 use std::fmt::Write;
 use std::io::Read;

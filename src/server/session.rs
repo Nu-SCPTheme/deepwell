@@ -20,10 +20,33 @@
 
 use crate::manager_prelude::*;
 
+macro_rules! wrap_login {
+    ($future:expr) => {
+        match $future.await {
+            Ok(session) => Ok(session),
+            Err(error) => {
+                trace!("Pausing before response due to invalid credentials.");
+
+                password_pause().await;
+                Err(error)
+            }
+        }
+    };
+}
+
 impl Server {
     /// Attempts to login a user via user ID.
     /// Returns the new session if successful, `AuthenticationFailed` otherwise.
     pub async fn try_login_id(
+        &self,
+        user_id: UserId,
+        password: &str,
+        remote_address: Option<&str>,
+    ) -> Result<Session> {
+        wrap_login!(self.try_login_id_internal(user_id, password, remote_address))
+    }
+
+    async fn try_login_id_internal(
         &self,
         user_id: UserId,
         password: &str,
@@ -70,6 +93,15 @@ impl Server {
     /// Attempts to login a user via username or email.
     /// Returns the new session if successful, `AuthenticationFailed` otherwise.
     pub async fn try_login(
+        &self,
+        name_or_email: &str,
+        password: &str,
+        remote_address: Option<&str>,
+    ) -> Result<Session> {
+        wrap_login!(self.try_login_internal(name_or_email, password, remote_address))
+    }
+
+    pub async fn try_login_internal(
         &self,
         name_or_email: &str,
         password: &str,
@@ -161,4 +193,18 @@ impl Server {
     ) -> Result<Vec<LoginAttempt>> {
         self.session.get_all_login_attempts(since).await
     }
+}
+
+#[cfg(test)]
+#[inline]
+async fn password_pause() {}
+
+#[cfg(not(test))]
+async fn password_pause() {
+    use async_std::task;
+    use std::time::Duration;
+
+    const PAUSE: Duration = Duration::from_millis(500);
+
+    task::sleep(PAUSE).await;
 }
