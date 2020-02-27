@@ -163,11 +163,11 @@ impl PasswordManager {
                 //
                 // However we are not adding the pause here at the deepwell layer.
                 //
-                // At the web server layer, execution may end earlier if the user
+                // At the RPC server layer, execution may end earlier if the user
                 // is found to be invalid, which will cause execution to end earlier.
                 // This difference in behavior leaks inside information about
                 // what credentials are possibly valid and should be avoided. As such,
-                // sleeping occurs within the web server.
+                // sleeping occurs within the deepwell-rpc server.
 
                 warn!("Authentication failure by user ID {}", user_id);
                 Err(error)
