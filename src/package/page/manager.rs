@@ -688,7 +688,9 @@ impl PageManager {
             wiki_id, slug,
         );
 
+        let wiki_id: i64 = wiki_id.into();
         let result = pages::table
+            .filter(pages::wiki_id.eq(wiki_id))
             .filter(pages::slug.eq(slug))
             .filter(pages::deleted_at.is_null())
             .select(pages::page_id)
