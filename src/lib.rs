@@ -45,7 +45,6 @@ extern crate ref_map;
 #[macro_use]
 extern crate serde;
 extern crate subprocess;
-extern crate tokio;
 
 #[macro_use]
 extern crate tinyvec;

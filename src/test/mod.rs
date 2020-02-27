@@ -20,6 +20,7 @@
 
 extern crate color_backtrace;
 extern crate tempfile;
+extern crate tokio;
 
 mod authors;
 mod factory;
