@@ -21,12 +21,9 @@
 use super::prelude::*;
 use crate::package::author::AuthorType;
 
-#[test]
-fn author_manager() {
-    run(|server| task::block_on(author_manager_internal(server)));
-}
-
-async fn author_manager_internal(server: &Server) {
+#[tokio::test]
+async fn author() {
+    let server = &create_server().await;
     let wiki_id = create_wiki(server).await;
 
     let user_id_1 = create_user(server).await;
