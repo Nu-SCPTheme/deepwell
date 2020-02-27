@@ -68,12 +68,16 @@ async fn logins() {
         .expect("Unable to login");
 
     // Check all login attempts
-    let attempts = server
+    let mut attempts = server
         .get_login_attempts(user_id, start_time())
         .await
         .expect("Unable to get login attempts");
 
     assert_eq!(attempts.len(), 3);
+
+    // Query returns most-recent first.
+    // We're checking all login attempts so we go most-recent last.
+    attempts.reverse();
 
     let first = &attempts[0];
     let second = &attempts[1];
