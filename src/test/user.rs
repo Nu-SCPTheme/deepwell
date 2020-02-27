@@ -33,34 +33,40 @@ macro_rules! check_err {
 async fn users() {
     let server = &create_server().await;
 
-    let user_id = create_user(server).await;
+    let user_id_1 = create_user(server).await;
+    let original_user = server
+        .get_user_from_id(user_id_1)
+        .await
+        .expect("Unable to get user")
+        .expect("Created user not found");
+
     let metadata = UserMetadata {
         name: Some("Jenny Person"),
         email: None,
         user_page: Some("http://www.scp-wiki.net/authors-pages"),
         website: None,
-        about: Some("A totally real person who writes"),
+        about: Some("Test user who writes for a test function to test"),
         gender: Some("FEMALE"),
         location: Some("Earth"),
     };
 
     server
-        .edit_user(user_id, metadata)
+        .edit_user(user_id_1, metadata)
         .await
         .expect("Unable to edit user");
 
     server
-        .verify_user(user_id)
+        .verify_user(user_id_1)
         .await
         .expect("Unable to mark user as verified");
 
     server
-        .mark_user_inactive(user_id)
+        .mark_user_inactive(user_id_1)
         .await
         .expect("Unable to mark user as inactive");
 
     server
-        .mark_user_active(user_id)
+        .mark_user_active(user_id_1)
         .await
         .expect("Unable to reactivate user");
 
@@ -80,6 +86,7 @@ async fn users() {
         .await
         .expect("Unable to edit second user");
 
+    // Fetch users
     let user_1 = server
         .get_user_from_name("Jenny Person")
         .await
@@ -94,7 +101,7 @@ async fn users() {
 
     let invalid = UserId::from_raw(-1);
     let users = server
-        .get_users_from_ids(&[user_id, invalid, user_id_2])
+        .get_users_from_ids(&[user_id_1, invalid, user_id_2])
         .await
         .expect("Unable to get multiple users");
 
@@ -106,6 +113,22 @@ async fn users() {
         .expect_err("Able to fetch over 100 users");
 
     check_err!(error, Error::RequestTooLarge(198, 100));
+
+    // Reset username
+    let metadata = UserMetadata {
+        name: Some(original_user.name()),
+        email: None,
+        user_page: None,
+        website: None,
+        about: None,
+        gender: None,
+        location: None,
+    };
+
+    server
+        .edit_user(user_id_1, metadata)
+        .await
+        .expect("Unable to reset user's name");
 }
 
 #[tokio::test]
