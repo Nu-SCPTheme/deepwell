@@ -41,21 +41,9 @@ fn start_time() -> DateTime<Utc> {
 
 // Runs separately due to the login_attempts table check
 
-#[test]
-fn login_id() {
-    run(|server| {
-        task::block_on(login_id_internal(server));
-    });
-}
-
-#[test]
-fn login_name() {
-    run(|server| {
-        task::block_on(login_name_internal(server));
-    });
-}
-
-async fn login_id_internal(server: &Server) {
+#[tokio::test]
+async fn login_id() {
+    let server = &create_server().await;
     let (user_id, _, _) = create_user_full(server, "blackmoonhowls").await;
 
     // Login
@@ -106,7 +94,9 @@ async fn login_id_internal(server: &Server) {
     assert_eq!(third.success(), true);
 }
 
-async fn login_name_internal(server: &Server) {
+#[tokio::test]
+async fn login_name() {
+    let server = &create_server().await;
     let password = "blackmoonhowls";
     let (_, username, email) = create_user_full(server, password).await;
 

@@ -20,12 +20,10 @@
 
 use super::prelude::*;
 
-#[test]
-fn tags() {
-    run(|server| task::block_on(tags_internal(server)));
-}
+#[tokio::test]
+async fn tags() {
+    let server = &create_server().await;
 
-async fn tags_internal(server: &Server) {
     let user_1 = server
         .get_user_from_name("unknown")
         .await

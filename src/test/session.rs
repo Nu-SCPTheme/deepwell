@@ -29,16 +29,9 @@ macro_rules! check_err {
     };
 }
 
-#[test]
-fn session() {
-    run(|server| {
-        task::block_on(async {
-            join!(session_internal(server), session_end_other(server));
-        })
-    });
-}
-
-async fn session_internal(server: &Server) {
+#[tokio::test]
+async fn session_internal() {
+    let server = &create_server().await;
     let password = "blackmoonhowls";
     let (user_id, username, email) = create_user_full(server, password).await;
 
@@ -129,7 +122,9 @@ async fn session_internal(server: &Server) {
     check_err!(error);
 }
 
-async fn session_end_other(server: &Server) {
+#[tokio::test]
+async fn session_end_other() {
+    let server = &create_server().await;
     let (user_id, _, _) = create_user_full(server, "blackmoonhowls").await;
 
     // Create multiple sessions

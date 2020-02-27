@@ -20,12 +20,9 @@
 
 use super::prelude::*;
 
-#[test]
-fn wiki_manager() {
-    run(|server| task::block_on(wiki_manager_internal(server)));
-}
-
-async fn wiki_manager_internal(server: &Server) {
+#[tokio::test]
+async fn wikis() {
+    let server = &create_server().await;
     let (wiki_id, slug) = create_wiki_full(server).await;
 
     server

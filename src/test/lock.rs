@@ -20,12 +20,10 @@
 
 use super::prelude::*;
 
-#[test]
-fn locks() {
-    run(|server| task::block_on(locks_internal(server)));
-}
+#[tokio::test]
+async fn locks() {
+    let server = &create_server().await;
 
-async fn locks_internal(server: &Server) {
     // Setup models
     let wiki_id = create_wiki(server).await;
     let user_id = create_user(server).await;

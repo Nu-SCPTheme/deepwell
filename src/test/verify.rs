@@ -20,12 +20,10 @@
 
 use super::prelude::*;
 
-#[test]
-fn verify() {
-    run(|server| task::block_on(verify_internal(server)));
-}
+#[tokio::test]
+async fn verify() {
+    let server = &create_server().await;
 
-async fn verify_internal(server: &Server) {
     // Test verify_token
     let user_id = create_user(server).await;
     let user = server

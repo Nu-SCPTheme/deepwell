@@ -20,12 +20,10 @@
 
 use super::prelude::*;
 
-#[test]
-fn password_manager() {
-    run(|server| task::block_on(password_manager_internal(server)));
-}
+#[tokio::test]
+async fn passwords() {
+    let server = &create_server().await;
 
-async fn password_manager_internal(server: &Server) {
     macro_rules! good_password {
         ($user_id:expr, $password:expr) => {
             server
@@ -64,12 +62,10 @@ async fn password_manager_internal(server: &Server) {
     bad_password!(user_id, "letmein");
 }
 
-#[test]
-fn password_default() {
-    run(|server| task::block_on(password_default_internal(server)));
-}
+#[tokio::test]
+async fn password_default() {
+    let server = &create_server().await;
 
-async fn password_default_internal(server: &Server) {
     macro_rules! bad_password {
         ($user_id:expr, $password:expr) => {{
             let user_id = UserId::from_raw($user_id);

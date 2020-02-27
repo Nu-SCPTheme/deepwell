@@ -20,12 +20,10 @@
 
 use super::prelude::*;
 
-#[test]
-fn page_manager() {
-    run(|server| task::block_on(page_manager_internal(server)));
-}
+#[tokio::test]
+async fn pages() {
+    let server = &create_server().await;
 
-async fn page_manager_internal(server: &Server) {
     // Setup
     let user = server
         .get_user_from_name("unknown")
