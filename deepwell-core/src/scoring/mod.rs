@@ -1,5 +1,5 @@
 /*
- * lib.rs
+ * scoring/mod.rs
  *
  * deepwell-core - Database management and migrations service
  * Copyright (C) 2019-2020 Ammon Smith
@@ -18,45 +18,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#![forbid(unsafe_code)]
+use crate::models::Votes;
 
-extern crate chrono;
-
-#[macro_use]
-extern crate diesel;
-extern crate subprocess;
-
-#[macro_use]
-extern crate lazy_static;
-
-#[macro_use]
-extern crate log;
-extern crate map_vec;
-extern crate ref_map;
-extern crate regex;
-
-#[macro_use]
-extern crate serde;
-
-#[macro_use]
-extern crate thiserror;
-
-#[macro_use]
-mod macros;
-
-pub mod error;
-pub mod models;
-pub mod scoring;
-pub mod types;
-
-pub mod prelude {
-    pub use super::error::{Error, SendableError};
-    pub use super::models::*;
-    pub use super::scoring::*;
-    pub use super::types::*;
+/// Trait for determining the rating from votes.
+///
+/// Allows for different implementations, at the choice of wiki
+/// administrators.
+pub trait Scoring {
+    fn score(votes: &Votes) -> i32;
 }
-
-pub use self::prelude::*;
-
-pub type StdResult<T, E> = std::result::Result<T, E>;
-pub type Result<T> = StdResult<T, Error>;
