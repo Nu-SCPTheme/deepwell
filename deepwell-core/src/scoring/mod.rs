@@ -22,6 +22,7 @@ use crate::models::Votes;
 
 mod null;
 mod wikidot;
+mod wilson;
 
 mod prelude {
     pub use crate::models::Votes;
