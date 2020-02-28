@@ -44,13 +44,17 @@ extern crate thiserror;
 #[macro_use]
 mod macros;
 
-mod error;
-mod models;
-mod types;
+pub mod error;
+pub mod models;
+pub mod types;
+
+pub mod prelude {
+    pub use super::error::{Error, SendableError};
+    pub use super::models::*;
+    pub use super::types::*;
+}
+
+pub use self::prelude::*;
 
 pub type StdResult<T, E> = std::result::Result<T, E>;
 pub type Result<T> = StdResult<T, Error>;
-
-pub use self::error::{Error, SendableError};
-pub use self::models::*;
-pub use self::types::*;
