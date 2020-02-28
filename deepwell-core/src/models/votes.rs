@@ -46,6 +46,11 @@ impl Votes {
     }
 
     #[inline]
+    pub fn iter(&self) -> impl Iterator<Item = (i16, u32)> + '_ {
+        self.distribution.iter().map(|(&vote, &count)| (vote, count))
+    }
+
+    #[inline]
     pub fn distribution(&self) -> &Map<i16, u32> {
         &self.distribution
     }

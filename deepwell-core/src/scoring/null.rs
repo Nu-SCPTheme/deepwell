@@ -1,5 +1,5 @@
 /*
- * scoring/mod.rs
+ * scoring/null.rs
  *
  * deepwell-core - Database management and migrations service
  * Copyright (C) 2019-2020 Ammon Smith
@@ -18,23 +18,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::models::Votes;
+use super::prelude::*;
 
-mod null;
-mod wikidot;
+/// Null-scorer. Returns `0` for all pages.
+#[derive(Debug, Copy, Clone, Default)]
+pub struct NullScoring;
 
-mod prelude {
-    pub use crate::models::Votes;
-    pub use super::Scoring;
-}
-
-pub use self::null::NullScoring;
-pub use self::wikidot::WikidotScoring;
-
-/// Trait for determining the rating from votes.
-///
-/// Allows for different implementations, at the choice of wiki
-/// administrators.
-pub trait Scoring {
-    fn score(votes: &Votes) -> i32;
+impl Scoring for NullScoring {
+    fn score(_votes: &Votes) -> i32 {
+        0
+    }
 }

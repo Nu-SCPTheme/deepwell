@@ -1,5 +1,5 @@
 /*
- * scoring/mod.rs
+ * scoring/wikidot.rs
  *
  * deepwell-core - Database management and migrations service
  * Copyright (C) 2019-2020 Ammon Smith
@@ -18,23 +18,21 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::models::Votes;
+use super::prelude::*;
+use std::convert::TryInto;
 
-mod null;
-mod wikidot;
+/// Wikidot-compatible scorer. Returns the sum of all votes.
+/// Equivalent to `ups - downs`.
+#[derive(Debug, Copy, Clone, Default)]
+pub struct WikidotScoring;
 
-mod prelude {
-    pub use crate::models::Votes;
-    pub use super::Scoring;
-}
+impl Scoring for WikidotScoring {
+    fn score(votes: &Votes) -> i32 {
+        votes.iter().fold(0, |score, (vote, count)| {
+            let vote = i32::from(vote);
+            let count: i32 = count.try_into().expect("Number of votes too large for i32");
 
-pub use self::null::NullScoring;
-pub use self::wikidot::WikidotScoring;
-
-/// Trait for determining the rating from votes.
-///
-/// Allows for different implementations, at the choice of wiki
-/// administrators.
-pub trait Scoring {
-    fn score(votes: &Votes) -> i32;
+            score + vote * count
+        })
+    }
 }
