@@ -168,13 +168,12 @@ impl Server {
         self.page.check_page(wiki_id, &slug).await
     }
 
-    /// Gets the metadata for a given page, as well as its rating information.
-    /// Uses Wikidot's `ups - downs` formula for scoring.
+    /// Gets the metadata for a given page, as well as its vote information.
     pub async fn get_page<S: Into<String>>(
         &self,
         wiki_id: WikiId,
         slug: S,
-    ) -> Result<Option<(Page, Rating)>> {
+    ) -> Result<Option<(Page, Votes)>> {
         debug!("Creating transaction for page and rating");
 
         let slug = normalize_slug(slug);
@@ -194,9 +193,8 @@ impl Server {
         .await
     }
 
-    /// Gets the metadata for a given page ID, as well as its rating information.
-    /// Uses Wikidot's `ups - downs` formula for scoring.
-    pub async fn get_page_by_id(&self, page_id: PageId) -> Result<Option<(Page, Rating)>> {
+    /// Gets the metadata for a given page ID, as well as its vote information.
+    pub async fn get_page_by_id(&self, page_id: PageId) -> Result<Option<(Page, Votes)>> {
         debug!("Creating transaction for page ID and rating");
 
         self.transaction(async {

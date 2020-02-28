@@ -72,7 +72,7 @@ impl RatingManager {
         RatingManager { conn }
     }
 
-    pub async fn get_rating(&self, page_id: PageId) -> Result<Rating> {
+    pub async fn get_rating(&self, page_id: PageId) -> Result<Votes> {
         info!("Getting rating information for page ID {}", page_id);
 
         // Get count by vote value.
@@ -112,7 +112,7 @@ impl RatingManager {
             .iter()
             .for_each(|&rating| *votes.entry(rating).or_insert(0) += 1);
 
-        Ok(Rating::new(votes))
+        Ok(Votes::new(votes))
     }
 
     pub async fn set(&self, page_id: PageId, user_id: UserId, rating: i16) -> Result<RatingId> {

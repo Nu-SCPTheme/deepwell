@@ -22,9 +22,9 @@ mod blame;
 mod git_hash;
 mod login_attempt;
 mod page;
-mod rating;
 mod session;
 mod user;
+mod votes;
 mod wiki;
 
 mod prelude {
@@ -38,7 +38,7 @@ pub use self::blame::Blame;
 pub use self::git_hash::GitHash;
 pub use self::login_attempt::LoginAttempt;
 pub use self::page::Page;
-pub use self::rating::Rating;
 pub use self::session::Session;
 pub use self::user::{User, UserMetadata, UserMetadataOwned};
+pub use self::votes::Votes;
 pub use self::wiki::{Wiki, WikiSettings};

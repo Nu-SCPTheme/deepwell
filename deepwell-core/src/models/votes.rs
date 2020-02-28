@@ -1,5 +1,5 @@
 /*
- * models/rating.rs
+ * models/votes.rs
  *
  * deepwell-core - Database management and migrations service
  * Copyright (C) 2019-2020 Ammon Smith
@@ -21,7 +21,7 @@
 use map_vec::Map;
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
-pub struct Rating {
+pub struct Votes {
     /// Number of each kind of vote.
     ///
     /// For instance a page with two +1 and three -1 votes would be:
@@ -31,23 +31,23 @@ pub struct Rating {
     ///     -1: 3,
     /// }
     /// ```
-    votes: Map<i16, u32>,
+    distribution: Map<i16, u32>,
 
     /// Total number of votes.
     count: u32,
 }
 
-impl Rating {
+impl Votes {
     #[inline]
-    pub fn new(votes: Map<i16, u32>) -> Self {
-        let count = votes.values().sum();
+    pub fn new(distribution: Map<i16, u32>) -> Self {
+        let count = distribution.values().sum();
 
-        Rating { votes, count }
+        Votes { distribution, count }
     }
 
     #[inline]
-    pub fn votes(&self) -> &Map<i16, u32> {
-        &self.votes
+    pub fn distribution(&self) -> &Map<i16, u32> {
+        &self.distribution
     }
 
     #[inline]
