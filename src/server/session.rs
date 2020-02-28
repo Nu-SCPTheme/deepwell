@@ -118,7 +118,7 @@ impl Server {
 
         // Attempt login or fail
         match user_id {
-            Some(id) => self.try_login_id(id, password, remote_address).await,
+            Some(id) => self.try_login_id_internal(id, password, remote_address).await,
             None => {
                 self.session
                     .add_login_attempt(None, Some(name_or_email), remote_address, false)
