@@ -18,25 +18,40 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#[derive(Serialize, Deserialize, Debug, Copy, Clone, PartialEq, Eq)]
+use map_vec::Map;
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub struct Rating {
-    score: i64,
-    votes: u32,
+    /// Number of each kind of vote.
+    ///
+    /// For instance a page with two +1 and three -1 votes would be:
+    /// ```ignore
+    /// {
+    ///     1: 2,
+    ///     -1: 3,
+    /// }
+    /// ```
+    votes: Map<i16, u32>,
+
+    /// Total number of votes.
+    count: u32,
 }
 
 impl Rating {
     #[inline]
-    pub fn new(score: i64, votes: u32) -> Self {
-        Rating { score, votes }
+    pub fn new(votes: Map<i16, u32>) -> Self {
+        let count = votes.values().sum();
+
+        Rating { votes, count }
     }
 
     #[inline]
-    pub fn score(&self) -> i64 {
-        self.score
+    pub fn votes(&self) -> &Map<i16, u32> {
+        &self.votes
     }
 
     #[inline]
-    pub fn votes(&self) -> u32 {
-        self.votes
+    pub fn count(&self) -> u32 {
+        self.count
     }
 }

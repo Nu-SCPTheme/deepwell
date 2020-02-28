@@ -21,6 +21,7 @@
 use super::{NewRating, NewRatingHistory};
 use crate::manager_prelude::*;
 use crate::utils::rows_to_result;
+use map_vec::Map;
 
 #[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
 pub struct RatingHistory {
@@ -72,34 +73,46 @@ impl RatingManager {
     }
 
     pub async fn get_rating(&self, page_id: PageId) -> Result<Rating> {
-        use diesel::dsl::{count, sum};
-        use std::convert::TryInto;
-
         info!("Getting rating information for page ID {}", page_id);
 
-        // Right now we use SUM() as a simple scoring system, for compatibility with Wikidot.
-        // However it's not the best scoring metric and may be adjusted later.
+        // Get count by vote value.
+        // We then create a map of vote_value -> count.
         //
-        // Similarly, it might make sense to turn this into a raw query.
+        // Normally this query would be:
+        // ```
+        // let rows = ratings::table
+        //     .filter(ratings::page_id.eq(id))
+        //     .select((ratings::rating, count(ratings::user_id)))
+        //     .get_results::<(i16, i64)>(&*self.conn)?;
+        // ```
+        //
+        // However diesel does not currently support queries across
+        // aggregate and non-aggregate columns.
+        //
+        // The raw equivalent here is:
+        // ```
+        // SELECT rating, COUNT(user_id)
+        // FROM ratings
+        // WHERE page_id = $1
+        // GROUP BY rating;
+        // ```
+        //
+        // However I was having trouble getting the types to work for a raw
+        // query, so we're manually aggregating ourselves here.
 
-        self.transaction(async {
-            let id: i64 = page_id.into();
-            let score = ratings::table
-                .filter(ratings::page_id.eq(id))
-                .select(sum(ratings::rating))
-                .first::<Option<i64>>(&*self.conn)?
-                .unwrap_or(0);
+        let id: i64 = page_id.into();
+        let ratings = ratings::table
+            .filter(ratings::page_id.eq(id))
+            .select(ratings::rating)
+            .get_results::<i16>(&*self.conn)?;
 
-            let votes = ratings::table
-                .filter(ratings::page_id.eq(id))
-                .select(count(ratings::user_id))
-                .first::<i64>(&*self.conn)?
-                .try_into()
-                .map_err(|_| Error::StaticMsg("number of votes doesn't fit into u32"))?;
+        // Increment each rating for each occurrence
+        let mut votes = Map::new();
+        ratings
+            .iter()
+            .for_each(|&rating| *votes.entry(rating).or_insert(0) += 1);
 
-            Ok(Rating::new(score, votes))
-        })
-        .await
+        Ok(Rating::new(votes))
     }
 
     pub async fn set(&self, page_id: PageId, user_id: UserId, rating: i16) -> Result<RatingId> {

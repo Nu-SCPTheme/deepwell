@@ -240,6 +240,7 @@ dependencies = [
  "futures",
  "lazy_static",
  "log",
+ "map_vec",
  "rand 0.7.3",
  "ref-map",
  "rust-crypto",
@@ -260,6 +261,7 @@ dependencies = [
  "diesel",
  "lazy_static",
  "log",
+ "map_vec",
  "ref-map",
  "regex",
  "serde",
@@ -552,6 +554,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "14b6052be84e6b71ab17edffc2eeabf5c2c3ae1fdb464aae35ac50c67a44e1f7"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "map_vec"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "43e9839b06bd5129fa636a93cb53601ffae739b8ff115841374d110cafb02cad"
+dependencies = [
+ "serde",
 ]
 
 [[package]]

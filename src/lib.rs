@@ -39,6 +39,7 @@ extern crate lazy_static;
 
 #[macro_use]
 extern crate log;
+extern crate map_vec;
 extern crate rand;
 extern crate ref_map;
 
