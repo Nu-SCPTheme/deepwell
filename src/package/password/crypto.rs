@@ -23,7 +23,7 @@ use super::Password;
 use crate::Result;
 use crypto::scrypt::{scrypt, ScryptParams};
 use crypto::util::fixed_time_eq;
-use deepwell_core::UserId;
+use deepwell_core::types::UserId;
 use rand::{rngs::OsRng, RngCore};
 
 const PARAM_LOGN: u8 = 6;

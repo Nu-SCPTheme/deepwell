@@ -23,7 +23,7 @@ use crate::{Error, Result};
 use async_std::fs::{self, File};
 use async_std::prelude::*;
 use async_std::sync::{Mutex, RwLock};
-use deepwell_core::{Blame, GitHash};
+use deepwell_core::models::{Blame, GitHash};
 use std::convert::TryFrom;
 use std::ffi::{OsStr, OsString};
 use std::path::PathBuf;

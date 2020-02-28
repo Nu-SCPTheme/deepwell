@@ -20,7 +20,7 @@
 
 use super::{check_password, new_password, Password};
 use async_std::task;
-use deepwell_core::UserId;
+use deepwell_core::types::UserId;
 
 #[test]
 fn crypto() {

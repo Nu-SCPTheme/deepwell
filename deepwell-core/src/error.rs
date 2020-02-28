@@ -18,11 +18,14 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::UserId;
+use crate::types::UserId;
 use diesel::result::{ConnectionError, Error as DieselError};
 use std::fmt::{self, Display};
 use std::io;
 use subprocess::PopenError;
+
+pub type StdResult<T, E> = std::result::Result<T, E>;
+pub type Result<T> = StdResult<T, Error>;
 
 #[derive(Debug, Error)]
 #[non_exhaustive]

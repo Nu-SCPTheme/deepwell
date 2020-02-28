@@ -55,8 +55,3 @@ pub mod prelude {
     pub use super::scoring::*;
     pub use super::types::*;
 }
-
-pub use self::prelude::*;
-
-pub type StdResult<T, E> = std::result::Result<T, E>;
-pub type Result<T> = StdResult<T, Error>;

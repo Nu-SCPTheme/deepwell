@@ -66,7 +66,7 @@ pub mod prelude {
     pub use crate::package::page::PageCommit;
     pub use crate::server::{Config, Server};
     pub use crate::{Error, Result, StdResult};
-    pub use deepwell_core::*;
+    pub use deepwell_core::prelude::*;
 }
 
 mod manager_prelude {
@@ -91,4 +91,4 @@ pub type StdResult<T, E> = std::result::Result<T, E>;
 pub type Result<T> = StdResult<T, Error>;
 
 pub use self::server::{Config, Server};
-pub use deepwell_core::Error;
+pub use deepwell_core::error::Error;

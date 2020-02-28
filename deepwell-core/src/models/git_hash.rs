@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::StdResult;
+use crate::error::StdResult;
 use arrayvec::ArrayString;
 use regex::Regex;
 use std::borrow::Borrow;

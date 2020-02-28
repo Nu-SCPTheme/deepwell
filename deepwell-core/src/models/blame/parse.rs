@@ -19,8 +19,8 @@
  */
 
 use super::*;
-use crate::GitHash;
-use crate::{Error, Result};
+use crate::error::{Error, Result};
+use crate::models::GitHash;
 use chrono::{DateTime, FixedOffset, NaiveDateTime};
 use regex::bytes::Regex;
 use std::{mem, str};
