@@ -9,8 +9,10 @@ os:
   - osx
 
 env:
-  - RUSTFLAGS='-D warnings' DATABASE_URL=postgres://overseer:blackmoon@localhost/deepwell DATABASE_TEST_URL=postgres://overseer:blackmoon@localhost/deepwell_test
-
+  - >
+    RUSTFLAGS='-D warnings'
+    DATABASE_URL=postgres://overseer:blackmoon@localhost/deepwell
+    DATABASE_TEST_URL=postgres://overseer:blackmoon@localhost/deepwell_test
 
 services:
   - postgresql
