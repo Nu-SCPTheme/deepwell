@@ -36,6 +36,7 @@ script:
   # Ensure code is rustfmt'd
   - .travis/banner.sh rustfmt
   - rustfmt --edition=2018 src/lib.rs --check
+  - rustfmt --edition=2018 deepwell-core/src/lib.rs --check
   # Check clippy lints
   - .travis/banner.sh clippy
   - .travis/clippy.sh check
