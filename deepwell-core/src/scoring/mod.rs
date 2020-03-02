@@ -25,8 +25,8 @@ mod wikidot;
 mod wilson;
 
 mod prelude {
-    pub use crate::models::Votes;
     pub use super::Scoring;
+    pub use crate::models::Votes;
 }
 
 pub use self::null::NullScoring;

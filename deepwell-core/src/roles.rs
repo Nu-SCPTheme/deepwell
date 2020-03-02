@@ -34,7 +34,7 @@ impl Role {
             Role::Member => "member",
             Role::Staff => "staff",
             Role::Moderator => "moderator",
-            Role::Administrator => "admin"
+            Role::Administrator => "admin",
         }
     }
 }
