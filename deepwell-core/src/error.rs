@@ -57,7 +57,7 @@ pub enum Error {
     #[error("invalid username or password")]
     AuthenticationFailed,
 
-    #[error("not logged in, expired session, or invalid session")]
+    #[error("not logged in, expired session, or invalid token")]
     InvalidSession,
 
     #[error("invalid password: {0}")]
