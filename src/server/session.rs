@@ -133,14 +133,14 @@ impl Server {
     }
 
     /// Validate a user's session to ensure they are logged in.
-    /// Returns `()` if successful, `NotLoggedIn` otherwise.
+    /// Returns `()` if successful, `InvalidSession` otherwise.
     #[inline]
     pub async fn check_session(&self, session_id: SessionId, user_id: UserId) -> Result<()> {
         self.session.check_session(session_id, user_id).await
     }
 
     /// Deactivate a session currently logged in.
-    /// Returns `()` if successful, `NotLoggedIn` if no such session was found.
+    /// Returns `()` if successful, `InvalidSession` if no such session was found.
     #[inline]
     pub async fn end_session(&self, session_id: SessionId, user_id: UserId) -> Result<()> {
         self.session.end_session(session_id, user_id).await

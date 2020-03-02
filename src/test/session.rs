@@ -23,8 +23,8 @@ use super::prelude::*;
 macro_rules! check_err {
     ($error:expr) => {
         match $error {
-            Error::NotLoggedIn => (),
-            _ => panic!("Error wasn't not logged in"),
+            Error::InvalidSession => (),
+            _ => panic!("Error wasn't invalid session"),
         }
     };
 }

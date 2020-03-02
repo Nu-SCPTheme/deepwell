@@ -57,11 +57,8 @@ pub enum Error {
     #[error("invalid username or password")]
     AuthenticationFailed,
 
-    #[error("session expired or invalid")]
+    #[error("not logged in, expired session, or invalid session")]
     InvalidSession,
-
-    #[error("not logged in")]
-    NotLoggedIn,
 
     #[error("invalid password: {0}")]
     NewPasswordInvalid(&'static str),
@@ -115,7 +112,6 @@ impl Error {
             RequestTooLarge(_, _) => "request-too-large",
             AuthenticationFailed => "authentication-failed",
             InvalidSession => "invalid-session",
-            NotLoggedIn => "not-logged-in",
             NewPasswordInvalid(_) => "invalid-password",
             InvalidVerificationToken => "invalid-verification-token",
             WikiNotFound => "wiki-not-found",

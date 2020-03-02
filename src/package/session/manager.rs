@@ -133,7 +133,7 @@ impl SessionManager {
 
         match result {
             Some(_) => Ok(()),
-            None => Err(Error::NotLoggedIn),
+            None => Err(Error::InvalidSession),
         }
     }
 
@@ -150,7 +150,7 @@ impl SessionManager {
         if rows_to_result(rows) {
             Ok(())
         } else {
-            Err(Error::NotLoggedIn)
+            Err(Error::InvalidSession)
         }
     }
 
