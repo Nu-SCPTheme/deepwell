@@ -18,6 +18,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use std::fmt::{self, Display};
+
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Role {
     Guest,
@@ -36,5 +38,11 @@ impl Role {
             Role::Moderator => "moderator",
             Role::Administrator => "admin",
         }
+    }
+}
+
+impl Display for Role {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.fixed_name())
     }
 }

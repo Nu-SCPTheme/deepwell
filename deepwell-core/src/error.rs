@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use crate::roles::Role;
 use crate::types::UserId;
 use diesel::result::{ConnectionError, Error as DieselError};
 use std::fmt::{self, Display};
@@ -65,6 +66,9 @@ pub enum Error {
 
     #[error("invalid verification token")]
     InvalidVerificationToken,
+
+    #[error("insufficient permissions, can only be done at {1} or higher, not {0}")]
+    InsufficientPermissions(Role, Role),
 
     #[error("the given wiki was not found")]
     WikiNotFound,
@@ -114,6 +118,7 @@ impl Error {
             InvalidSession => "invalid-session",
             NewPasswordInvalid(_) => "invalid-password",
             InvalidVerificationToken => "invalid-verification-token",
+            InsufficientPermissions(_, _) => "insufficient-permissions",
             WikiNotFound => "wiki-not-found",
             PageNotFound => "page-not-found",
             PageExists => "page-exists",
