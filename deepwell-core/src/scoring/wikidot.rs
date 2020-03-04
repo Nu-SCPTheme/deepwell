@@ -36,3 +36,20 @@ impl Scoring for WikidotScoring {
         })
     }
 }
+
+#[test]
+fn wikidot_scoring() {
+    macro_rules! check {
+        ($votes:expr, $score:expr) => {
+            assert_eq!(WikidotScoring::score(&*$votes), $score, "Score mismatch");
+        };
+    }
+
+    check!(NO_VOTES, 0);
+    check!(POSITIVE_VOTES, 20);
+    check!(POSITIVE_AND_NEUTRAL_VOTES, 12);
+    check!(NEGATIVE_VOTES, -5);
+    check!(NEUTRAL_VOTES, 0);
+    check!(MIXED_VOTES_1, 26);
+    check!(MIXED_VOTES_2, 5);
+}
