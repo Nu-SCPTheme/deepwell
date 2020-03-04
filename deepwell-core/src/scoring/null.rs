@@ -29,3 +29,20 @@ impl Scoring for NullScoring {
         0
     }
 }
+
+#[test]
+fn null_scoring() {
+    macro_rules! check {
+        ($votes:expr) => {
+            assert_eq!(NullScoring::score(&*$votes), 0, "Score mismatch");
+        };
+    }
+
+    check!(NO_VOTES);
+    check!(POSITIVE_VOTES);
+    check!(POSITIVE_AND_NEUTRAL_VOTES);
+    check!(NEGATIVE_VOTES);
+    check!(NEUTRAL_VOTES);
+    check!(MIXED_VOTES_1);
+    check!(MIXED_VOTES_2);
+}
