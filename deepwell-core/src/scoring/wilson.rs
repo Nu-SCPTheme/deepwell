@@ -30,7 +30,7 @@ use crate::math::probit;
 pub struct WilsonScoring;
 
 impl Scoring for WilsonScoring {
-    fn score(votes: &Votes) -> i32 {
+    fn score(votes: &Votes) -> f32 {
         const CONFIDENCE: f32 = 0.95;
 
         // Note: while implementation matches
@@ -39,7 +39,7 @@ impl Scoring for WilsonScoring {
         // score, which is presently multipled my total votes.
 
         if votes.count() == 0 {
-            return 0;
+            return 0.0;
         }
 
         let positive = votes.count_for_vote(1).unwrap_or(0) as f32;
@@ -52,9 +52,8 @@ impl Scoring for WilsonScoring {
         let a = p_hat + z_2 / (2.0 * total);
         let b = p_hat * (1.0 - p_hat) + z_2 / (4.0 * total);
         let lower_bound = (a - z * (b / total).sqrt()) / (1.0 + z_2 / total);
-        let score = lower_bound * total;
 
-        score as i32
+        lower_bound * total
     }
 }
 

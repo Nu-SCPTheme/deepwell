@@ -19,7 +19,6 @@
  */
 
 use super::prelude::*;
-use std::convert::TryInto;
 
 /// Wikidot-compatible scorer. Returns the sum of all votes.
 /// Equivalent to `ups - downs`.
@@ -27,10 +26,10 @@ use std::convert::TryInto;
 pub struct WikidotScoring;
 
 impl Scoring for WikidotScoring {
-    fn score(votes: &Votes) -> i32 {
-        votes.iter().fold(0, |score, (vote, count)| {
-            let vote = i32::from(vote);
-            let count: i32 = count.try_into().expect("Number of votes too large for i32");
+    fn score(votes: &Votes) -> f32 {
+        votes.iter().fold(0.0, |score, (vote, count)| {
+            let vote = f32::from(vote);
+            let count = count as f32;
 
             score + vote * count
         })

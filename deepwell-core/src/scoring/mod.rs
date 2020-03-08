@@ -81,5 +81,5 @@ pub use self::wikidot::WikidotScoring;
 /// Allows for different implementations, at the choice of wiki
 /// administrators.
 pub trait Scoring {
-    fn score(votes: &Votes) -> i32;
+    fn score(votes: &Votes) -> f32;
 }

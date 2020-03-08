@@ -26,7 +26,7 @@ use super::prelude::*;
 pub struct PercentScoring;
 
 impl Scoring for PercentScoring {
-    fn score(votes: &Votes) -> i32 {
+    fn score(votes: &Votes) -> f32 {
         macro_rules! get_vote {
             ($vote:expr) => {
                 votes.count_for_vote($vote).unwrap_or(0) as f32
@@ -34,15 +34,14 @@ impl Scoring for PercentScoring {
         }
 
         if votes.count() == 0 {
-            return 0;
+            return 0.0;
         }
 
         let positive = get_vote!(1);
         let neutral = get_vote!(0) * 0.5;
         let total = votes.count() as f32;
 
-        let score = (positive + neutral) / total;
-        (score * 100.0) as i32
+        (positive + neutral) / total * 100.0
     }
 }
 

@@ -25,8 +25,8 @@ use super::prelude::*;
 pub struct NullScoring;
 
 impl Scoring for NullScoring {
-    fn score(_votes: &Votes) -> i32 {
-        0
+    fn score(_votes: &Votes) -> f32 {
+        0.0
     }
 }
 
