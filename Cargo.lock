@@ -257,6 +257,7 @@ name = "deepwell-core"
 version = "0.0.8"
 dependencies = [
  "arrayvec",
+ "cfg-if",
  "chrono",
  "diesel",
  "lazy_static",

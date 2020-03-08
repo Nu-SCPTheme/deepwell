@@ -30,50 +30,51 @@ mod prelude {
     pub use super::Scoring;
     pub use crate::models::Votes;
 
-    #[cfg(test)]
-    pub use super::f32_eq;
+    cfg_if! {
+        if #[cfg(test)] {
+            pub use super::f32_eq;
 
-    #[cfg(test)]
-    use map_vec::Map;
+            use map_vec::Map;
 
-    #[cfg(test)]
-    lazy_static! {
-        pub static ref NO_VOTES: Votes = Votes::new(Map::new());
-        pub static ref POSITIVE_VOTES: Votes = {
-            let mut distr = Map::new();
-            distr.insert(1, 20);
-            Votes::new(distr)
-        };
-        pub static ref POSITIVE_AND_NEUTRAL_VOTES: Votes = {
-            let mut distr = Map::new();
-            distr.insert(1, 12);
-            distr.insert(0, 8);
-            Votes::new(distr)
-        };
-        pub static ref NEGATIVE_VOTES: Votes = {
-            let mut distr = Map::new();
-            distr.insert(-1, 5);
-            Votes::new(distr)
-        };
-        pub static ref NEUTRAL_VOTES: Votes = {
-            let mut distr = Map::new();
-            distr.insert(0, 8);
-            Votes::new(distr)
-        };
-        pub static ref MIXED_VOTES_1: Votes = {
-            let mut distr = Map::new();
-            distr.insert(1, 46);
-            distr.insert(0, 18);
-            distr.insert(-1, 20);
-            Votes::new(distr)
-        };
-        pub static ref MIXED_VOTES_2: Votes = {
-            let mut distr = Map::new();
-            distr.insert(1, 20);
-            distr.insert(0, 36);
-            distr.insert(-1, 15);
-            Votes::new(distr)
-        };
+            lazy_static! {
+                pub static ref NO_VOTES: Votes = Votes::new(Map::new());
+                pub static ref POSITIVE_VOTES: Votes = {
+                    let mut distr = Map::new();
+                    distr.insert(1, 20);
+                    Votes::new(distr)
+                };
+                pub static ref POSITIVE_AND_NEUTRAL_VOTES: Votes = {
+                    let mut distr = Map::new();
+                    distr.insert(1, 12);
+                    distr.insert(0, 8);
+                    Votes::new(distr)
+                };
+                pub static ref NEGATIVE_VOTES: Votes = {
+                    let mut distr = Map::new();
+                    distr.insert(-1, 5);
+                    Votes::new(distr)
+                };
+                pub static ref NEUTRAL_VOTES: Votes = {
+                    let mut distr = Map::new();
+                    distr.insert(0, 8);
+                    Votes::new(distr)
+                };
+                pub static ref MIXED_VOTES_1: Votes = {
+                    let mut distr = Map::new();
+                    distr.insert(1, 46);
+                    distr.insert(0, 18);
+                    distr.insert(-1, 20);
+                    Votes::new(distr)
+                };
+                pub static ref MIXED_VOTES_2: Votes = {
+                    let mut distr = Map::new();
+                    distr.insert(1, 20);
+                    distr.insert(0, 36);
+                    distr.insert(-1, 15);
+                    Votes::new(distr)
+                };
+            }
+        }
     }
 }
 

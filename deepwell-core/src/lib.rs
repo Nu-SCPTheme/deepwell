@@ -20,6 +20,8 @@
 
 #![forbid(unsafe_code)]
 
+#[macro_use]
+extern crate cfg_if;
 extern crate chrono;
 
 #[macro_use]
