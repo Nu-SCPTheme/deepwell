@@ -20,6 +20,7 @@
 
 use crate::models::Votes;
 
+mod average;
 mod null;
 mod percent;
 mod wikidot;
