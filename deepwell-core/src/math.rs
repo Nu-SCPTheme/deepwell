@@ -58,11 +58,8 @@ pub fn inverse_error(x: f32) -> f32 {
 }
 
 // Tests
-
 #[cfg(test)]
-fn f32_eq(x: f32, y: f32) {
-    assert!((x - y).abs() < 0.000001)
-}
+use crate::scoring::f32_eq;
 
 #[test]
 fn test_probit() {

@@ -31,6 +31,9 @@ mod prelude {
     pub use crate::models::Votes;
 
     #[cfg(test)]
+    pub use super::f32_eq;
+
+    #[cfg(test)]
     use map_vec::Map;
 
     #[cfg(test)]
@@ -86,4 +89,9 @@ pub use self::wilson::WilsonScoring;
 /// administrators.
 pub trait Scoring {
     fn score(votes: &Votes) -> f32;
+}
+
+#[cfg(test)]
+pub fn f32_eq(x: f32, y: f32) {
+    assert!((x - y).abs() < 0.000001, "Score mismatch")
 }

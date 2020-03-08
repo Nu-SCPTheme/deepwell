@@ -61,15 +61,15 @@ impl Scoring for WilsonScoring {
 fn wilson_scoring() {
     macro_rules! check {
         ($votes:expr, $score:expr) => {
-            assert_eq!(WilsonScoring::score(&*$votes), $score, "Score mismatch");
+            f32_eq(WilsonScoring::score(&*$votes), $score);
         };
     }
 
-    check!(NO_VOTES, 0);
-    check!(POSITIVE_VOTES, 16);
-    check!(POSITIVE_AND_NEUTRAL_VOTES, 7);
-    check!(NEGATIVE_VOTES, 0);
-    check!(NEUTRAL_VOTES, 0);
-    check!(MIXED_VOTES_1, 37);
-    check!(MIXED_VOTES_2, 13);
+    check!(NO_VOTES, 0.0);
+    check!(POSITIVE_VOTES, 16.0);
+    check!(POSITIVE_AND_NEUTRAL_VOTES, 7.0);
+    check!(NEGATIVE_VOTES, 0.0);
+    check!(NEUTRAL_VOTES, 0.0);
+    check!(MIXED_VOTES_1, 37.0);
+    check!(MIXED_VOTES_2, 13.0);
 }

@@ -42,15 +42,15 @@ impl Scoring for AverageScorer {
 fn average_voting() {
     macro_rules! check {
         ($votes:expr, $score:expr) => {
-            assert_eq!(AverageScorer::score(&*$votes), $score, "Score mismatch");
+            f32_eq(AverageScorer::score(&*$votes), $score);
         };
     }
 
-    check!(NO_VOTES, 0);
-    check!(POSITIVE_VOTES, 0);
-    check!(POSITIVE_AND_NEUTRAL_VOTES, 0);
-    check!(NEGATIVE_VOTES, 0);
-    check!(NEUTRAL_VOTES, 0);
-    check!(MIXED_VOTES_1, 0);
-    check!(MIXED_VOTES_2, 0);
+    check!(NO_VOTES, -0.0);
+    check!(POSITIVE_VOTES, -0.0);
+    check!(POSITIVE_AND_NEUTRAL_VOTES, -0.0);
+    check!(NEGATIVE_VOTES, -0.0);
+    check!(NEUTRAL_VOTES, -0.0);
+    check!(MIXED_VOTES_1, -0.0);
+    check!(MIXED_VOTES_2, -0.0);
 }
