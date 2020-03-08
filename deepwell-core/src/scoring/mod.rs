@@ -21,6 +21,7 @@
 use crate::models::Votes;
 
 mod null;
+mod percent;
 mod wikidot;
 mod wilson;
 
