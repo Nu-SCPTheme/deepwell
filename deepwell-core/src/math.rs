@@ -18,7 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-use std::f32::consts::{E, PI, SQRT_2};
+use std::f32::consts::{PI, SQRT_2};
 
 /// Small enough value to stop evaluation at.
 const EPSILON: f32 = 0.0001;

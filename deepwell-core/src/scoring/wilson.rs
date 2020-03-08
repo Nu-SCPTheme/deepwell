@@ -19,14 +19,20 @@
  */
 
 use super::prelude::*;
+use crate::math::probit;
 
 /// Lower bound of a Wilson score confidence interval.
-/// See https://www.evanmiller.org/how-not-to-sort-by-average-rating.html
+/// See https://www.evanmiller.org/how-not-to-sort-by-average-rating.html and
+/// https://www.itl.nist.gov/div898/handbook/prc/section2/prc241.htm
+///
+/// Takes implementation from https://github.com/simple-statistics/simple-statistics
 #[derive(Debug, Copy, Clone, Default)]
 pub struct WilsonScoring;
 
 impl Scoring for WilsonScoring {
     fn score(votes: &Votes) -> i32 {
+        const CONFIDENCE: f32 = 0.95;
+
         macro_rules! get_votes {
             (+1) => {
                 get_votes!(1)
@@ -37,14 +43,44 @@ impl Scoring for WilsonScoring {
             };
         }
 
-        let total = votes.count() as f32;
+        // Note: while implementation matches
+        // https://medium.com/@gattermeier/calculating-better-rating-scores-for-things-voted-on-7fa3f632c79d
+        // it could definitely use some tuning, especially with regards to neutral-vote and overall
+        // score, which is presently multipled my total votes.
+
+        if votes.count() == 0 {
+            return 0;
+        }
+
         let positive = get_votes!(+1);
-        let negative = get_votes!(-1);
+        let total = votes.count() as f32;
 
-        let a = (positive + 1.9208) / total - 1.96;
-        let b = (positive * negative) / total + 0.9604;
-        let bound = (a * b.sqrt() / total) / (3.8416 / total + 1.0);
+        let p_hat = 1.0 * positive / total;
+        let z = probit(1.0 - (1.0 - CONFIDENCE) / 2.0);
+        let z_2 = z * z;
 
-        bound as i32
+        let a = p_hat + z_2 / (2.0 * total);
+        let b = p_hat * (1.0 - p_hat) + z_2 / (4.0 * total);
+        let lower_bound = (a - z * (b / total).sqrt()) / (1.0 + z_2 / total);
+        let score = lower_bound * total;
+
+        score as i32
     }
+}
+
+#[test]
+fn wilson_scoring() {
+    macro_rules! check {
+        ($votes:expr, $score:expr) => {
+            assert_eq!(WilsonScoring::score(&*$votes), $score, "Score mismatch");
+        };
+    }
+
+    check!(NO_VOTES, 0);
+    check!(POSITIVE_VOTES, 16);
+    check!(POSITIVE_AND_NEUTRAL_VOTES, 7);
+    check!(NEGATIVE_VOTES, 0);
+    check!(NEUTRAL_VOTES, 0);
+    check!(MIXED_VOTES_1, 37);
+    check!(MIXED_VOTES_2, 13);
 }
