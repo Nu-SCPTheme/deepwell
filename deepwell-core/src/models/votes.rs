@@ -64,4 +64,9 @@ impl Votes {
     pub fn count(&self) -> u32 {
         self.count
     }
+
+    #[inline]
+    pub fn count_for_vote(&self, vote: i16) -> Option<u32> {
+        self.distribution.get(&vote).copied()
+    }
 }

@@ -33,16 +33,6 @@ impl Scoring for WilsonScoring {
     fn score(votes: &Votes) -> i32 {
         const CONFIDENCE: f32 = 0.95;
 
-        macro_rules! get_votes {
-            (+1) => {
-                get_votes!(1)
-            };
-
-            ($value:expr) => {
-                *votes.distribution().get(&$value).unwrap_or(&0) as f32
-            };
-        }
-
         // Note: while implementation matches
         // https://medium.com/@gattermeier/calculating-better-rating-scores-for-things-voted-on-7fa3f632c79d
         // it could definitely use some tuning, especially with regards to neutral-vote and overall
@@ -52,7 +42,7 @@ impl Scoring for WilsonScoring {
             return 0;
         }
 
-        let positive = get_votes!(+1);
+        let positive = votes.count_for_vote(1).unwrap_or(0) as f32;
         let total = votes.count() as f32;
 
         let p_hat = 1.0 * positive / total;
