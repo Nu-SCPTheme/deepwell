@@ -82,6 +82,7 @@ pub use self::average::AverageScorer;
 pub use self::null::NullScoring;
 pub use self::percent::PercentScoring;
 pub use self::wikidot::WikidotScoring;
+pub use self::wikidot::WikidotScoring as SumScoring;
 pub use self::wilson::WilsonScoring;
 
 /// Trait for determining the rating from votes.
