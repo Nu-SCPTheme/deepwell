@@ -40,6 +40,38 @@ impl Scoring for AverageScorer {
 
 #[test]
 fn average_voting() {
+    use map_vec::Map;
+
+    lazy_static! {
+        static ref FIVE_STAR_1: Votes = {
+            let mut distr = Map::new();
+            distr.insert(1, 48);
+            distr.insert(2, 64);
+            distr.insert(3, 50);
+            distr.insert(4, 21);
+            distr.insert(5, 33);
+            Votes::new(distr)
+        };
+        static ref FIVE_STAR_2: Votes = {
+            let mut distr = Map::new();
+            distr.insert(1, 12);
+            distr.insert(2, 3);
+            distr.insert(3, 3);
+            distr.insert(4, 28);
+            distr.insert(5, 41);
+            Votes::new(distr)
+        };
+        static ref FIVE_STAR_3: Votes = {
+            let mut distr = Map::new();
+            distr.insert(1, 0);
+            distr.insert(2, 0);
+            distr.insert(3, 0);
+            distr.insert(4, 0);
+            distr.insert(5, 10);
+            Votes::new(distr)
+        };
+    }
+
     macro_rules! check {
         ($votes:expr, $score:expr) => {
             f32_eq(AverageScorer::score(&*$votes), $score, 0.1);
@@ -53,4 +85,8 @@ fn average_voting() {
     check!(NEUTRAL_VOTES, 0.0);
     check!(MIXED_VOTES_1, 0.3);
     check!(MIXED_VOTES_2, 0.0);
+
+    check!(FIVE_STAR_1, 2.6);
+    check!(FIVE_STAR_2, 3.9);
+    check!(FIVE_STAR_3, 5.0);
 }
