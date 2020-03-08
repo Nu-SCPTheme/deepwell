@@ -8,4 +8,6 @@ The first is the `Error` type, which represents possible failure modes of DEEPWE
 
 Second are the collection of `Id` types, which are cheap wrappers around an `i64`. This ensures that arithmetic cannot be performed on them and raises the confidence that it actually corresponds to a row in the database.
 
-Finally there are models, which are `diesel`-queryable representations of rows retrieved from disk. They are serializable and read-only.
+Then there are models, which are `diesel`-queryable representations of rows retrieved from disk. They are serializable and read-only.
+
+Finally, this crate also contains the `Votes` model and the trait `Scorer` and a number of implementations for it. This permits choosing from a number of different means of ranking articles based on their vote composition, or extending it with a custom implementation.
