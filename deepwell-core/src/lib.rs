@@ -43,6 +43,7 @@ extern crate thiserror;
 
 #[macro_use]
 mod macros;
+mod math;
 
 pub mod error;
 pub mod models;
