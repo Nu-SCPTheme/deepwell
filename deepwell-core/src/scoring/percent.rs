@@ -49,7 +49,7 @@ impl Scoring for PercentScoring {
 fn percent_voting() {
     macro_rules! check {
         ($votes:expr, $score:expr) => {
-            f32_eq(PercentScoring::score(&*$votes), $score);
+            f32_eq(PercentScoring::score(&*$votes), $score, 0.1);
         };
     }
 
@@ -58,6 +58,6 @@ fn percent_voting() {
     check!(POSITIVE_AND_NEUTRAL_VOTES, 80.0);
     check!(NEGATIVE_VOTES, 0.0);
     check!(NEUTRAL_VOTES, 50.0);
-    check!(MIXED_VOTES_1, 65.0);
-    check!(MIXED_VOTES_2, 53.0);
+    check!(MIXED_VOTES_1, 65.5);
+    check!(MIXED_VOTES_2, 53.5);
 }

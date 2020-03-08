@@ -40,7 +40,7 @@ impl Scoring for WikidotScoring {
 fn wikidot_scoring() {
     macro_rules! check {
         ($votes:expr, $score:expr) => {
-            f32_eq(WikidotScoring::score(&*$votes), $score);
+            f32_eq(WikidotScoring::score(&*$votes), $score, 0.1);
         };
     }
 

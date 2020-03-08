@@ -93,6 +93,12 @@ pub trait Scoring {
 }
 
 #[cfg(test)]
-pub fn f32_eq(x: f32, y: f32) {
-    assert!((x - y).abs() < 0.000001, "Score mismatch")
+pub fn f32_eq(x: f32, y: f32, precision: f32) {
+    let equal = (x - y).abs() < precision;
+    if !equal {
+        panic!(
+            "Float values did not match: {:.6} != {:.6} (diff < {})",
+            x, y, precision,
+        );
+    }
 }

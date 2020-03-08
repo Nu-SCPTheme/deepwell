@@ -58,28 +58,33 @@ pub fn inverse_error(x: f32) -> f32 {
 }
 
 // Tests
-#[cfg(test)]
+cfg_if! {
+if #[cfg(test)] {
 use crate::scoring::f32_eq;
+
+const PRECISION: f32 = 0.000001;
+}
+}
 
 #[test]
 fn test_probit() {
-    f32_eq(probit(0.0), -3.706124);
-    f32_eq(probit(0.1), -1.281053);
-    f32_eq(probit(0.2), -0.841549);
-    f32_eq(probit(0.3), -0.524393);
-    f32_eq(probit(0.4), -0.253346);
-    f32_eq(probit(0.5), 0.0);
-    f32_eq(probit(0.8), 0.8415493);
-    f32_eq(probit(1.0), 3.706049);
-    f32_eq(probit(1.3), 3.706049);
+    f32_eq(probit(0.0), -3.706124, PRECISION);
+    f32_eq(probit(0.1), -1.281053, PRECISION);
+    f32_eq(probit(0.2), -0.841549, PRECISION);
+    f32_eq(probit(0.3), -0.524393, PRECISION);
+    f32_eq(probit(0.4), -0.253346, PRECISION);
+    f32_eq(probit(0.5), 0.0, PRECISION);
+    f32_eq(probit(0.8), 0.8415493, PRECISION);
+    f32_eq(probit(1.0), 3.706049, PRECISION);
+    f32_eq(probit(1.3), 3.706049, PRECISION);
 }
 
 #[test]
 fn test_inverse_error() {
-    f32_eq(inverse_error(0.1), 0.088856);
-    f32_eq(inverse_error(0.3), 0.272462);
-    f32_eq(inverse_error(0.8), 0.905842);
-    f32_eq(inverse_error(-0.1), -0.088856);
-    f32_eq(inverse_error(-0.3), -0.272462);
-    f32_eq(inverse_error(-0.5), -0.476919);
+    f32_eq(inverse_error(0.1), 0.088856, PRECISION);
+    f32_eq(inverse_error(0.3), 0.272462, PRECISION);
+    f32_eq(inverse_error(0.8), 0.905842, PRECISION);
+    f32_eq(inverse_error(-0.1), -0.088856, PRECISION);
+    f32_eq(inverse_error(-0.3), -0.272462, PRECISION);
+    f32_eq(inverse_error(-0.5), -0.476919, PRECISION);
 }

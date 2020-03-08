@@ -34,7 +34,7 @@ impl Scoring for NullScoring {
 fn null_scoring() {
     macro_rules! check {
         ($votes:expr) => {
-            f32_eq(NullScoring::score(&*$votes), 0.0);
+            f32_eq(NullScoring::score(&*$votes), 0.0, 0.0000001);
         };
     }
 
