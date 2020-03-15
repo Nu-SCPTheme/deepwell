@@ -230,11 +230,12 @@ impl Server {
     }
 
     /// Sets all the tags for a given page.
+    /// Returns `None` if no changes were made.
     pub async fn set_page_tags<S: AsRef<str>>(
         &self,
         commit: PageCommit<'_>,
         tags: &[S],
-    ) -> Result<RevisionId> {
+    ) -> Result<Option<RevisionId>> {
         let PageCommit {
             wiki_id,
             slug,

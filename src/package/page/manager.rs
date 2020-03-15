@@ -591,7 +591,7 @@ impl PageManager {
         commit: PageCommit<'_>,
         page_id: PageId,
         tags: &mut [&str],
-    ) -> Result<RevisionId> {
+    ) -> Result<Option<RevisionId>> {
         info!("Modifying tags for {:?}: {:?}", commit, tags);
 
         let PageCommit {
@@ -612,6 +612,11 @@ impl PageManager {
             };
 
             let (added_tags, removed_tags) = tag_diff(&current_tags, tags);
+
+            // Ignore if no changes have been made.
+            if added_tags.is_empty() && removed_tags.is_empty() {
+                return Ok(None);
+            }
 
             // Create commit
             let user_id = user.id();
@@ -659,7 +664,7 @@ impl PageManager {
                 .set(pages::dsl::tags.eq(&*tags))
                 .execute(&*self.conn)?;
 
-            Ok(revision_id)
+            Ok(Some(revision_id))
         })
         .await
     }
