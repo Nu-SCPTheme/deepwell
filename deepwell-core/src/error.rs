@@ -23,6 +23,7 @@ use crate::types::UserId;
 use diesel::result::{ConnectionError, Error as DieselError};
 use std::fmt::{self, Display};
 use std::io;
+use std::string::FromUtf8Error;
 use subprocess::PopenError;
 
 pub type StdResult<T, E> = std::result::Result<T, E>;
@@ -36,6 +37,9 @@ pub enum Error {
 
     #[error("general I/O error: {0}")]
     Io(#[from] io::Error),
+
+    #[error("bytes were not valid UTF-8: {0}")]
+    Utf8(#[from] FromUtf8Error),
 
     #[error("database error: {0}")]
     Database(#[from] DieselError),
@@ -108,6 +112,7 @@ impl Error {
         match *self {
             StaticMsg(_) => "custom",
             Io(_) => "io",
+            Utf8(_) => "utf-8",
             Database(_) => "database",
             DatabaseConnection(_) => "database-connection",
             Subprocess(_) => "subprocess",
