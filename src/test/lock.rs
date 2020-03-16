@@ -77,7 +77,7 @@ async fn locks() {
     }
 
     // Create page
-    let content = b"Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
+    let content = "Lorem ipsum dolor sit amet, consectetur adipiscing elit.";
     server
         .create_page(commit, content, &[], "The Grand Story of Dude", "")
         .await
@@ -92,16 +92,16 @@ async fn locks() {
 
     // Edit page with no contention
     commit.message = "Updating tale";
-    edit!(b"Proin est lectus, venenatis nec convallis a, rhoncus nec lorem.");
+    edit!("Proin est lectus, venenatis nec convallis a, rhoncus nec lorem.");
 
     // Edit page with lock
     commit.message = "More updates";
-    edit!(b"Donec vel augue id massa semper vehicula iaculis ac sapien.");
+    edit!("Donec vel augue id massa semper vehicula iaculis ac sapien.");
 
     // Edit page with no lock (failure)
     commit.message = "Some other user's changes";
     commit.user = &other_user;
-    edit!(b"Apple banana cherry durian", user_id);
+    edit!("Apple banana cherry durian", user_id);
 
     // Remove page lock
     server
@@ -112,7 +112,7 @@ async fn locks() {
     // Edit page with no lock (success)
     commit.message = "Some other user's changes";
     commit.user = &other_user;
-    edit!(b"Apple banana cherry durian");
+    edit!("Apple banana cherry durian");
 
     // Create page lock
     // All operations done by user_id should fail

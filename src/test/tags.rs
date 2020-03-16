@@ -49,7 +49,7 @@ async fn tags() {
     let (_page_id, _revision_id) = server
         .create_page(
             commit,
-            b"**Item #:** SCP-XXXX\n\n**Object Class:** Keter\n",
+            "**Item #:** SCP-XXXX\n\n**Object Class:** Keter\n",
             &[],
             "SCP-XXXX",
             "The Monster Behind the Door",

@@ -56,7 +56,7 @@ async fn author() {
     let (page_id, _revision_id) = server
         .create_page(
             commit,
-            b"item number spc-xxx\nobject: SUPER KETER",
+            "item number spc-xxx\nobject: SUPER KETER",
             &[],
             "SCP-XXXX",
             "Super-Keter",

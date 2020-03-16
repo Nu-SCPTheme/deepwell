@@ -299,7 +299,7 @@ async fn git_internal() {
         };
 
         let hash = store
-            .commit(slug, Some(content.as_bytes()), info)
+            .commit(slug, Some(&content), info)
             .await
             .expect("Unable to commit generated data");
 
@@ -348,7 +348,7 @@ async fn git_internal() {
 
         println!();
         println!("Diff between {} and {} for {}:", first, second, slug);
-        println!("{}", str::from_utf8(&diff).unwrap());
+        println!("{}", diff);
     }
 
     // Get a blame
@@ -392,7 +392,7 @@ async fn thread_internal() {
         message: "message",
     };
 
-    store.commit("test-0", Some(b"000"), info).await.unwrap();
+    store.commit("test-0", Some("000"), info).await.unwrap();
 
     let rc = Arc::new((directory, store));
 
@@ -401,7 +401,7 @@ async fn thread_internal() {
         let (_, store) = &*rc2;
 
         task::block_on(async {
-            store.commit("test-1", Some(b"abc"), info).await.unwrap();
+            store.commit("test-1", Some("abc"), info).await.unwrap();
         });
     });
 
@@ -410,7 +410,7 @@ async fn thread_internal() {
         let (_, store) = &*rc2;
 
         task::block_on(async {
-            store.commit("test-2", Some(b"def"), info).await.unwrap();
+            store.commit("test-2", Some("def"), info).await.unwrap();
         });
     });
 
@@ -419,7 +419,7 @@ async fn thread_internal() {
         let (_, store) = &*rc2;
 
         task::block_on(async {
-            store.commit("test-3", Some(b"ghi"), info).await.unwrap();
+            store.commit("test-3", Some("ghi"), info).await.unwrap();
         });
     });
 

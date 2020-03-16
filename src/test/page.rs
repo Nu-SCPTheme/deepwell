@@ -45,7 +45,7 @@ async fn pages() {
     };
 
     let (page_id, _revision_id) = server
-        .create_page(commit, b"my great article here", &[], "Tale Thing", "")
+        .create_page(commit, "my great article here", &[], "Tale Thing", "")
         .await
         .expect("Unable to create page");
 
@@ -97,7 +97,7 @@ async fn pages() {
     let revision_id = server
         .edit_page(
             commit,
-            Some(b"and then 049 cured him!! it was epic"),
+            Some("and then 049 cured him!! it was epic"),
             None,
             None,
         )
