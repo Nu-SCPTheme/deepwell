@@ -47,7 +47,7 @@ impl Server {
     pub async fn create_page(
         &self,
         commit: PageCommit<'_>,
-        content: &[u8],
+        content: &str,
         other_authors: &[UserId],
         title: &str,
         alt_title: &str,
@@ -88,7 +88,7 @@ impl Server {
     pub async fn edit_page(
         &self,
         commit: PageCommit<'_>,
-        content: Option<&[u8]>,
+        content: Option<&str>,
         title: Option<&str>,
         alt_title: Option<&str>,
     ) -> Result<RevisionId> {

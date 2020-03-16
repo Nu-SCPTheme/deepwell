@@ -116,7 +116,7 @@ impl PageManager {
         &self,
         wiki_id: WikiId,
         slug: &str,
-        content: Option<&[u8]>,
+        content: Option<&str>,
         info: CommitInfo<'_>,
     ) -> Result<GitHash> {
         trace!("Committing content to repository");
@@ -144,7 +144,7 @@ impl PageManager {
     pub async fn create(
         &self,
         commit: PageCommit<'_>,
-        content: &[u8],
+        content: &str,
         title: &str,
         alt_title: Option<&str>,
     ) -> Result<(PageId, RevisionId)> {
@@ -209,7 +209,7 @@ impl PageManager {
         &self,
         commit: PageCommit<'_>,
         page_id: PageId,
-        content: Option<&[u8]>,
+        content: Option<&str>,
         title: Option<&str>,
         alt_title: Option<Nullable<&str>>,
     ) -> Result<RevisionId> {

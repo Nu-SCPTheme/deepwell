@@ -177,14 +177,15 @@ impl RevisionStore {
         &self,
         _guard: &mut RevisionBlock,
         slug: &str,
-        content: &[u8],
+        content: &str,
     ) -> Result<()> {
         let path = self.get_path(slug, true);
 
         debug!("Writing {} bytes to {}", content.len(), path.display());
 
         let mut file = File::create(path).await?;
-        file.write_all(content).await?;
+        let bytes = content.as_bytes();
+        file.write_all(bytes).await?;
         Ok(())
     }
 
@@ -297,7 +298,7 @@ impl RevisionStore {
     pub async fn commit(
         &self,
         slug: &str,
-        content: Option<&[u8]>,
+        content: Option<&str>,
         info: CommitInfo<'_>,
     ) -> Result<GitHash> {
         info!(
@@ -444,7 +445,7 @@ impl RevisionStore {
             let args = arguments!["git", "show", "--format=%B", &spec];
 
             match self.spawn_output(guard, &args).await {
-                Ok(bytes) => Ok(bytes),
+                Ok(bytes) => Ok(convert_utf8!(bytes)),
                 Err(Error::CommandFailed(_)) => Err(Error::PageNotFound),
                 Err(error) => Err(error),
             }
