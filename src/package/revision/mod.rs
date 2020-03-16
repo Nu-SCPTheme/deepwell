@@ -26,5 +26,5 @@ mod store;
 mod test;
 
 pub use self::info::CommitInfo;
-pub use self::process::{spawn, spawn_output};
+pub use self::process::{spawn, spawn_output, OwnedBytes};
 pub use self::store::RevisionStore;

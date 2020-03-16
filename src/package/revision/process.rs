@@ -35,6 +35,8 @@ macro_rules! mut_borrow {
     };
 }
 
+pub type OwnedBytes = Box<[u8]>;
+
 /// Runs a process to completion, returning `Err` if it fails.
 pub async fn spawn(repo: OsString, arguments: &[&OsStr]) -> Result<()> {
     debug!(
@@ -46,7 +48,7 @@ pub async fn spawn(repo: OsString, arguments: &[&OsStr]) -> Result<()> {
 }
 
 /// Runs a process to completion, returning its `stdout`, or `Err` if it fails.
-pub async fn spawn_output(repo: OsString, arguments: &[&OsStr]) -> Result<Box<[u8]>> {
+pub async fn spawn_output(repo: OsString, arguments: &[&OsStr]) -> Result<OwnedBytes> {
     debug!(
         "Running process: (in {:?}) {:?} (capturing stdout)",
         repo, arguments,
@@ -61,7 +63,7 @@ async fn spawn_inner(
     repo: OsString,
     arguments: &[&OsStr],
     output: bool,
-) -> Result<Option<Box<[u8]>>> {
+) -> Result<Option<OwnedBytes>> {
     const TIMEOUT: Duration = Duration::from_millis(1800);
 
     let config = PopenConfig {

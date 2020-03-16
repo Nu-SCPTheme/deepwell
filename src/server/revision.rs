@@ -29,7 +29,7 @@ impl Server {
         wiki_id: WikiId,
         slug: &str,
         revision: Either<RevisionId, &GitHash>,
-    ) -> Result<Option<Box<[u8]>>> {
+    ) -> Result<Option<String>> {
         self.page.get_page_version(wiki_id, slug, revision).await
     }
 
@@ -64,7 +64,7 @@ impl Server {
         slug: S,
         first: Either<RevisionId, &GitHash>,
         second: Either<RevisionId, &GitHash>,
-    ) -> Result<Box<[u8]>> {
+    ) -> Result<String> {
         let slug = normalize_slug(slug);
 
         self.page.get_diff(wiki_id, &slug, first, second).await

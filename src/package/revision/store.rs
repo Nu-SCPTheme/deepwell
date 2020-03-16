@@ -19,6 +19,7 @@
  */
 
 use super::CommitInfo;
+use super::OwnedBytes;
 use crate::{Error, Result};
 use async_std::fs::{self, File};
 use async_std::prelude::*;
@@ -49,6 +50,12 @@ macro_rules! check_normal {
             Ok(_) => (),
             Err(error) => return Err(error),
         }
+    };
+}
+
+macro_rules! convert_utf8 {
+    ($bytes:expr) => {
+        String::from_utf8($bytes.into_vec())?
     };
 }
 
@@ -144,7 +151,7 @@ impl RevisionStore {
         path
     }
 
-    async fn read_file(&self, _guard: &mut RevisionBlock, slug: &str) -> Result<Option<Box<[u8]>>> {
+    async fn read_file(&self, _guard: &mut RevisionBlock, slug: &str) -> Result<Option<String>> {
         let path = self.get_path(slug, true);
 
         debug!("Reading file from {}", path.display());
@@ -161,10 +168,9 @@ impl RevisionStore {
             }
         };
 
-        let mut content = Vec::new();
-        file.read_to_end(&mut content).await?;
-        let bytes = content.into_boxed_slice();
-        Ok(Some(bytes))
+        let mut content = String::new();
+        file.read_to_string(&mut content).await?;
+        Ok(Some(content))
     }
 
     async fn write_file(
@@ -226,7 +232,7 @@ impl RevisionStore {
         &self,
         _guard: &mut RevisionBlock,
         arguments: &[&OsStr],
-    ) -> Result<Box<[u8]>> {
+    ) -> Result<OwnedBytes> {
         super::spawn_output(self.repo(), arguments).await
     }
 
@@ -498,7 +504,7 @@ impl RevisionStore {
 
     /// Gets the current version of a page.
     /// Returns `None` if the page does not exist.
-    pub async fn get_page(&self, slug: &str) -> Result<Option<Box<[u8]>>> {
+    pub async fn get_page(&self, slug: &str) -> Result<Option<String>> {
         info!("Getting page content for slug '{}'", slug);
 
         check_normal!(slug);
@@ -512,7 +518,7 @@ impl RevisionStore {
 
     /// Gets the version of a page at the specified commit.
     /// Returns `None` if the page did not at exist at the time.
-    pub async fn get_page_version(&self, slug: &str, hash: &GitHash) -> Result<Option<Box<[u8]>>> {
+    pub async fn get_page_version(&self, slug: &str, hash: &GitHash) -> Result<Option<String>> {
         info!(
             "Getting page content for slug '{}' at commit {}",
             slug, hash,
@@ -526,7 +532,7 @@ impl RevisionStore {
         let args = arguments!["git", "show", "--format=%B", &spec];
 
         let result = match self.spawn_output(guard, &args).await {
-            Ok(bytes) => Ok(Some(bytes)),
+            Ok(bytes) => Ok(Some(convert_utf8!(bytes))),
             Err(Error::CommandFailed(_)) => Ok(None),
             Err(error) => Err(error),
         };
@@ -537,12 +543,7 @@ impl RevisionStore {
 
     /// Gets the diff between commits of a particular page.
     /// Returns `None` if the page or commits do not exist.
-    pub async fn get_diff(
-        &self,
-        slug: &str,
-        first: &GitHash,
-        second: &GitHash,
-    ) -> Result<Box<[u8]>> {
+    pub async fn get_diff(&self, slug: &str, first: &GitHash, second: &GitHash) -> Result<String> {
         info!(
             "Getting diff for slug '{}' between {}..{}",
             slug, first, second,
@@ -565,7 +566,7 @@ impl RevisionStore {
         let diff = self.spawn_output(guard, &args).await?;
         self.check_clean(guard).await;
 
-        Ok(diff)
+        Ok(convert_utf8!(diff))
     }
 
     /// Gets the blame for a particular page.

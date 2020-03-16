@@ -217,7 +217,7 @@ impl Server {
         &self,
         wiki_id: WikiId,
         slug: S,
-    ) -> Result<Option<Box<[u8]>>> {
+    ) -> Result<Option<String>> {
         let slug = normalize_slug(slug);
 
         self.page.get_page_contents(wiki_id, &slug).await
@@ -225,7 +225,7 @@ impl Server {
 
     /// Gets the contents for a given page ID.
     #[inline]
-    pub async fn get_page_contents_by_id(&self, page_id: PageId) -> Result<Option<Box<[u8]>>> {
+    pub async fn get_page_contents_by_id(&self, page_id: PageId) -> Result<Option<String>> {
         self.page.get_page_contents_by_id(page_id).await
     }
 

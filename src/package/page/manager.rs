@@ -731,11 +731,7 @@ impl PageManager {
         Ok(page)
     }
 
-    pub async fn get_page_contents(
-        &self,
-        wiki_id: WikiId,
-        slug: &str,
-    ) -> Result<Option<Box<[u8]>>> {
+    pub async fn get_page_contents(&self, wiki_id: WikiId, slug: &str) -> Result<Option<String>> {
         info!("Getting contents for wiki ID {}, slug {}", wiki_id, slug);
 
         let guard = self.store(wiki_id).await;
@@ -771,7 +767,7 @@ impl PageManager {
         Ok(Some((wiki_id, slug, hash)))
     }
 
-    pub async fn get_page_contents_by_id(&self, page_id: PageId) -> Result<Option<Box<[u8]>>> {
+    pub async fn get_page_contents_by_id(&self, page_id: PageId) -> Result<Option<String>> {
         info!("Getting contents for page ID {}", page_id);
 
         self.transaction(async {
@@ -851,7 +847,7 @@ impl PageManager {
         wiki_id: WikiId,
         slug: &str,
         revision: Either<RevisionId, &GitHash>,
-    ) -> Result<Option<Box<[u8]>>> {
+    ) -> Result<Option<String>> {
         info!(
             "Getting specific page version for wiki ID {}, slug {}",
             wiki_id, slug
@@ -871,7 +867,7 @@ impl PageManager {
         slug: &str,
         first: Either<RevisionId, &GitHash>,
         second: Either<RevisionId, &GitHash>,
-    ) -> Result<Box<[u8]>> {
+    ) -> Result<String> {
         info!("Getting diff for wiki ID {}, slug {}", wiki_id, slug);
 
         // Get both commits
