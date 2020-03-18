@@ -604,4 +604,24 @@ impl RevisionStore {
         guard.clear();
         guard.push_str(new_domain);
     }
+
+    /// Runs `git gc` and `git prune` on the repository.
+    /// Returns the number of pruned objects.
+    pub async fn vacuum(&self) -> Result<usize> {
+        // Doesn't obtain the lock since this is intended to run in the background
+        macro_rules! run {
+            ($call:ident, $arguments:expr) => {
+                super::$call(self.repo(), &$arguments).await?
+            };
+        }
+
+        let args = arguments!["git", "gc", "--auto"];
+        run!(spawn, args);
+
+        let args = arguments!["git", "prune", "-v"];
+        let output = run!(spawn_output, args);
+        let pruned = output.split(|&c| c == b'\n').into_iter().count();
+
+        Ok(pruned)
+    }
 }

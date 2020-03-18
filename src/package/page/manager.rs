@@ -899,6 +899,12 @@ impl PageManager {
         store.set_domain(new_domain).await;
         Ok(())
     }
+
+    pub async fn git_vacuum(&self, wiki_id: WikiId) -> Result<usize> {
+        let guard = self.store(wiki_id).await;
+        let store = guard.get()?;
+        store.vacuum().await
+    }
 }
 
 impl_async_transaction!(PageManager);

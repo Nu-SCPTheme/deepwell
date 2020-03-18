@@ -85,4 +85,11 @@ impl Server {
     ) -> Result<RevisionId> {
         self.page.undo(commit, revision).await
     }
+
+    /// Performs git vacuum in the page repository to maintain performance.
+    /// This does not need to be performed regularly and may take a while.
+    #[inline]
+    pub async fn revision_vacuum(&self, wiki_id: WikiId) -> Result<usize> {
+        self.page.git_vacuum(wiki_id).await
+    }
 }
