@@ -426,4 +426,10 @@ async fn thread_internal() {
     t1.join().expect("Unable to join thread 1");
     t2.join().expect("Unable to join thread 2");
     t3.join().expect("Unable to join thread 3");
+
+    let (_, store) = &*rc;
+    store
+        .vacuum()
+        .await
+        .expect("Unable to vacuum revision store");
 }
