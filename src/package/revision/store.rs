@@ -608,6 +608,21 @@ impl RevisionStore {
     /// Runs `git gc` and `git prune` on the repository.
     /// Returns the number of pruned objects.
     pub async fn vacuum(&self) -> Result<usize> {
+        self.vacuum_internal("--auto").await
+    }
+
+    /// Runs a full `git gc` and `git prune` on the repository.
+    /// Will take a long time to execute, may cause performance degradatations
+    /// for other operations on the repository.
+    ///
+    /// Should be run infrequently.
+    ///
+    /// Returns the number of pruned objects.
+    pub async fn vacuum_deep(&self) -> Result<usize> {
+        self.vacuum_internal("--aggressive").await
+    }
+
+    async fn vacuum_internal(&self, gc_argument: &str) -> Result<usize> {
         // Doesn't obtain the lock since this is intended to run in the background
         macro_rules! run {
             ($call:ident, $arguments:expr) => {
@@ -615,7 +630,7 @@ impl RevisionStore {
             };
         }
 
-        let args = arguments!["git", "gc", "--auto"];
+        let args = arguments!["git", "gc", gc_argument];
         run!(spawn, args);
 
         let args = arguments!["git", "prune", "-v"];
