@@ -429,7 +429,15 @@ async fn thread_internal() {
 
     let (_, store) = &*rc;
     store
+        .vacuum_deep()
+        .await
+        .expect("Unable to deep vacuum revision store");
+
+    let (_, store) = &*rc;
+    let pruned = store
         .vacuum()
         .await
-        .expect("Unable to vacuum revision store");
+        .expect("Unable to lite vacuum revision store");
+
+    assert_eq!(pruned, 0, "Pruned objects were found");
 }

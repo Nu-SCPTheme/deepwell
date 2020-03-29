@@ -635,7 +635,11 @@ impl RevisionStore {
 
         let args = arguments!["git", "prune", "-v"];
         let output = run!(spawn_output, args);
-        let pruned = output.split(|&c| c == b'\n').count();
+        let pruned = if output.is_empty() {
+            0
+        } else {
+            output.split(|&c| c == b'\n').count()
+        };
 
         Ok(pruned)
     }
