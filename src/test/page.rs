@@ -156,4 +156,8 @@ async fn pages() {
 
     let has_page = server.check_page(wiki_id, "amazing-battle").await.unwrap();
     assert_eq!(has_page, true);
+
+    // Run vacuum
+    let objects = server.revision_vacuum(wiki_id).await.unwrap();
+    assert_eq!(objects, 0, "Pruned objects found");
 }
