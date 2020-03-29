@@ -86,10 +86,17 @@ impl Server {
         self.page.undo(commit, revision).await
     }
 
-    /// Performs git vacuum in the page repository to maintain performance.
-    /// This does not need to be performed regularly and may take a while.
+    /// Performs git vacuum in the page repository.
+    /// Returns the number of pruned objects.
     #[inline]
     pub async fn revision_vacuum(&self, wiki_id: WikiId) -> Result<usize> {
-        self.page.git_vacuum(wiki_id).await
+        self.page.git_vacuum(wiki_id, true).await
+    }
+
+    /// Performs a deep git vacuum in the page repository.
+    /// This does not need to be performed regularly and may take a while.
+    #[inline]
+    pub async fn revision_vacuum_deep(&self, wiki_id: WikiId) -> Result<usize> {
+        self.page.git_vacuum(wiki_id, false).await
     }
 }

@@ -900,10 +900,15 @@ impl PageManager {
         Ok(())
     }
 
-    pub async fn git_vacuum(&self, wiki_id: WikiId) -> Result<usize> {
+    pub async fn git_vacuum(&self, wiki_id: WikiId, deep: bool) -> Result<usize> {
         let guard = self.store(wiki_id).await;
         let store = guard.get()?;
-        store.vacuum().await
+
+        if deep {
+            store.vacuum_deep().await
+        } else {
+            store.vacuum().await
+        }
     }
 }
 
