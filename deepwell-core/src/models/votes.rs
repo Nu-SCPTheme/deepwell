@@ -69,4 +69,13 @@ impl Votes {
     pub fn count_for_vote(&self, vote: i16) -> Option<u32> {
         self.distribution.get(&vote).copied()
     }
+
+    #[inline]
+    pub fn sum(&self) -> i16 {
+        let mut sum = 0;
+        for (vote, count) in self.distribution {
+            sum += vote * count;
+        }
+        sum
+    }
 }

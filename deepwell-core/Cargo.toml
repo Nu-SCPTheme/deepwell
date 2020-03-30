@@ -22,6 +22,7 @@ arrayvec = "0.5"
 chrono = { version = "0.4", features = ["serde"] }
 cfg-if = "0.1"
 diesel = { version = "1", features = ["chrono", "network-address", "postgres"] }
+ftml = { path = "../../ftml" }
 lazy_static = "1"
 log = "0.4"
 map_vec = "0.3"

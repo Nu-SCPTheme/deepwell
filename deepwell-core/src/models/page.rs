@@ -78,3 +78,16 @@ impl Page {
         self.deleted_at.is_none()
     }
 }
+
+impl<'a> From<(Page, Votes)> for ftml::PageInfo<'a> {
+    fn from(p: (Page, Votes)) -> Self {
+        ftml::PageInfo {
+            title: p.0.title(),
+            alt_title: p.0.alt_title(),
+            tags: p.0.tags().iter().map(|s| &**s).collect(),
+            header: None,
+            subheader: None,
+            rating: p.1.sum(),
+        }
+    }
+}
