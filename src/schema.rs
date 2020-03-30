@@ -145,6 +145,14 @@ table! {
 }
 
 table! {
+    user_verification (user_id) {
+        user_id -> Int8,
+        token -> Text,
+        created_at -> Timestamptz,
+    }
+}
+
+table! {
     users (user_id) {
         user_id -> Int8,
         name -> Text,
@@ -163,14 +171,6 @@ table! {
 }
 
 table! {
-    user_verification (user_id) {
-        user_id -> Int8,
-        token -> Text,
-        created_at -> Timestamptz,
-    }
-}
-
-table! {
     wiki_membership (wiki_id, user_id) {
         wiki_id -> Int8,
         user_id -> Int8,
@@ -182,19 +182,19 @@ table! {
 }
 
 table! {
+    wiki_settings (wiki_id) {
+        wiki_id -> Int8,
+        page_lock_duration -> Int2,
+    }
+}
+
+table! {
     wikis (wiki_id) {
         wiki_id -> Int8,
         name -> Text,
         slug -> Text,
         domain -> Text,
         created_at -> Timestamptz,
-    }
-}
-
-table! {
-    wiki_settings (wiki_id) {
-        wiki_id -> Int8,
-        page_lock_duration -> Int2,
     }
 }
 
@@ -243,9 +243,9 @@ allow_tables_to_appear_in_same_query!(
     roles,
     sessions,
     tag_history,
-    users,
     user_verification,
+    users,
     wiki_membership,
-    wikis,
     wiki_settings,
+    wikis,
 );
