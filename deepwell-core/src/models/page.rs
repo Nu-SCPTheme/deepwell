@@ -18,7 +18,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+use crate::scoring::Scoring;
 use super::prelude::*;
+use super::Votes;
 
 #[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
 pub struct Page {
@@ -77,17 +79,17 @@ impl Page {
     pub fn exists(&self) -> bool {
         self.deleted_at.is_none()
     }
-}
-
-impl<'a> From<(Page, Votes)> for ftml::PageInfo<'a> {
-    fn from(p: (Page, Votes)) -> Self {
-        ftml::PageInfo {
-            title: p.0.title(),
-            alt_title: p.0.alt_title(),
-            tags: p.0.tags().iter().map(|s| &**s).collect(),
+   
+    #[cfg(feature = "ftml_compat")]
+    pub fn create_pageinfo<'a, TScoring: Scoring>(&self, votes: &Votes) -> ftml::PageInfoOwned {
+        ftml::PageInfoOwned {
+            title: String::from(self.title()),
+            alt_title: match self.alt_title() { None => None, Some(s) => Some(String::from(s)) },
+            tags: self.tags().to_vec(),
             header: None,
             subheader: None,
-            rating: p.1.sum(),
+            rating: TScoring::score(votes) as i32,
         }
     }
 }
+
