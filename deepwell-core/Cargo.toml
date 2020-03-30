@@ -18,7 +18,7 @@ name = "deepwell_core"
 path = "src/lib.rs"
 
 [features]
-default = ["ftml-compat"]
+default = []
 ftml-compat = ["ftml"]
 
 [dependencies]
