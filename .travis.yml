@@ -31,6 +31,8 @@ before_script:
   - .travis/clippy.sh setup
   # Setup database
   - .travis/database.sh setup
+  # Add FTML for support
+  - .travis/download.sh ftml
 
 script:
   # Ensure code is rustfmt'd

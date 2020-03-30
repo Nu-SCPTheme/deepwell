@@ -19,6 +19,8 @@
  */
 
 use super::prelude::*;
+use super::Votes;
+use crate::scoring::Scoring;
 
 #[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
 pub struct Page {
@@ -76,5 +78,18 @@ impl Page {
     #[inline]
     pub fn exists(&self) -> bool {
         self.deleted_at.is_none()
+    }
+
+    #[cfg(feature = "ftml_compat")]
+    pub fn into_pageinfo<TScoring: Scoring>(self, votes: Votes) -> ftml::PageInfoOwned {
+        let Self { title, alt_title, tags, .. } = self;
+        ftml::PageInfoOwned {
+            title,
+            alt_title,
+            tags,
+            header: None,
+            subheader: None,
+            rating: TScoring::score(&votes),
+        }
     }
 }
