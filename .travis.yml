@@ -49,7 +49,7 @@ script:
   # Run tests
   - .travis/banner.sh tests
   - .travis/database.sh test
-  - cd deepwell-core; cargo test --release -- --nocapture
+  - cd deepwell-core; cargo test --release -- --nocapture; cd ..
   # Build documentation
   - .travis/banner.sh docs
   - cargo doc --no-deps
