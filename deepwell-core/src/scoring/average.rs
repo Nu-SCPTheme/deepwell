@@ -23,9 +23,9 @@ use super::WikidotScoring;
 
 /// Average-based scorer. Returns the mean of all the votes cast.
 #[derive(Debug, Copy, Clone, Default)]
-pub struct AverageScorer;
+pub struct AverageScoring;
 
-impl Scoring for AverageScorer {
+impl Scoring for AverageScoring {
     fn score(votes: &Votes) -> f32 {
         if votes.count() == 0 {
             return 0.0;
@@ -74,7 +74,7 @@ fn average_voting() {
 
     macro_rules! check {
         ($votes:expr, $score:expr) => {
-            f32_eq(AverageScorer::score(&*$votes), $score, 0.1);
+            f32_eq(AverageScoring::score(&*$votes), $score, 0.1);
         };
     }
 

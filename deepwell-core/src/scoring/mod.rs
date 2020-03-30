@@ -78,7 +78,7 @@ mod prelude {
     }
 }
 
-pub use self::average::AverageScorer;
+pub use self::average::AverageScoring;
 pub use self::null::NullScoring;
 pub use self::percent::PercentScoring;
 pub use self::wikidot::WikidotScoring;
