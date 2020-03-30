@@ -80,7 +80,7 @@ impl Page {
         self.deleted_at.is_none()
     }
 
-    #[cfg(feature = "ftml_compat")]
+    #[cfg(feature = "ftml-compat")]
     pub fn into_pageinfo<TScoring: Scoring>(self, votes: Votes) -> ftml::PageInfoOwned {
         let Self { title, alt_title, tags, .. } = self;
         ftml::PageInfoOwned {
