@@ -19,8 +19,6 @@
  */
 
 use super::prelude::*;
-use super::Votes;
-use crate::scoring::Scoring;
 
 #[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
 pub struct Page {
