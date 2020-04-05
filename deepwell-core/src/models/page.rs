@@ -21,7 +21,7 @@
 use super::prelude::*;
 
 #[cfg(feature = "ftml-compat")]
-use crate::{scoring::Scoring, models::Votes};
+use crate::{models::Votes, scoring::Scoring};
 
 #[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
 pub struct Page {
