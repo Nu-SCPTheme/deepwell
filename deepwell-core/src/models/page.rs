@@ -20,6 +20,9 @@
 
 use super::prelude::*;
 
+#[cfg(feature = "ftml-compat")]
+use crate::{scoring::Scoring, models::Votes};
+
 #[derive(Serialize, Deserialize, Queryable, Debug, Clone, PartialEq, Eq)]
 pub struct Page {
     page_id: PageId,
