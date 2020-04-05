@@ -80,7 +80,12 @@ impl Page {
 
     #[cfg(feature = "ftml-compat")]
     pub fn into_pageinfo<TScoring: Scoring>(self, votes: Votes) -> ftml::PageInfoOwned {
-        let Self { title, alt_title, tags, .. } = self;
+        let Self {
+            title,
+            alt_title,
+            tags,
+            ..
+        } = self;
         ftml::PageInfoOwned {
             title,
             alt_title,
