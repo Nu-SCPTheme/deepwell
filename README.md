@@ -22,7 +22,7 @@ Currently, the following services are provided:
 You will need the `diesel_cli` crate installed. For all commands you will need to the `DATABASE_URL` environment variable set.
 
 ### Compilation
-This library targets the latest stable Rust. At time of writing, that is 1.42.0
+This library targets the latest stable Rust. At time of writing, that is 1.43.0
 
 The environment variable `DATABASE_URL` must be set in order to use diesel.
 Additionally the variable `DATABASE_TEST_URL` must be set if you want to run tests.
